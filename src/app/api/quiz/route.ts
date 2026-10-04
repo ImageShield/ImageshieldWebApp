@@ -1,4 +1,4 @@
-import { validateAnswers } from "@/lib/quiz";
+import { declaresMinor, validateAnswers } from "@/lib/quiz";
 import { noteVersionDrift, readLiveQuizDefinition } from "@/lib/quiz-definition";
 import { saveQuizAnswers } from "@/lib/quiz-save";
 import { allowPerIp } from "@/lib/rate-limit";
@@ -96,6 +96,26 @@ export async function POST(request: Request) {
         retakeQuiz: true,
       },
       { status: 409 },
+    );
+  }
+
+  /* Adults only, and this is where the web enforces it with authority: the one place
+     the age answer reaches this server, ahead of the write. The quiz, details and OTP
+     screens all turn an under-18 answer away, but they run in the browser — this is
+     what stops it reaching the scorer from anywhere else: `/calculating` opened by
+     hand, the score screen's resume, or a request made directly. Checked against the
+     validated answers, so it judges exactly what would have been written; nothing is
+     sent to the API and the record's existing score is left as it was.
+
+     403 with a flag beside `error`, the same shape as the 409's `retakeQuiz` above,
+     so `submitAnswers` can route on it rather than on a status code. */
+  if (declaresMinor(parsed.answers)) {
+    return Response.json(
+      {
+        error: "The Likeness Health Score is only available to people aged 18 and over.",
+        notEligible: true,
+      },
+      { status: 403 },
     );
   }
 

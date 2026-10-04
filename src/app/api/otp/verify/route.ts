@@ -20,7 +20,8 @@ import { fetchMe, type Me } from "@/lib/v1/me";
  *                        spent whatever happens next.
  *   /v1/me               who we now are. Read before the write because the email
  *                        below is only sent when it differs from what is on record.
- *   /v1/me/profile       the lead's name.
+ *   /v1/me/profile       the lead's name, and the placeholder birth date the API
+ *                        requires — see `saveLead`.
  *   /v1/me/email         the lead's email — and a verification mail with it.
  *
  * The quiz is deliberately NOT here, though the answers do exist by this point — the
@@ -121,7 +122,11 @@ export async function POST(request: Request) {
     firstName: challenge.firstName,
     lastName: challenge.lastName,
     email: challenge.email,
-    dob: challenge.dob,
+    /* Always true by now — `readChallenge` refuses an unconfirmed cookie outright.
+       Compared rather than copied anyway, because this flag is what lets `saveLead`
+       write a placeholder birth date to a write-once field, and that should not
+       hinge on a check in another file staying put. */
+    ageConfirmed: challenge.ageConfirmed === true,
   };
   await clearChallenge();
 

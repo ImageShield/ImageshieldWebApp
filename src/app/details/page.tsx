@@ -9,8 +9,8 @@ export const metadata: Metadata = {
 };
 
 /**
- * Full name, date of birth, email and phone. Submitting it sends the verification
- * code.
+ * Full name, email, phone and an 18+ confirmation. Submitting it sends the
+ * verification code.
  *
  * The step after the questions rather than before them, which is what the copy is
  * leaning on: there is a finished quiz behind this form, so it asks for a number in

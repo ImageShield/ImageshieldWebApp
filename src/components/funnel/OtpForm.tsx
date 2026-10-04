@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { backPath, nextPath, STEP_PATHS } from "@/lib/funnel";
+import { backPath, NOT_ELIGIBLE_PATH, nextPath, STEP_PATHS } from "@/lib/funnel";
 import { readFunnel, useFunnel } from "@/lib/funnel-state";
+import { declaresMinor } from "@/lib/quiz";
 
 /**
  * The six-digit code, ported from the app's OTPScreen.
@@ -58,6 +59,14 @@ export function OtpForm() {
   const code = digits.join("");
 
   useEffect(() => {
+    /* The details form already turns away an under-18 answer, but the quiz can be
+       re-answered after the code is sent — back, change the age, forward to here.
+       Verifying is what writes the adult placeholder birth date, so this screen
+       checks too. */
+    if (declaresMinor(readFunnel().answers)) {
+      router.replace(NOT_ELIGIBLE_PATH);
+      return;
+    }
     // No number means the details step never completed, so no code was ever sent.
     if (!readFunnel().phone) {
       router.replace(STEP_PATHS.details);
@@ -75,6 +84,10 @@ export function OtpForm() {
   const verify = useCallback(
     async (entered: string) => {
       if (submitted.current === entered) return;
+      if (declaresMinor(readFunnel().answers)) {
+        router.replace(NOT_ELIGIBLE_PATH);
+        return;
+      }
       submitted.current = entered;
 
       setBusy(true);

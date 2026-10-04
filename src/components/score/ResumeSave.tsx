@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ShieldMark } from "@/components/ShieldMark";
-import { STEP_PATHS } from "@/lib/funnel";
+import { NOT_ELIGIBLE_PATH, STEP_PATHS } from "@/lib/funnel";
 import { readFunnel } from "@/lib/funnel-state";
 import { quizIncomplete } from "@/lib/quiz";
 import { useQuizDefinition } from "@/lib/use-quiz-definition";
@@ -55,6 +55,12 @@ export function ResumeSave() {
          way on, and the session makes it free. */
       if (outcome.reason === "retake") {
         return router.replace(STEP_PATHS["quiz-questions"]);
+      }
+      /* The API refused an under-18 answer. Retrying would be refused again, so off
+         this screen rather than onto its "Try again" panel. `/api/quiz` judges the
+         age; this only follows its answer. */
+      if (outcome.reason === "not-eligible") {
+        return router.replace(NOT_ELIGIBLE_PATH);
       }
       setFailed(outcome.error);
     },

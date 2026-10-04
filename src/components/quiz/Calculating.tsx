@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ShieldMark } from "@/components/ShieldMark";
-import { nextPath, STEP_PATHS } from "@/lib/funnel";
+import { NOT_ELIGIBLE_PATH, nextPath, STEP_PATHS } from "@/lib/funnel";
 import { readFunnel } from "@/lib/funnel-state";
 import { quizIncomplete } from "@/lib/quiz";
 import { useQuizDefinition } from "@/lib/use-quiz-definition";
@@ -60,6 +60,12 @@ export function Calculating() {
          code. */
       if (outcome.reason === "retake") {
         return router.replace(STEP_PATHS["quiz-questions"]);
+      }
+      /* The API refused an under-18 answer. Not an error to retry — the same
+         answers would be refused again — so not the panel below either. The age is
+         judged by `/api/quiz`, not here; this only follows its answer. */
+      if (outcome.reason === "not-eligible") {
+        return router.replace(NOT_ELIGIBLE_PATH);
       }
       setError(outcome.error);
     },

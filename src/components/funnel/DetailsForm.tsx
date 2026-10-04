@@ -2,23 +2,22 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useState, type ReactNode } from "react";
-import { ChevronDown } from "@/components/landing/icons";
+import { Check, ChevronDown } from "@/components/landing/icons";
 import {
   CALLING_CODES,
   composePhone,
   DEFAULT_CALLING_CODE,
   DEFAULT_COUNTRY,
 } from "@/lib/calling-codes";
-import { backPath, nextPath, STEP_PATHS } from "@/lib/funnel";
+import { backPath, NOT_ELIGIBLE_PATH, nextPath, STEP_PATHS } from "@/lib/funnel";
 import { readFunnel, writeFunnel } from "@/lib/funnel-state";
-import { quizIncomplete } from "@/lib/quiz";
+import { declaresMinor, quizIncomplete } from "@/lib/quiz";
 import { useQuizDefinition } from "@/lib/use-quiz-definition";
-import { DobField } from "./DobField";
 import { ContactCard, Envelope } from "./icons";
 
 /**
- * First and last name, email, date of birth and phone — the gate in front of the
- * score.
+ * First and last name, email, phone and an 18+ confirmation — the gate in front of
+ * the score.
  *
  * Submitting sends the OTP. Nothing is written to the shared user record here: the
  * server only remembers the details in a signed cookie until the code comes back,
@@ -66,11 +65,24 @@ export function DetailsForm() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [dob, setDob] = useState("");
+  /* A checkbox, not a date of birth. The funnel deliberately stopped collecting birth
+     dates; the API's required `date_of_birth` gets a fixed placeholder server-side
+     (`SYNTHETIC_ADULT_DOB`), and only this boolean ever leaves the browser. */
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [country, setCountry] = useState(DEFAULT_COUNTRY);
   const [phone, setPhone] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+
+  /* Adults only: someone who answered the age question with the under-18 band is
+     sent away before this form can text them a code — no challenge cookie, and no
+     adult placeholder birth date written to a profile on the strength of an 18+ box
+     they would have to tick against their own answer. Doesn't wait for the
+     definition like the guard below, because it needs nothing from it: the answer
+     is either in this tab's store or it isn't. */
+  useEffect(() => {
+    if (declaresMinor(readFunnel().answers)) router.replace(NOT_ELIGIBLE_PATH);
+  }, [router]);
 
   /* No quiz behind this form means there is no score to send anywhere, so there is
      nothing to ask for. Same shape as the guard on the OTP screen, and same reason it
@@ -102,7 +114,15 @@ export function DetailsForm() {
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
-    if (sending) return;
+    /* The button is already disabled without the tick; this covers anything that
+       submits the form some other way. The server refuses it regardless. */
+    if (sending || !ageConfirmed) return;
+    /* Again at the moment of sending, so the code can't go out in the gap before the
+       redirect above lands. */
+    if (declaresMinor(readFunnel().answers)) {
+      router.replace(NOT_ELIGIBLE_PATH);
+      return;
+    }
 
     setSending(true);
     setError(null);
@@ -114,7 +134,7 @@ export function DetailsForm() {
           firstName,
           lastName,
           email,
-          dob,
+          ageConfirmed,
           phone: composePhone(callingCode, phone),
         }),
       });
@@ -214,8 +234,6 @@ export function DetailsForm() {
           />
         </Field>
 
-        <DobField id={`${ids}-dob`} value={dob} onChange={setDob} />
-
         {/*
          * The design draws the picker inside the field's LEFT edge, with a rule
          * between it and the digits, so the two read as one control rather than a
@@ -302,6 +320,48 @@ export function DetailsForm() {
             className="pointer-events-none absolute top-1/2 left-[108px] h-[30px] w-px -translate-y-1/2 bg-line-soft"
           />
         </div>
+
+        {/* In place of the date-of-birth field, which is gone: the funnel no longer
+            asks for a birth date at all. The box is the quiz's own "select all
+            that apply" checkbox — 20px on a 4px radius, a 1.61px inset outline at
+            rest, brand fill and tick when on — so it reads as the same control
+            the visitor has just been using. See QuizFlow for why the outline is a
+            shadow rather than a border.
+
+            Under the drawing is a real checkbox, hidden but not removed, so the
+            keyboard, screen readers and `required` all work without code of ours,
+            and the words are its label, so a tap on them toggles it too. It can't
+            show focus itself, so `peer` hands the ring to the box. The box sits on
+            the first line of the 14/20 copy, which wraps on a narrow phone.
+
+            Last in the column rather than where the date sat, so the four text
+            fields still read as one block and the confirmation sits next to the
+            button it unlocks. */}
+        <label
+          htmlFor={`${ids}-adult`}
+          className="flex cursor-pointer items-start gap-3 text-sm text-ink-soft"
+        >
+          <input
+            id={`${ids}-adult`}
+            name="age-confirmed"
+            type="checkbox"
+            required
+            checked={ageConfirmed}
+            onChange={(e) => setAgeConfirmed(e.target.checked)}
+            className="peer sr-only"
+          />
+          <span
+            aria-hidden
+            className={`flex size-5 shrink-0 items-center justify-center rounded-[4px] transition-[background-color,box-shadow] peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand ${
+              ageConfirmed
+                ? "bg-brand text-ink-inverse"
+                : "shadow-[inset_0_0_0_1.61px_var(--color-line-strong)]"
+            }`}
+          >
+            {ageConfirmed ? <Check className="size-5" /> : null}
+          </span>
+          I confirm that I am 18 years old or older
+        </label>
       </div>
 
       {error ? (
@@ -329,11 +389,12 @@ export function DetailsForm() {
          * screen where the request goes out over SMS and can genuinely take a
          * few seconds. So the dim is kept for "can't press this yet" and the
          * sweep carries "pressed, working": full brand purple, with a band of
-         * light crossing it for as long as the code is in flight.
+         * light crossing it for as long as the code is in flight. Until the
+         * 18+ box is ticked it is "can't press this yet".
          */}
         <button
           type="submit"
-          disabled={sending}
+          disabled={sending || !ageConfirmed}
           aria-busy={sending}
           className={`flex h-14 items-center justify-center rounded-full bg-brand text-base font-semibold text-ink-inverse transition-colors hover:bg-cta sm:w-[317px] ${
             sending ? "shimmer" : "disabled:opacity-40"

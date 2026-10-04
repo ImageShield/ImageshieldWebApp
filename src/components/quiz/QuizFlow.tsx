@@ -3,14 +3,15 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { Check } from "@/components/landing/icons";
-import { nextPath, STEP_PATHS } from "@/lib/funnel";
+import { NOT_ELIGIBLE_PATH, nextPath, STEP_PATHS } from "@/lib/funnel";
 import {
+  readFunnel,
   saveAnswer,
   syncQuizVersion,
   toggleAnswer,
   useFunnel,
 } from "@/lib/funnel-state";
-import { askedQuestions } from "@/lib/quiz";
+import { askedQuestions, declaresMinor } from "@/lib/quiz";
 import { useQuizDefinition } from "@/lib/use-quiz-definition";
 import { QuizProgress } from "./QuizProgress";
 import { QuizSkeleton } from "./QuizSkeleton";
@@ -132,6 +133,19 @@ export function QuizFlow({ signedIn }: { signedIn: boolean }) {
    * they proved a minute ago. They go straight to the write.
    */
   function finish() {
+    /* Adults only, and checked BEFORE the signed-in shortcut below — that ordering is
+       the point. Someone who has already verified (and been given an adult placeholder
+       birth date) still holds a session, so they can retake the quiz, change their
+       age to under 18 and finish again; the shortcut would take them straight to
+       `/calculating`, past the details and OTP screens that otherwise turn this
+       answer away, and submit it as a fresh score.
+
+       Read from the store rather than `answers`: `pick` calls this straight after
+       writing the last answer, and the render-time copy doesn't have it yet. */
+    if (declaresMinor(readFunnel().answers)) {
+      router.push(NOT_ELIGIBLE_PATH);
+      return;
+    }
     const onwards = signedIn
       ? STEP_PATHS.calculating
       : (nextPath("quiz-questions") ?? STEP_PATHS.landing);

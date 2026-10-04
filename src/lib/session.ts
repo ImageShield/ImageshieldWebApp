@@ -148,19 +148,49 @@ export async function startChallenge(
   contact: Contact,
   challengeId: string,
 ): Promise<void> {
+  /* Field by field rather than spreading `contact`. The resend route hands back
+     whatever `readChallenge` decoded, and a spread would re-sign any key that rode in
+     on it into a fresh cookie with a fresh fifteen minutes — including the `dob` that
+     cookies from before the 18+ checkbox carry. */
+  const challenge: Challenge = {
+    firstName: contact.firstName,
+    lastName: contact.lastName,
+    email: contact.email,
+    phone: contact.phone,
+    ageConfirmed: contact.ageConfirmed,
+    challengeId,
+    exp: now() + CHALLENGE_TTL_S,
+  };
   const store = await cookies();
-  store.set(
-    FUNNEL_COOKIE,
-    encode({ ...contact, challengeId, exp: now() + CHALLENGE_TTL_S }),
-    { ...COOKIE_BASE, maxAge: CHALLENGE_TTL_S },
-  );
+  store.set(FUNNEL_COOKIE, encode(challenge), {
+    ...COOKIE_BASE,
+    maxAge: CHALLENGE_TTL_S,
+  });
 }
 
+/**
+ * The pending challenge, or null when there is none worth acting on.
+ *
+ * Only called from route handlers, which is what lets it delete as well as read.
+ */
 export async function readChallenge(): Promise<Challenge | null> {
-  const raw = (await cookies()).get(FUNNEL_COOKIE)?.value;
+  const store = await cookies();
+  const raw = store.get(FUNNEL_COOKIE)?.value;
   if (!raw) return null;
   const challenge = decode<Challenge>(raw);
-  return challenge && challenge.exp > now() ? challenge : null;
+  if (!challenge || challenge.exp <= now()) return null;
+
+  /* A cookie signed before the 18+ checkbox existed is still valid for up to fifteen
+     minutes after a deploy. It was never confirmed, and it carries the birth date that
+     visitor typed. So it counts as no challenge at all — verify and resend both
+     answer "start again", which leads back to the details form, the one place the
+     confirmation is asked for — and it is deleted on the spot rather than left to
+     expire, so the typed date is never read, re-sent or re-signed. */
+  if (challenge.ageConfirmed !== true) {
+    store.delete(FUNNEL_COOKIE);
+    return null;
+  }
+  return challenge;
 }
 
 /**

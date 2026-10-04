@@ -27,7 +27,7 @@ export const STEP_PATHS: Record<FunnelStep, string> = {
      because that endpoint is answered only to a session and there is none yet — see
      the note in that file for what the local copy costs and how drift is caught. */
   "quiz-questions": "/quiz/questions",
-  /* Full name, date of birth, email, phone. Submitting it sends the code. Asked
+  /* Full name, email, phone and an 18+ checkbox. Submitting it sends the code. Asked
      once the visitor has answered eight questions and has a score waiting on the
      other side of it, which is the entire reason the quiz moved in front. */
   details: "/details",
@@ -39,6 +39,13 @@ export const STEP_PATHS: Record<FunnelStep, string> = {
   /* Score, QR and the store links: one screen, fed by /api/score. */
   score: "/score",
 };
+
+/**
+ * Where the details and OTP screens send someone who answered the quiz's age
+ * question with the under-18 band. Not a step: nothing comes after it, so it sits
+ * outside the array and next/prev never land on it.
+ */
+export const NOT_ELIGIBLE_PATH = "/not-eligible";
 
 /**
  * Steps that move on by themselves.

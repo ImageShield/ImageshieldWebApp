@@ -214,3 +214,28 @@ export function quizIncomplete(
   if (state.quizVersion !== definition.quiz_version) return true;
   return missingAnswers(definition, state.answers).length > 0;
 }
+
+/**
+ * The age question's under-18 answers.
+ *
+ * The funnel is adults-only — the details form asks for an 18+ confirmation, and the
+ * profile is given an adult placeholder birth date on the strength of it — but the
+ * age question still offers an under-18 option, because the backend owns the
+ * questions. So it is the screens that turn it away, before a code is sent or
+ * anything is written.
+ *
+ * "Under 18" is the live spelling: `GET /v1/quiz` serves it on both prod (v11) and
+ * dev (v15), checked 2026-10-05. "13-17" is the older band the local dev fixture
+ * (tools/dev-api/quiz.json, v2) still serves, kept so the fixture exercises the same
+ * path. Matched exactly, because options are display strings the API validates
+ * verbatim — which cuts both ways: if the backend rewords the option again, this
+ * stops matching and has to be changed with it.
+ */
+const AGE_QUESTION_KEY = "age";
+const MINOR_AGE_ANSWERS: ReadonlySet<string> = new Set(["Under 18", "13-17"]);
+
+/** Whether the visitor answered the age question with an under-18 option. */
+export function declaresMinor(answers: QuizAnswers): boolean {
+  const age = answers[AGE_QUESTION_KEY];
+  return typeof age === "string" && MINOR_AGE_ANSWERS.has(age);
+}

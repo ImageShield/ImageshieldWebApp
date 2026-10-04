@@ -1,5 +1,5 @@
 /**
- * Name / email / phone / date-of-birth rules, shared by the form and the route
+ * Name / email / phone / 18+ confirmation rules, shared by the form and the route
  * handlers so the client can't submit something the server would then have to guess
  * about.
  *
@@ -23,108 +23,16 @@ export type Contact = {
   lastName: string;
   email: string;
   phone: string;
-  /** `YYYY-MM-DD`, the format `PATCH /v1/me/profile` stores `date_of_birth` in. */
-  dob: string;
+  /**
+   * The visitor ticked "I confirm that I am 18 years old or older". Always `true` on a
+   * validated contact — there is no such thing as a contact without it.
+   *
+   * This replaced a date-of-birth field, and the funnel no longer asks for, accepts or
+   * keeps a birth date in any form. `PATCH /v1/me/profile` still wants one, so a fixed
+   * placeholder is written there instead — see `SYNTHETIC_ADULT_DOB`.
+   */
+  ageConfirmed: true;
 };
-
-/**
- * The youngest date of birth accepted, and the oldest.
- *
- * 13 is not arbitrary: the live quiz definition's youngest age band is `13-17`, so
- * the product already expects teenagers, and a floor below the band the scoring
- * itself starts at would collect a birth date nothing downstream can score. Raise it
- * if the funnel is ever meant to be adults-only — this is the one place to do it.
- *
- * The ceiling exists to catch a mistyped year rather than to judge anyone: a visitor
- * who fat-fingers 1024 should be told, not silently recorded as 1001 years old.
- */
-const MIN_AGE_YEARS = 13;
-const MAX_AGE_YEARS = 120;
-
-/**
- * The same range as two dates, for the calendar to draw.
- *
- * Derived here rather than re-expressed in the picker, because a picker that offers
- * a date `validateDob` refuses is a form that rejects what it just invited you to
- * click — and the two drifting apart is exactly what happens when the bound is
- * written twice.
- *
- * `latest` is the day someone turns MIN_AGE today, and is inclusive: `ageOn` returns
- * exactly MIN_AGE for it. `earliest` is the day AFTER their MAX_AGE+1 birthday, which
- * looks off by one and is not — `age > MAX_AGE_YEARS` only rejects at MAX_AGE + 1, so
- * someone 120 years and six months old is still accepted and the floor has to leave
- * room for them.
- *
- * UTC on both sides, matching `ageOn`. `today` is a parameter so this is testable
- * without stubbing the clock.
- */
-export function dobBounds(today: Date = new Date()): { earliest: Date; latest: Date } {
-  const y = today.getUTCFullYear();
-  const m = today.getUTCMonth();
-  const d = today.getUTCDate();
-  return {
-    earliest: new Date(Date.UTC(y - MAX_AGE_YEARS - 1, m, d + 1)),
-    latest: new Date(Date.UTC(y - MIN_AGE_YEARS, m, d)),
-  };
-}
-
-/** `YYYY-MM-DD` and nothing else — the shape, before the date is checked for being real. */
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
-
-/**
- * Whole years between a birth date and today, both read in UTC.
- *
- * UTC on both sides on purpose: mixing a UTC-parsed birth date with a local "today"
- * shifts the comparison by a day for anyone west of Greenwich, which turns someone's
- * 13th birthday into a rejection until the afternoon.
- */
-function ageOn(birth: Date, today: Date): number {
-  let age = today.getUTCFullYear() - birth.getUTCFullYear();
-  const monthDelta = today.getUTCMonth() - birth.getUTCMonth();
-  if (monthDelta < 0 || (monthDelta === 0 && today.getUTCDate() < birth.getUTCDate())) {
-    age -= 1;
-  }
-  return age;
-}
-
-/**
- * Parses and range-checks a date of birth.
- *
- * The round-trip comparison is what rejects a date that matches the pattern but does
- * not exist: `new Date("2004-02-31")` does not throw, it rolls forward to March 2nd,
- * so a visitor who typed a day that isn't there would otherwise have a different date
- * than the one they entered written to their record.
- */
-export function validateDob(
-  raw: unknown,
-): { ok: true; dob: string } | { ok: false; error: string } {
-  if (typeof raw !== "string" || !ISO_DATE.test(raw.trim())) {
-    return { ok: false, error: "Enter your date of birth" };
-  }
-  const value = raw.trim();
-
-  const parsed = new Date(`${value}T00:00:00Z`);
-  if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== value) {
-    return { ok: false, error: "That date doesn't exist — check the day and month" };
-  }
-
-  const today = new Date();
-  const age = ageOn(parsed, today);
-  if (age < 0) {
-    return { ok: false, error: "Your date of birth can't be in the future" };
-  }
-  if (age < MIN_AGE_YEARS) {
-    return {
-      ok: false,
-      error: `You need to be at least ${MIN_AGE_YEARS} to use ImageShield`,
-    };
-  }
-  if (age > MAX_AGE_YEARS) {
-    return { ok: false, error: "Check the year — that date looks like a typo" };
-  }
-
-  return { ok: true, dob: value };
-}
 
 /**
  * Strips separators and settles on a leading `+` — but never invents one. A bare
@@ -150,7 +58,10 @@ export function validateContact(
   if (!raw || typeof raw !== "object") {
     return { ok: false, error: "missing body" };
   }
-  const { firstName, lastName, email, phone, dob } = raw as Record<
+  /* Anything else in the body is ignored, and that includes a `dob` from a client
+     built before the date field was removed: the contact below is assembled field by
+     field, so a birth date that arrives here goes no further than this line. */
+  const { firstName, lastName, email, phone, ageConfirmed } = raw as Record<
     string,
     unknown
   >;
@@ -176,11 +87,15 @@ export function validateContact(
     return { ok: false, error: "Enter your number with its country code" };
   }
 
-  /* Last, so a visitor who got several fields wrong is told about the phone number
-     before the birth date — the phone is the one the whole funnel turns on. */
-  const parsedDob = validateDob(dob);
-  if (!parsedDob.ok) {
-    return { ok: false, error: parsedDob.error };
+  /* Strictly `true`, not truthy: a string "false" is truthy, and this flag is the
+     only thing standing behind the placeholder birth date written to the record. The
+     form keeps its button dimmed until the box is ticked, so a visitor only meets
+     this message if something other than the form is posting.
+
+     Last, so a visitor who got several fields wrong is told about the phone number
+     first — the phone is the one the whole funnel turns on. */
+  if (ageConfirmed !== true) {
+    return { ok: false, error: "Confirm that you are 18 or older to continue" };
   }
 
   return {
@@ -192,7 +107,7 @@ export function validateContact(
       lastName: lastName.trim().slice(0, MAX_NAME_LENGTH),
       email: email.trim().toLowerCase().slice(0, 254),
       phone: normalized,
-      dob: parsedDob.dob,
+      ageConfirmed: true,
     },
   };
 }

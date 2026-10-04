@@ -29,6 +29,10 @@ export type SubmitOutcome =
          *  changed. The session is untouched, so they re-answer without a second
          *  code. */
         | "retake"
+        /** The API refused an under-18 answer — the funnel is adults-only. Nothing
+         *  to retry and nothing to fix from here; the screens send the visitor to
+         *  the not-eligible page. */
+        | "not-eligible"
         /** Worth trying again from where the visitor stands. */
         | "failed";
       error: string;
@@ -67,10 +71,12 @@ export async function submitAnswers(quizVersion: string): Promise<SubmitOutcome>
   const body = (await response.json().catch(() => ({}))) as {
     error?: string;
     retakeQuiz?: boolean;
+    notEligible?: boolean;
   };
   const error = body.error ?? "We couldn't save your answers.";
 
   if (response.status === 401) return { ok: false, reason: "signed-out", error };
+  if (body.notEligible === true) return { ok: false, reason: "not-eligible", error };
   if (body.retakeQuiz === true) return { ok: false, reason: "retake", error };
   return { ok: false, reason: "failed", error };
 }

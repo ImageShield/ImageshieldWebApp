@@ -9,7 +9,11 @@ import { requestOtp, resendCooldownSeconds } from "@/lib/v1/auth";
 import { ApiFailure, presentableFailure } from "@/lib/v1/errors";
 
 /**
- * POST /api/otp/start — { firstName, lastName, email, phone, dob }
+ * POST /api/otp/start — { firstName, lastName, email, phone, ageConfirmed }
+ *
+ * `ageConfirmed` must be literally `true` — the 18+ checkbox. No date of birth is
+ * taken here any more, and one sent anyway is dropped by `validateContact` before it
+ * reaches the cookie.
  *
  * Sends the code and remembers the details, plus the id of the challenge the API
  * issued, in a signed cookie. Nothing is written to the person record here: an

@@ -3,7 +3,7 @@ import "server-only";
 import type { QuizAnswers } from "./quiz";
 import type { ScoreEnvelope } from "./score";
 import type { Me } from "./v1/me";
-import { patchProfile, setEmail } from "./v1/profile";
+import { patchProfile, setEmail, SYNTHETIC_ADULT_DOB } from "./v1/profile";
 import { submitQuizResponses } from "./v1/quiz";
 
 /**
@@ -33,7 +33,8 @@ export async function saveQuizAnswers(
 }
 
 /**
- * The lead's name, date of birth and email, onto the same record.
+ * The lead's name and email, onto the same record — plus the placeholder birth date
+ * the API still requires, when the visitor confirmed they are 18 or older.
  *
  * Never fatal, and deliberately attempted BEFORE the score: the score can be retried
  * from the client afterwards, but the name and email only exist in the pre-verification
@@ -64,10 +65,26 @@ export async function saveLead(
     firstName: string;
     lastName: string;
     email: string;
-    dob: string;
+    ageConfirmed: boolean;
   },
   me: Me | null,
 ): Promise<boolean> {
+  /* Never the visitor's birth date — the funnel doesn't collect one. The placeholder
+     is what the API's required field gets in its place, and only when both hold:
+
+       - the visitor ticked the 18+ box.
+       - `/v1/me` was read and shows no birth date on the record.
+
+     The second is strict because `date_of_birth` is WRITE-ONCE: the API refuses a
+     second value, and that refusal fails the whole PATCH — the name goes with it,
+     and the email call after it never runs. So a date already on record is left
+     alone (the key is omitted, and the PATCH only touches the keys it is sent), and
+     a failed read (`me` null) sends no date at all rather than guess. A record left
+     without one can still be given one later; a record sent a second one loses the
+     whole lead save. */
+  const dobKnownMissing = me?.person ? !me.person.date_of_birth : false;
+  const needsDob = contact.ageConfirmed && dobKnownMissing;
+
   try {
     /* Only the keys we mean to change. The API builds the update from the keys it
        receives, so sending a field as undefined would blank it — and `employer_name`,
@@ -82,9 +99,7 @@ export async function saveLead(
          record actually has removes the guess entirely. */
       first_name: contact.firstName,
       last_name: contact.lastName,
-      /* Already `YYYY-MM-DD` — `validateContact` rejects anything else, so there is
-         nothing to format here and no chance of sending a date the API will refuse. */
-      date_of_birth: contact.dob,
+      ...(needsDob ? { date_of_birth: SYNTHETIC_ADULT_DOB } : {}),
     });
 
     const wanted = contact.email.trim();
