@@ -131,10 +131,16 @@ export function ScoreResult({
           <h1 className="order-1 text-center text-[28px] leading-[1.2] font-bold tracking-[-0.5px] text-ink-report sm:text-left sm:text-[32px] sm:leading-[1.5] lg:col-start-1 lg:row-start-1 lg:max-w-[440px] lg:pt-2 lg:text-[40px] lg:leading-[60px]">
             {record.firstName}, your risk of likeness abuse is{" "}
             {/* One weight heavier than the sentence it ends, not just a colour —
-                the export sets the risk word in ExtraBold. The exclamation mark is
-                inside the span rather than after it: it belongs to the word it
-                exclaims, so it takes the band's colour and weight with it. */}
-            <span className={`font-extrabold ${RISK_WORD[level]}`}>{label}!</span>
+                the export sets the risk word in ExtraBold. The closing mark is
+                inside the span rather than after it: it belongs to the word, so it
+                takes the band's colour and weight with it.
+
+                An exclamation for the high-risk colour only (the API's "high" and
+                "severe" bands); a moderate or low result is stated, not exclaimed. */}
+            <span className={`font-extrabold ${RISK_WORD[level]}`}>
+              {label}
+              {level === "high" ? "!" : "."}
+            </span>
           </h1>
 
           <div className="order-2 mx-auto mt-9 w-full max-w-[333px] lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:mt-0">
