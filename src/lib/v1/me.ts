@@ -11,6 +11,7 @@
  */
 import "server-only";
 
+import type { DisplayedScore, QuizFactor } from "../score";
 import { readAsUser, callAsUser } from "../session";
 import type { Onboarding } from "./auth";
 
@@ -28,9 +29,24 @@ export type Me = {
     school_name: string | null;
   };
   onboarding: Onboarding;
-  /** Null before the quiz. The funnel reads the full record from `/v1/me/score`
-   *  instead — this summary carries no breakdown. */
-  score: { total_score: number; band: string; computed_at: string } | null;
+  /**
+   * The score stored on the account. Null before the quiz.
+   *
+   * The funnel normally reads the full record from `/v1/me/score` instead. This is
+   * the fallback for an account that endpoint answers QUIZ_OUTDATED for — see
+   * `storedScoreOf`.
+   *
+   * The number arrives as `live`, which is what the API actually serves (the app
+   * verified it against the live API); `total_score` is the name the collection
+   * documents, kept as a fallback the way the app keeps it.
+   */
+  score: {
+    live?: number;
+    total_score?: number;
+    band: string;
+    computed_at: string;
+    breakdown?: { quiz?: QuizFactor[] };
+  } | null;
 };
 
 /** For a server component's render. Throws `SessionUnavailable` rather than refreshing. */
@@ -38,6 +54,26 @@ export const readMe = () => readAsUser<Me>("GET", "/v1/me");
 
 /** For a route handler, which may refresh and persist the rotated pair. */
 export const fetchMe = () => callAsUser<Me>("GET", "/v1/me");
+
+/**
+ * The score already on this account, or null when it has none.
+ *
+ * What an account whose quiz was answered against a retired version is shown, rather
+ * than a score recomputed from the web quiz: `/v1/me/score` has no record for it,
+ * but the account still carries the number it had — the same number the app's Home
+ * screen falls back to. No breakdown is guaranteed here, so the result screen leaves
+ * out its risk-factor card when there are none.
+ */
+export function storedScoreOf(me: Me): DisplayedScore | null {
+  const stored = me.score;
+  const live = stored?.live ?? stored?.total_score;
+  if (!stored || typeof live !== "number" || !Number.isFinite(live)) return null;
+  return {
+    live,
+    band: stored.band,
+    breakdown: { quiz: stored.breakdown?.quiz ?? [] },
+  };
+}
 
 /** The display name for the result screen. Falls back rather than rendering "null". */
 export function firstNameOf(me: Me): string {

@@ -64,9 +64,21 @@ export type ScoreEnvelope = {
   scope_note: string;
 };
 
+/**
+ * The part of a score the result screen and the share poster actually read.
+ *
+ * Narrower than `Score` on purpose. The screen usually renders `GET /v1/me/score`,
+ * but an account whose quiz was answered against a retired version gets no record
+ * there — it is shown the score stored on its account instead, which `GET /v1/me`
+ * carries without most of these fields. Both fit this.
+ */
+export type DisplayedScore = Pick<Score, "live" | "band"> & {
+  breakdown: Pick<Score["breakdown"], "quiz">;
+};
+
 /** What the result screen renders: the envelope plus who is looking at it. */
 export type ScoreRecord = {
-  score: Score;
+  score: DisplayedScore;
   scopeNote: string;
   /** From `GET /v1/me`, not from a cookie — the person record is the one source. */
   firstName: string;

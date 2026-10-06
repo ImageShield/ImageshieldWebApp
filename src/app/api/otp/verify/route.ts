@@ -7,7 +7,7 @@ import { saveLead } from "@/lib/quiz-save";
 import { allow } from "@/lib/rate-limit";
 import { verifyOtp } from "@/lib/v1/auth";
 import { ApiFailure } from "@/lib/v1/errors";
-import { fetchMe, type Me } from "@/lib/v1/me";
+import { fetchMe, storedScoreOf, type Me } from "@/lib/v1/me";
 
 /**
  * POST /api/otp/verify — { code }
@@ -152,9 +152,13 @@ export async function POST(request: Request) {
     returningAppUser: Boolean(
       me?.onboarding.enrolled || me?.onboarding.photos_uploaded,
     ),
-    /* Already answered the quiz on another device or in the app. The OTP screen does
-       not branch on it yet; it is here so "take the quiz" can become "see your score"
-       without another round trip. */
-    quizAlreadyTaken: Boolean(me?.onboarding.quiz_completed),
+    /* Already answered the quiz on another device or in the app — or carrying a score
+       from a quiz version since retired, which keeps that score all the same. The OTP
+       screen sends such an account straight to its score instead of to /calculating.
+       A hint, not the guard: false whenever /v1/me couldn't be read, which is why
+       `/api/quiz` makes the same check against the record before it writes anything. */
+    quizAlreadyTaken:
+      me !== null &&
+      (me.onboarding.quiz_completed === true || storedScoreOf(me) !== null),
   });
 }

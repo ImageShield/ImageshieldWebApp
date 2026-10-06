@@ -98,7 +98,11 @@ export function OtpForm() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ code: entered }),
         });
-        const body = (await res.json()) as { error?: string; blocked?: boolean };
+        const body = (await res.json()) as {
+          error?: string;
+          blocked?: boolean;
+          quizAlreadyTaken?: boolean;
+        };
 
         if (!res.ok) {
           /* The number is serving a deletion cooldown. This arrives AFTER the code
@@ -127,7 +131,16 @@ export function OtpForm() {
           return;
         }
 
-        router.push(nextPath("otp") ?? STEP_PATHS.landing);
+        /* An account that already took the quiz — in the app, or here before — has
+           a score, and the answers in this tab are not going to replace it. So it
+           skips the loader and reads its score. Only a shortcut: `/api/quiz` refuses
+           the overwrite on its own, which is what covers a verify that couldn't read
+           the account and so reported false. */
+        router.push(
+          body.quizAlreadyTaken === true
+            ? STEP_PATHS.score
+            : (nextPath("otp") ?? STEP_PATHS.landing),
+        );
       } catch {
         setError("We couldn't reach the server. Check your connection.");
         submitted.current = undefined;

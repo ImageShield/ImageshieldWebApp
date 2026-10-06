@@ -13,7 +13,10 @@ vi.mock("@/lib/session", () => ({
 vi.mock("@/lib/quiz-save", () => ({ saveLead: vi.fn() }));
 vi.mock("@/lib/rate-limit", () => ({ allow: () => true }));
 vi.mock("@/lib/v1/auth", () => ({ verifyOtp: vi.fn() }));
-vi.mock("@/lib/v1/me", () => ({ fetchMe: vi.fn() }));
+vi.mock("@/lib/v1/me", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/v1/me")>()),
+  fetchMe: vi.fn(),
+}));
 
 const challenge: Challenge = {
   firstName: "Ada",
@@ -92,5 +95,42 @@ describe("POST /api/otp/verify", () => {
     const [sent] = vi.mocked(saveLead).mock.calls[0];
     expect(sent.ageConfirmed).toBe(false);
     expect(sent).not.toHaveProperty("dob");
+  });
+
+  /* What the OTP screen routes on: an account with a quiz on record goes to its score
+     rather than to the write on /calculating. */
+  describe("quizAlreadyTaken", () => {
+    it("is true for an account that has taken the quiz", async () => {
+      vi.mocked(readChallenge).mockResolvedValue(challenge);
+      vi.mocked(fetchMe).mockResolvedValue({
+        ...me,
+        onboarding: { next_step: null, quiz_completed: true },
+      });
+
+      expect(await (await verify()).json()).toMatchObject({ quizAlreadyTaken: true });
+    });
+
+    /* A quiz answered against a retired version still leaves its score on the
+       account, and that account keeps it like any other. */
+    it("is true for an account carrying a stored score", async () => {
+      vi.mocked(readChallenge).mockResolvedValue(challenge);
+      vi.mocked(fetchMe).mockResolvedValue({
+        ...me,
+        onboarding: { next_step: null, quiz_completed: false },
+        score: { live: 74, band: "moderate risk", computed_at: "2026-07-01T00:00:00.000Z" },
+      });
+
+      expect(await (await verify()).json()).toMatchObject({ quizAlreadyTaken: true });
+    });
+
+    it("is false for an account that hasn't", async () => {
+      vi.mocked(readChallenge).mockResolvedValue(challenge);
+      vi.mocked(fetchMe).mockResolvedValue({
+        ...me,
+        onboarding: { next_step: "quiz", quiz_completed: false },
+      });
+
+      expect(await (await verify()).json()).toMatchObject({ quizAlreadyTaken: false });
+    });
   });
 });

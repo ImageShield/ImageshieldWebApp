@@ -212,10 +212,15 @@ export function ScoreResult({
         </DownloadPrompt>
 
         <div className="mt-6 flex flex-col gap-9 sm:mt-9 sm:gap-10">
-          <InsightCard
-            heading="The primary risk factors that determined your initial score"
-            rows={factorRows}
-          />
+          {/* Absent rather than empty: an account shown its stored score (a quiz
+              answered against a retired version) may come with no breakdown, and a
+              heading over nothing reads as a screen that failed to load. */}
+          {factorRows.length > 0 && (
+            <InsightCard
+              heading="The primary risk factors that determined your initial score"
+              rows={factorRows}
+            />
+          )}
           <InsightCard
             heading="General recommendations"
             rows={recommendations}

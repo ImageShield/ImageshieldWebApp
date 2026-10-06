@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { writeFunnel } from "@/lib/funnel-state";
 import { OtpForm } from "./OtpForm";
@@ -50,5 +50,33 @@ describe("OtpForm", () => {
     expect(replace).not.toHaveBeenCalled();
     enterCode();
     expect(fetchMock).toHaveBeenCalledWith("/api/otp/verify", expect.anything());
+  });
+
+  /* /calculating is where the answers in this tab are written. An account that
+     already has a score is not sent there: its score is read, not recomputed. */
+  describe("after a verified code", () => {
+    const verifiedWith = (body: unknown) =>
+      fetchMock.mockResolvedValue(new Response(JSON.stringify(body), { status: 200 }));
+
+    it("takes an account that has taken the quiz straight to its score", async () => {
+      writeFunnel({ phone: "+15551230000", answers: { age: "18-24" } });
+      verifiedWith({ ok: true, quizAlreadyTaken: true });
+      render(<OtpForm />);
+
+      enterCode();
+
+      await waitFor(() => expect(push).toHaveBeenCalledWith("/score"));
+      expect(push).not.toHaveBeenCalledWith("/calculating");
+    });
+
+    it("sends a new account on to be scored", async () => {
+      writeFunnel({ phone: "+15551230000", answers: { age: "18-24" } });
+      verifiedWith({ ok: true, quizAlreadyTaken: false });
+      render(<OtpForm />);
+
+      enterCode();
+
+      await waitFor(() => expect(push).toHaveBeenCalledWith("/calculating"));
+    });
   });
 });

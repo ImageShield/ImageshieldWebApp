@@ -89,3 +89,6 @@ export const submitQuizResponses = (
  * only way to a current score is to take it again.
  */
 export const readScore = () => readAsUser<ScoreEnvelope>("GET", "/v1/me/score");
+
+/** The same read, for a route handler, which may refresh and persist the rotated pair. */
+export const fetchScore = () => callAsUser<ScoreEnvelope>("GET", "/v1/me/score");

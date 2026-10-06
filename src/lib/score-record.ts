@@ -4,7 +4,7 @@ import { handoffFor, type Handoff } from "./handoff";
 import type { ScoreEnvelope, ScoreRecord } from "./score";
 import { SessionUnavailable } from "./session";
 import { ApiFailure } from "./v1/errors";
-import { firstNameOf, readMe } from "./v1/me";
+import { firstNameOf, readMe, storedScoreOf, type Me } from "./v1/me";
 import { readScore } from "./v1/quiz";
 
 /**
@@ -32,8 +32,8 @@ export type ScoreLoad =
         | "stale"
         /** Authenticated, no quiz response stored — the answers never landed. */
         | "missing"
-        /** Answered against a quiz version the server has retired. Only a retake
-         *  produces a current score; there is nothing to retry. */
+        /** Answered against a quiz version the server has retired, AND the account
+         *  has no stored score to show instead. Only a retake produces one. */
         | "outdated"
         /** Answers are banked and the number isn't ready yet. Not a failure. */
         | "pending"
@@ -44,8 +44,17 @@ export type ScoreLoad =
 export async function loadScore(): Promise<ScoreLoad> {
   try {
     /* In parallel: neither depends on the other, and this pair is the whole render.
-       A failure in either lands in the same catch, and the codes below say which. */
-    const [me, envelope] = await Promise.all([readMe(), readScore()]);
+       A failure in either lands in the same catch, and the codes below say which —
+       except QUIZ_OUTDATED, which comes back as null so the account read beside it
+       can answer it. */
+    const [me, envelope] = await Promise.all([
+      readMe(),
+      readScore().catch((error: unknown) => {
+        if (error instanceof ApiFailure && error.code === "QUIZ_OUTDATED") return null;
+        throw error;
+      }),
+    ]);
+    if (envelope === null) return resolveOutdated(me);
     return resolve(firstNameOf(me), envelope);
   } catch (error) {
     if (error instanceof SessionUnavailable) {
@@ -55,7 +64,6 @@ export async function loadScore(): Promise<ScoreLoad> {
       /* The one read allowed to 404 on emptiness, and it names the emptiness rather
          than leaving the status to be interpreted. */
       if (error.code === "NO_QUIZ_RESPONSE") return { ok: false, reason: "missing" };
-      if (error.code === "QUIZ_OUTDATED") return { ok: false, reason: "outdated" };
       console.error("score fetch failed", error.code, error.message);
       return { ok: false, reason: "unavailable" };
     }
@@ -83,6 +91,26 @@ function resolve(firstName: string, envelope: ScoreEnvelope): ScoreLoad {
       scopeNote: envelope.scope_note,
       firstName,
     },
+    handoff: handoffFor(),
+  };
+}
+
+/**
+ * A quiz answered against a retired version: `/v1/me/score` has no record, so the
+ * account's own stored score is shown — the one the app shows — rather than sending
+ * the visitor to retake the quiz and replacing it.
+ *
+ * No `scope_note` comes with it (that is attached to `/v1/me/score` answers only), and
+ * none is invented here; the screen simply shows none. Only an account with no
+ * number at all is still sent to retake.
+ */
+function resolveOutdated(me: Me): ScoreLoad {
+  const stored = storedScoreOf(me);
+  if (stored === null) return { ok: false, reason: "outdated" };
+
+  return {
+    ok: true,
+    record: { score: stored, scopeNote: "", firstName: firstNameOf(me) },
     handoff: handoffFor(),
   };
 }

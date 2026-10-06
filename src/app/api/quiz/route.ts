@@ -1,6 +1,6 @@
 import { declaresMinor, validateAnswers } from "@/lib/quiz";
 import { noteVersionDrift, readLiveQuizDefinition } from "@/lib/quiz-definition";
-import { saveQuizAnswers } from "@/lib/quiz-save";
+import { hasScoreOnRecord, saveQuizAnswers } from "@/lib/quiz-save";
 import { allowPerIp } from "@/lib/rate-limit";
 import { readSession, SessionUnavailable } from "@/lib/session";
 import { presentableFailure } from "@/lib/v1/errors";
@@ -25,6 +25,11 @@ import { presentableFailure } from "@/lib/v1/errors";
  *
  * Nothing in the body says whose record this is. It cannot: the API takes the person
  * from the bearer token.
+ *
+ * And it never replaces a score that is already there. The questions come before the
+ * phone number, so an app user who signs in here arrives holding a fresh set of web
+ * answers; this route is the one place that can refuse to post them over the record,
+ * whatever the screens in front of it decided. See `hasScoreOnRecord`.
  */
 export async function POST(request: Request) {
   /* Cheap pre-check so a signed-out browser is turned away without a round trip.
@@ -57,6 +62,33 @@ export async function POST(request: Request) {
       { status: 429 },
     );
   }
+
+  /* Before the definition is read or the answers judged: an account that already has
+     a score keeps it, and the answers in this tab are simply not used. Judging them
+     first would turn an app user's leftover answers into a "quiz has been updated"
+     retake, for a quiz that was never going to be written. `kept` is there for logs
+     and tests; the screen goes on to /score either way, which shows the account's
+     own score — the stored one, for a quiz answered against a retired version.
+
+     A failed read stops the write rather than guessing — it is the visitor's real
+     score on the line, and "Try again" on /calculating costs them nothing. */
+  let hasScore: boolean;
+  try {
+    hasScore = await hasScoreOnRecord();
+  } catch (error) {
+    if (error instanceof SessionUnavailable) {
+      return Response.json(
+        { error: "Your session expired. Start again." },
+        { status: 401 },
+      );
+    }
+    console.error("score read before the quiz write failed", (error as Error).message);
+    return Response.json(
+      { error: "We couldn't check your score just now. Please try again." },
+      { status: 502 },
+    );
+  }
+  if (hasScore) return Response.json({ ok: true, kept: true });
 
   /* Re-read rather than trusting the version the client sent. The screen that rendered
      these questions rendered them from this repo's own copy, so the client's version

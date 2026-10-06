@@ -2,9 +2,10 @@ import "server-only";
 
 import type { QuizAnswers } from "./quiz";
 import type { ScoreEnvelope } from "./score";
-import type { Me } from "./v1/me";
+import { ApiFailure } from "./v1/errors";
+import { fetchMe, storedScoreOf, type Me } from "./v1/me";
 import { patchProfile, setEmail, SYNTHETIC_ADULT_DOB } from "./v1/profile";
-import { submitQuizResponses } from "./v1/quiz";
+import { fetchScore, submitQuizResponses } from "./v1/quiz";
 
 /**
  * The funnel's two writes onto the person record — the score, and the lead behind it.
@@ -17,6 +18,41 @@ import { submitQuizResponses } from "./v1/quiz";
  * routes go through these two functions so there is one definition of what the
  * funnel puts on the record.
  */
+
+/**
+ * Whether the account already has a score the funnel must not replace.
+ *
+ * The funnel asks its questions before the phone number, so EVERY visitor arrives at
+ * the write holding answers — including someone who took the quiz in the app months
+ * ago. Posting those over their record recomputes the account's score from a web
+ * quiz, and that recompute is what the app then shows them too. So the account
+ * decides, never the answers in the tab, and the rule is the simple one: an account
+ * that has a score keeps it, and only one with none is scored from the web quiz.
+ *
+ *   200                    a response is on record. Usually a score; `score: null`
+ *                          is answers banked and the number still being worked out,
+ *                          which is on record just the same. True.
+ *   404 NO_QUIZ_RESPONSE   nothing to keep: a new account. False.
+ *   404 QUIZ_OUTDATED      answered against a retired quiz version. There is no
+ *                          current record, but the account still carries the score
+ *                          it had — see `storedScoreOf` — and that is the one it is
+ *                          shown. True when it has one; false only when it has no
+ *                          number at all, which leaves nothing to show but a new one.
+ *
+ * Anything else throws. A read that failed says nothing about the record, and
+ * guessing "empty" on a blip would overwrite a real score.
+ */
+export async function hasScoreOnRecord(): Promise<boolean> {
+  try {
+    await fetchScore();
+    return true;
+  } catch (error) {
+    if (!(error instanceof ApiFailure)) throw error;
+    if (error.code === "NO_QUIZ_RESPONSE") return false;
+    if (error.code === "QUIZ_OUTDATED") return storedScoreOf(await fetchMe()) !== null;
+    throw error;
+  }
+}
 
 /**
  * Scores the answers onto the person record.
