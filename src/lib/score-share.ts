@@ -15,16 +15,19 @@ import { bandLabel, riskLevelOf } from "./score";
 
 /**
  * Where the shared link sends people: the deployed funnel, which is the one page
- * that can give a recipient a score of their own. The app's `QUIZ_URL` is this same
- * address, so a score shared from either one links to the same place.
+ * that can give a recipient a score of their own. The app's `QUIZ_URL` should be
+ * this same address, so a score shared from either one links to the same place.
+ * It is also the origin of the QR's `/get-app` — see `GET_APP_URL`.
  *
  * Configured rather than read off the address bar. The page a visitor shares from
  * isn't necessarily one a recipient can open — in development it is localhost, and a
  * preview deployment is a throwaway URL — and the link outlives the visit. Set
- * `NEXT_PUBLIC_SHARE_URL` when the funnel moves to its branded domain.
+ * `NEXT_PUBLIC_SHARE_URL` if the funnel moves again: it was
+ * `imageshield-web-app.vercel.app` until that deployment was taken down, and every
+ * link and QR built on it went to Vercel's DEPLOYMENT_NOT_FOUND.
  */
 export const SHARE_URL =
-  process.env.NEXT_PUBLIC_SHARE_URL?.trim() || "https://imageshield-web-app.vercel.app";
+  process.env.NEXT_PUBLIC_SHARE_URL?.trim() || "https://quiz.imageshield.com";
 
 /** The name the picture is saved and shared under. */
 export const POSTER_FILENAME = "likeness-health-score.png";
