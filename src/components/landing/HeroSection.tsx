@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { ShimmerImage } from "@/components/ShimmerImage";
+import { appQrSvg } from "@/lib/app-qr";
 import { STORE_LINKS } from "@/lib/site-nav";
 import { HeroNav } from "./HeroNav";
 import { Star } from "./icons";
@@ -38,7 +39,11 @@ import { Star } from "./icons";
  * narrower frame, and this one would not survive the narrowing anyway — at 390 the
  * picture's left edge lands at x 48 and the headline would be set across her face.
  */
-export function HeroSection() {
+export async function HeroSection() {
+  /* Drawn at build — the page is static — from the same source as the result
+     screen's code. No margin: the plate below is the quiet zone. */
+  const qr = await appQrSvg({ margin: 0 });
+
   return (
     <section className="relative isolate overflow-hidden bg-night xl:min-h-[848px]">
       <div className="absolute inset-0 xl:top-auto xl:right-[max(-332px,-23.06%)] xl:bottom-0 xl:left-auto xl:h-[110.97%] xl:w-[min(110.69%,1594px)]">
@@ -139,8 +144,8 @@ export function HeroSection() {
                 above the plate — the label included — a pixel off the design. */}
             <div className="flex size-[97px] shrink-0 items-center justify-center rounded-2xl border border-line bg-white">
               <Image
-                src="/media/qr-download.svg"
-                alt="Scan to open imageshield.com"
+                src={`data:image/svg+xml,${encodeURIComponent(qr)}`}
+                alt="QR code to get the ImageShield app"
                 width={73}
                 height={73}
                 className="size-[73px]"

@@ -10,11 +10,9 @@ import { HandoffQr } from "./HandoffQr";
  * right-hand block, so that block lives here rather than being written out twice and
  * drifting.
  *
- * The QR comes from `/api/handoff/qr`, a route handler that builds it from the
- * session cookie. It is deliberately NOT `next/image`: the code is generated per
- * visitor and must never be cached, which is exactly what `next/image` would do.
- * That, and the wait it implies, is why it has a component of its own — see
- * `HandoffQr`.
+ * The QR comes from `/api/handoff/qr` and points at `/get-app`, which sends the
+ * scanning phone to whichever of these two stores it uses. It has a component of
+ * its own for the loading and failure states — see `HandoffQr`.
  */
 export function DownloadPrompt({
   handoff,

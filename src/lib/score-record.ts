@@ -46,7 +46,7 @@ export async function loadScore(): Promise<ScoreLoad> {
     /* In parallel: neither depends on the other, and this pair is the whole render.
        A failure in either lands in the same catch, and the codes below say which. */
     const [me, envelope] = await Promise.all([readMe(), readScore()]);
-    return resolve(me.account.phone_e164, firstNameOf(me), envelope);
+    return resolve(firstNameOf(me), envelope);
   } catch (error) {
     if (error instanceof SessionUnavailable) {
       return { ok: false, reason: error.reason };
@@ -69,11 +69,7 @@ export async function loadScore(): Promise<ScoreLoad> {
   }
 }
 
-function resolve(
-  phone: string,
-  firstName: string,
-  envelope: ScoreEnvelope,
-): ScoreLoad {
+function resolve(firstName: string, envelope: ScoreEnvelope): ScoreLoad {
   /* 200 with `score: null` means the answers are in and the number is still being
      computed. The legacy backend had no such state — it scored synchronously — so
      this is new, and it is emphatically not "missing": re-posting the answers would
@@ -87,6 +83,6 @@ function resolve(
       scopeNote: envelope.scope_note,
       firstName,
     },
-    handoff: handoffFor(phone),
+    handoff: handoffFor(),
   };
 }

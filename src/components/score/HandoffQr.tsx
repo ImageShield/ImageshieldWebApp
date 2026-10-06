@@ -5,18 +5,16 @@ import { useCallback, useState } from "react";
 /**
  * The QR code on the result screen, with a shimmering plate until it arrives.
  *
- * The slowest single thing on this page, and the only one still outstanding
- * once the server has finished rendering: `/api/handoff/qr` calls `GET /v1/me`
- * for the visitor's own number and then draws the code from it, so it is a
- * fresh round trip to the API every time, never cached anywhere. The two store
- * badges beside it come off this origin, so they land first — which is exactly
- * the arrangement that makes the empty square read as broken rather than slow.
+ * `/api/handoff/qr` is drawn once at build time and is the same for everyone —
+ * it points at `/get-app` — so it usually lands with the badges beside it. The
+ * plate and the failure line below are for the slow network and the failed
+ * request, where an empty square would read as broken.
  *
- * Deliberately NOT `next/image`, which is why this exists at all rather than
- * reaching for `ShimmerImage`: the code is per-visitor and must never be
- * cached, and the optimizer's whole job is caching. A plain `<img>` also means
- * the cached-image guarantee `next/image` provides has to be written by hand —
- * see `settle` below.
+ * A plain `<img>` rather than `next/image` (and so not `ShimmerImage`): the
+ * optimizer refuses SVG unless `dangerouslyAllowSVG` is switched on site-wide,
+ * and a vector code gains nothing from resizing anyway. That means the
+ * cached-image guarantee `next/image` provides has to be written by hand — see
+ * `settle` below.
  *
  * The placeholder sits UNDER the code rather than over it, for the reason
  * `ShimmerImage` sets out at length: an `<img>` paints nothing until it has
@@ -66,7 +64,7 @@ export function HandoffQr({
       {/* eslint-disable-next-line @next/next/no-img-element -- see the note above. */}
       <img
         src="/api/handoff/qr"
-        alt="QR code to open ImageShield"
+        alt="QR code to get the ImageShield app"
         width={120}
         height={120}
         ref={settle}
