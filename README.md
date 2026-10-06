@@ -122,6 +122,20 @@ Two things worth knowing before changing this layer:
   enough to be shared would be one visitor's authenticated response served to another.
   The transport has no opt-out.
 
+## Deploying
+
+`https://quiz.imageshield.com` is AWS Amplify app `d6eodb6vvn015` in us-east-1, pointed
+at the production API. **Every push to `main` builds and goes live in a few minutes.**
+The build is `amplify.yml`.
+
+Env vars live in the Amplify console under Hosting → Environment variables, never in this
+repo, since it is public. Amplify hands them to the build only, so a new server-side
+variable (one read through `process.env` at runtime) also has to be added to the
+`.env.production` line in `amplify.yml`, or the running site never sees it.
+`NEXT_PUBLIC_*` values are inlined at build time and need nothing extra. Changing a
+variable takes effect on the next deploy; redeploy `main` from the console to apply one
+without a push.
+
 ## Still open
 
 - Real App Store URL (`.env.example` has a placeholder).

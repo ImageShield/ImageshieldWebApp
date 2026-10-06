@@ -1,0 +1,32 @@
+# AWS Amplify build for quiz.imageshield.com (app d6eodb6vvn015, us-east-1).
+# While this file exists, Amplify uses it instead of the console's build settings.
+#
+# Env vars are set in the Amplify console (Hosting -> Environment variables), never here:
+# this repo is public. They reach the BUILD only. So:
+#   - NEXT_PUBLIC_* values are inlined at build time and need nothing more.
+#   - A server-side value (read via process.env at runtime, like src/lib/env.ts does)
+#     must also be added to the grep list below, or the running site never sees it.
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        # Next 16 needs Node >= 20.9, and Amplify runs the server on the Node major the build used.
+        - nvm install 22 && nvm use 22
+        - node --version
+        # `npm install`, not `npm ci`: package-lock.json is missing @emnapi/core and
+        # @emnapi/runtime, so `npm ci` refuses it. Switch back once the lockfile is regenerated.
+        - npm install --no-audit --no-fund
+    build:
+      commands:
+        # Server-side env vars: add new ones to this list.
+        - env | grep -E '^(IMAGESHIELD_API_URL|FUNNEL_SECRET|TRUSTED_PROXY_HOPS)=' >> .env.production
+        - npm run build
+  artifacts:
+    baseDirectory: .next
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+      - .next/cache/**/*
