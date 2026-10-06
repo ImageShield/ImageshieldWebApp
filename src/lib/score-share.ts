@@ -54,10 +54,14 @@ export function linkLabel(url: string): string {
  * Two paragraphs, each held as the lines the poster breaks it into: neither fits
  * the canvas on one line, and centred text left to wrap strands a word or two on a
  * line of its own. The caption joins each paragraph's lines back into a sentence.
+ *
+ * The name carries its ℠ here as everywhere it is printed. The caption sends the
+ * character as is; the poster's font has no glyph for it, so the poster sets it
+ * as a raised "SM" — see `Marked` in the score-card route.
  */
 export const SHARE_PITCH = [
   ["Are you a victim of image abuse?", "1 in 5 Americans are."],
-  ["Get your free Likeness Health Score", "and find out."],
+  ["Get your free Likeness Health Score℠", "and find out."],
 ] as const;
 
 /**

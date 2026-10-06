@@ -63,6 +63,28 @@ const LEGEND = [
  */
 const topFor = (baseline: number, size: number) => baseline - 0.908 * size;
 
+/**
+ * A line of text whose ℠ is drawn the way the card title draws its own: the font
+ * has no ℠ glyph, so the mark is "SM" at 7/16 of the text's size on a line half as
+ * tall, which a flex row hangs from the top of the line — a superscript. The
+ * caller's div sets the size and weight; these are the numbers it set them to.
+ */
+function Marked({ text, size, lineHeight }: { text: string; size: number; lineHeight: number }) {
+  const at = text.indexOf("℠");
+  if (at === -1) return <div style={{ display: "flex" }}>{text}</div>;
+
+  const after = text.slice(at + 1);
+  return (
+    <div style={{ display: "flex" }}>
+      {text.slice(0, at)}
+      <span style={{ fontSize: (size * 7) / 16, lineHeight: `${lineHeight / 2}px`, marginLeft: px(1) }}>
+        SM
+      </span>
+      {after ? after : null}
+    </div>
+  );
+}
+
 const UNAVAILABLE: Record<string, number> = {
   "signed-out": 401,
   stale: 401,
@@ -243,7 +265,7 @@ export async function GET() {
           {/* Broken by hand, as the app breaks it: left to wrap, the sentence
               strands "out" at the end of the first line. */}
           <div style={{ display: "flex", fontSize: px(22), lineHeight: `${px(30)}px`, fontWeight: 700 }}>
-            My Likeness Health Score
+            <Marked text="My Likeness Health Score℠" size={px(22)} lineHeight={px(30)} />
           </div>
           <div style={{ display: "flex", fontSize: px(22), lineHeight: `${px(30)}px`, fontWeight: 700 }}>
             {`is ${score.live} out of 100.`}
@@ -273,9 +295,7 @@ export async function GET() {
                 }}
               >
                 {lines.map((line) => (
-                  <div key={line} style={{ display: "flex" }}>
-                    {line}
-                  </div>
+                  <Marked key={line} text={line} size={px(15)} lineHeight={px(22)} />
                 ))}
               </div>
             ))}
