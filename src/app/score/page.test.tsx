@@ -62,6 +62,7 @@ const QUIZ_OUTDATED = new ApiFailure(
   null,
   null,
 );
+const NO_QUIZ_RESPONSE = new ApiFailure(404, "NO_QUIZ_RESPONSE", "no quiz response yet", null, null);
 
 /** What the two reads answer; a test swaps either. */
 let answers: { me: unknown; score: ScoreEnvelope | ApiFailure };
@@ -127,5 +128,31 @@ describe("/score", () => {
     await ScorePage();
 
     expect(redirect).toHaveBeenCalledWith("/quiz/questions");
+  });
+
+  /* /v1/me carries a score while /v1/me/score has no response for it. Rendering the
+     resume here would post this tab's answers over that score, so the stored one is
+     shown instead — the same answer `/api/quiz` gives. */
+  it("shows the account's stored score when /v1/me/score has no response for it", async () => {
+    answers = {
+      me: { ...ME, score: { live: 81, band: "low risk", computed_at: "2026-09-12T00:00:00.000Z" } },
+      score: NO_QUIZ_RESPONSE,
+    };
+
+    render(await ScorePage());
+
+    expect(
+      screen.getByRole("img", { name: "Likeness Health Score 81 out of 100 — low risk" }),
+    ).toBeTruthy();
+    expect(screen.queryByText(/Finishing your Likeness Health Score/)).toBeNull();
+  });
+
+  it("still resumes the write for an account with no score anywhere", async () => {
+    answers = { me: { ...ME, score: null }, score: NO_QUIZ_RESPONSE };
+
+    render(await ScorePage());
+
+    expect(screen.getByText(/Finishing your Likeness Health Score/)).toBeTruthy();
+    expect(screen.queryByRole("img", { name: /Likeness Health Score \d+ out of 100/ })).toBeNull();
   });
 });

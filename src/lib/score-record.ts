@@ -30,7 +30,8 @@ export type ScoreLoad =
         /** There is a session, but its access token needs rotating and a render
          *  cannot write cookies. One POST to /api/session/refresh fixes it. */
         | "stale"
-        /** Authenticated, no quiz response stored — the answers never landed. */
+        /** Authenticated, no quiz response stored and no score on the account — the
+         *  answers never landed. */
         | "missing"
         /** Answered against a quiz version the server has retired, AND the account
          *  has no stored score to show instead. Only a retake produces one. */
@@ -45,26 +46,27 @@ export async function loadScore(): Promise<ScoreLoad> {
   try {
     /* In parallel: neither depends on the other, and this pair is the whole render.
        A failure in either lands in the same catch, and the codes below say which —
-       except QUIZ_OUTDATED, which comes back as null so the account read beside it
-       can answer it. */
+       except the two 404s that mean "no current response", which come back as their
+       code so the account read beside it can answer them. */
     const [me, envelope] = await Promise.all([
       readMe(),
       readScore().catch((error: unknown) => {
-        if (error instanceof ApiFailure && error.code === "QUIZ_OUTDATED") return null;
+        if (
+          error instanceof ApiFailure &&
+          (error.code === "NO_QUIZ_RESPONSE" || error.code === "QUIZ_OUTDATED")
+        ) {
+          return error.code;
+        }
         throw error;
       }),
     ]);
-    if (envelope === null) return resolveOutdated(me);
+    if (typeof envelope === "string") return resolveFromAccount(me, envelope);
     return resolve(firstNameOf(me), envelope);
   } catch (error) {
     if (error instanceof SessionUnavailable) {
       return { ok: false, reason: error.reason };
     }
     if (error instanceof ApiFailure) {
-      /* The one read allowed to 404 on emptiness, and it names the emptiness rather
-         than leaving the status to be interpreted. */
-      if (error.code === "NO_QUIZ_RESPONSE") return { ok: false, reason: "missing" };
-      console.error("score fetch failed", error.code, error.message);
       return { ok: false, reason: "unavailable" };
     }
 
@@ -96,17 +98,25 @@ function resolve(firstName: string, envelope: ScoreEnvelope): ScoreLoad {
 }
 
 /**
- * A quiz answered against a retired version: `/v1/me/score` has no record, so the
- * account's own stored score is shown — the one the app shows — rather than sending
- * the visitor to retake the quiz and replacing it.
+ * `/v1/me/score` has no current response — never taken (NO_QUIZ_RESPONSE), or
+ * answered against a retired version (QUIZ_OUTDATED). If the account still carries a
+ * score, that is what is shown, rather than resuming the write or sending the visitor
+ * to retake the quiz, either of which would replace it. `/api/quiz` makes the same
+ * call through `hasScoreOnRecord`, so this screen never resumes a write that route
+ * would refuse.
  *
  * No `scope_note` comes with it (that is attached to `/v1/me/score` answers only), and
  * none is invented here; the screen simply shows none. Only an account with no
- * number at all is still sent to retake.
+ * number at all goes on to resume (`missing`) or retake (`outdated`).
  */
-function resolveOutdated(me: Me): ScoreLoad {
+function resolveFromAccount(
+  me: Me,
+  code: "NO_QUIZ_RESPONSE" | "QUIZ_OUTDATED",
+): ScoreLoad {
   const stored = storedScoreOf(me);
-  if (stored === null) return { ok: false, reason: "outdated" };
+  if (stored === null) {
+    return { ok: false, reason: code === "QUIZ_OUTDATED" ? "outdated" : "missing" };
+  }
 
   return {
     ok: true,

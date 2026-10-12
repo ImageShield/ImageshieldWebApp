@@ -220,6 +220,23 @@ describe("POST /api/quiz", () => {
       expect(await res.json()).toStrictEqual({ ok: true, kept: true });
       expect(submitQuizResponses).not.toHaveBeenCalled();
     });
+
+    /* The two reads disagree: /v1/me carries a score while /v1/me/score has no
+       response for it. Verify already sent this account to /score on the strength of
+       that number, and the score screen's resume posts here — so this is the check
+       that stops it being written over. */
+    it("keeps the score /v1/me carries when /v1/me/score has no response", async () => {
+      vi.mocked(fetchScore).mockRejectedValue(NO_QUIZ_RESPONSE);
+      vi.mocked(fetchMe).mockResolvedValue(
+        meWith({ live: 81, band: "low risk", computed_at: "2026-09-12T00:00:00.000Z" }),
+      );
+
+      const res = await post(LIVE, answersFor(LIVE, "18-24"));
+
+      expect(res.status).toBe(200);
+      expect(await res.json()).toStrictEqual({ ok: true, kept: true });
+      expect(submitQuizResponses).not.toHaveBeenCalled();
+    });
   });
 
   describe("an account with no score at all", () => {

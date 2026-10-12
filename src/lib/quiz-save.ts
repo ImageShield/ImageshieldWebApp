@@ -32,12 +32,19 @@ import { fetchScore, submitQuizResponses } from "./v1/quiz";
  *   200                    a response is on record. Usually a score; `score: null`
  *                          is answers banked and the number still being worked out,
  *                          which is on record just the same. True.
- *   404 NO_QUIZ_RESPONSE   nothing to keep: a new account. False.
- *   404 QUIZ_OUTDATED      answered against a retired quiz version. There is no
- *                          current record, but the account still carries the score
- *                          it had — see `storedScoreOf` — and that is the one it is
- *                          shown. True when it has one; false only when it has no
- *                          number at all, which leaves nothing to show but a new one.
+ *   404 NO_QUIZ_RESPONSE   no current response. The account decides — see below.
+ *   404 QUIZ_OUTDATED      answered against a retired quiz version; no current
+ *                          response either. Same as above.
+ *
+ * For both 404s, `/v1/me` is asked whether the account still carries a number
+ * (`storedScoreOf`). True when it does: that number is what verify routed the visitor
+ * on, what the score screen shows, and what posting here would replace. False only
+ * when neither read has a score, which is a new account.
+ *
+ * NO_QUIZ_RESPONSE used to be taken at its word. But `/v1/me` can hold a score that
+ * `/v1/me/score` doesn't answer for (the app documents that read lagging a write), and
+ * verify sends such an account straight to /score. The score screen then found no
+ * response and resumed the write from there, and this said yes to it.
  *
  * Anything else throws. A read that failed says nothing about the record, and
  * guessing "empty" on a blip would overwrite a real score.
@@ -48,8 +55,9 @@ export async function hasScoreOnRecord(): Promise<boolean> {
     return true;
   } catch (error) {
     if (!(error instanceof ApiFailure)) throw error;
-    if (error.code === "NO_QUIZ_RESPONSE") return false;
-    if (error.code === "QUIZ_OUTDATED") return storedScoreOf(await fetchMe()) !== null;
+    if (error.code === "NO_QUIZ_RESPONSE" || error.code === "QUIZ_OUTDATED") {
+      return storedScoreOf(await fetchMe()) !== null;
+    }
     throw error;
   }
 }
