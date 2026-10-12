@@ -29,10 +29,11 @@
  *   - No route accepts an identifier saying whose data to touch. The bearer token
  *     is the only answer to that question.
  *
- * WHAT IT IS NOT: a scorer. The score is a fixed fixture with a plausible breakdown;
- * it does not vary with the answers. Nothing about how the funnel renders a score
- * depends on the number being derived, and inventing a second scoring implementation
- * is precisely the mistake the real API's docs warn about.
+ * WHAT IT IS NOT: a scorer. The number is a fixed fixture and does not vary with the
+ * answers. Nothing about how the funnel renders a score depends on the number being
+ * derived, and inventing a second scoring implementation is precisely the mistake the
+ * real API's docs warn about. The breakdown DOES carry the account's own answers,
+ * because the score screen builds its cards from them — see `scoreFor`.
  */
 import { createServer } from "node:http";
 import { readFileSync } from "node:fs";
@@ -53,6 +54,14 @@ const config = {
   pendingScore: process.env.DEV_API_PENDING_SCORE === "1",
   /** Fail the first quiz write, to reach the save-failed → resume recovery path. */
   failQuizOnce: process.env.DEV_API_FAIL_QUIZ_ONCE === "1",
+  /**
+   * `risk_factors` and `general_recommendations`, which the real API doesn't send yet:
+   *   unset     leave both out, as prod does today. The score screen builds its cards
+   *             from the answers instead (src/lib/local-insights).
+   *   empty     send both as [] — the API saying it has no research; both cards hide.
+   *   fixture   send the placeholder rows below, to see the API's own path.
+   */
+  insights: process.env.DEV_API_INSIGHTS ?? "absent",
 };
 
 /** A real `GET /v1/quiz` response, captured from the live API. Recapture it when the
@@ -91,7 +100,11 @@ const accountFor = (phone) => {
   return accounts.get(phone);
 };
 
-const scoreFor = () => ({
+/** What a field is sent as, if at all — see `config.insights`. */
+const insight = (rows) =>
+  config.insights === "fixture" ? rows : config.insights === "empty" ? [] : undefined;
+
+const scoreFor = (account) => ({
   live: config.score,
   band: config.band,
   baseline: 70,
@@ -100,28 +113,73 @@ const scoreFor = () => ({
   dynamic_deduction: 0,
   current_ceiling: 70,
   maximum_ceiling: 100,
-  scoring_version: "dev-0.3",
+  /* The scoring the evidence report pairs with this quiz.json (v17). */
+  scoring_version: "likeness-score-v17",
   quiz_version: quiz.quiz_version,
   computed_at: new Date().toISOString(),
   breakdown: {
-    /* One entry per SCORED question, which is what the real API returns — it had
-       four, and a breakdown missing half the quiz is not the contract. The result
-       screen pins its three cards to `age`, `gender` and `posting_volume`, so a stub
-       without those silently exercised the backfill path instead of the real one. */
-    quiz: [
-      { key: "privacy", value: "Public", deduction: 12, type: "exposure" },
-      { key: "platforms", value: "Instagram, TikTok", deduction: 8, type: "exposure" },
-      { key: "posting_volume", value: "High", deduction: 7, type: "exposure" },
-      { key: "gender", value: "Female", deduction: 6, type: "demographic" },
-      { key: "age", value: "25-34", deduction: 5, type: "demographic" },
-      { key: "content_type", value: "Regular content", deduction: 4, type: "exposure" },
-      { key: "monitoring", value: "I don't monitor", deduction: 3, type: "history" },
-      { key: "prior_misuse", value: "No", deduction: 0, type: "history" },
-    ],
+    /* One entry per answered question, carrying the account's own answer — the score
+       screen builds its cards from these. The deductions are placeholders, like the
+       number: this is not a scorer. A multi-select answer is echoed as the list it was
+       posted as; whether the real API sends a list or a joined string is unconfirmed,
+       and the screen reads both. */
+    quiz: Object.entries(account.answers ?? {}).map(([key, value]) => ({
+      key,
+      value,
+      deduction: 0,
+      type: "fixture",
+    })),
     dynamic: [],
     escrow: { next_milestone_days: 90 },
   },
+  risk_factors: insight(RISK_FACTORS),
 });
+
+/* Placeholder rows in the contract's shape — NOT copy. The real strings are drafted
+   from cited research and approved by an operator; nothing here is either, and none
+   of it may be lifted into src/. Chosen to reach every branch of the two cards: both
+   kinds of factor, and a link labelled, unlabelled and absent. */
+const RISK_FACTORS = [
+  {
+    kind: "quiz",
+    key: "age",
+    title: "Age",
+    line: "Dev fixture line for a quiz factor. The real one comes from the research.",
+    points: 9,
+  },
+  {
+    kind: "threat",
+    key: "evt_dev_0001",
+    title: "Live incident",
+    line: "Dev fixture line for a threat: a live incident affecting people who answered like you.",
+    points: 6,
+  },
+  {
+    kind: "quiz",
+    key: "posting_volume",
+    title: "Posting volume",
+    line: "Dev fixture line for a second quiz factor.",
+    points: 4,
+  },
+];
+
+const GENERAL_RECOMMENDATIONS = [
+  {
+    title: "Dev fixture recommendation with a labelled link",
+    body: "Placeholder body. The real one is one sentence drafted from a cited source.",
+    link: { url: "https://example.org/", label: "Example source" },
+  },
+  {
+    title: "Dev fixture recommendation with an unlabelled link",
+    body: "Placeholder body. Its link is named by the page's host instead.",
+    link: { url: "https://www.example.com/research", label: null },
+  },
+  {
+    title: "Dev fixture recommendation with no link",
+    body: "Placeholder body. No link is drawn under it.",
+    link: null,
+  },
+];
 
 const SCOPE_NOTE =
   "This score covers likeness-protection health in monitored sources. It is not a " +
@@ -325,20 +383,24 @@ const ROUTES = {
         }
       }
     }
-    accountFor(phone).answers = body.answers;
+    const account = accountFor(phone);
+    account.answers = body.answers;
     return send(res, 201, {
-      score: config.pendingScore ? null : scoreFor(),
+      score: config.pendingScore ? null : scoreFor(account),
       scope_note: SCOPE_NOTE,
+      general_recommendations: insight(GENERAL_RECOMMENDATIONS),
     });
   },
 
   "GET /v1/me/score": (req, res, body, phone) => {
-    if (accountFor(phone).answers === null) {
+    const account = accountFor(phone);
+    if (account.answers === null) {
       return fail(res, 404, "NO_QUIZ_RESPONSE", "no quiz response yet");
     }
     return send(res, 200, {
-      score: config.pendingScore ? null : scoreFor(),
+      score: config.pendingScore ? null : scoreFor(account),
       scope_note: SCOPE_NOTE,
+      general_recommendations: insight(GENERAL_RECOMMENDATIONS),
     });
   },
 };

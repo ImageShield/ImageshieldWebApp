@@ -1,42 +1,102 @@
 /**
- * "General recommendations" — the same two for every visitor, for now.
+ * "General recommendations" — served by the API, rendered as served.
  *
- * The backend is building the real thing: recommendations picked from what the
- * person actually answered and what monitoring has found. Until that lands there is
- * nothing on the score response to derive them from — `GET /v1/me/score` returns the
- * number, the band and the per-question breakdown, and that is all — so these are the
- * two the design draws, shown to everyone.
+ * `general_recommendations` sits at the top level of the score envelope, beside
+ * `scope_note`: at most three, already in the order they are meant to be read, and the
+ * same for every visitor. Every word was drafted from cited sources and approved by an
+ * operator, so nothing here rewrites, supplements or reorders them. A list with
+ * entries is shown as served; until the backend publishes research, an empty one is
+ * filled from the visitor's answers by ./local-insights instead (see `resolve` in
+ * ./score-record.ts) — never by copy written into the bundle.
  *
- * Worth being honest about what that costs while it lasts: a visitor whose accounts
- * are already private is told to make them private. The copy is therefore written as
- * general advice rather than as a claim about this person, which is the difference
- * between "keep your social media private" and "your accounts are public".
+ * This file used to BE the list — two recommendations written into the bundle and
+ * shown to everyone. Their copy was unsourced, so it went when the API took over
+ * rather than surviving as a fallback that would quietly reappear on an empty answer.
  *
- * When the API serves them, this file becomes the fallback for an empty response
- * rather than the source — `ScoreResult` already takes the list as a prop, so the
- * swap is in the page, not in the screen.
+ * Client-safe: the screen renders straight from it.
  */
-import { Lock, PlayBadge } from "@/components/funnel/icons";
 
-export type Recommendation = {
-  /** Stable id, so a served list can be keyed the same way this one is. */
-  id: string;
-  icon: (props: { className?: string }) => React.ReactElement;
-  title: string;
-  body: string;
+export type RecommendationLink = {
+  url: string;
+  /** Null when the research gave the page no name of its own — see `linkText`. */
+  label: string | null;
 };
 
-export const RECOMMENDATIONS: readonly Recommendation[] = [
-  {
-    id: "youtube-likeness-detection",
-    icon: PlayBadge,
-    title: "Sign up for YouTube's free likeness detection service",
-    body: "It's available to all adults and will monitor videos on YouTube for the use of your likeness.",
-  },
-  {
-    id: "private-accounts",
-    icon: Lock,
-    title: "Keep your social media private",
-    body: "Social media platforms sometimes change their settings, which might effect the privacy of your accounts.",
-  },
-];
+export type GeneralRecommendation = {
+  /** An instruction. Rendered as served. */
+  title: string;
+  /** One sentence. Rendered as served. */
+  body: string;
+  /** A page the research cited, opened in a new tab. */
+  link: RecommendationLink | null;
+};
+
+/**
+ * The served list, checked against the contract on its way in.
+ *
+ * Checked rather than trusted because `call<T>` types an answer by assertion, so this
+ * is the first place a missing field can surface — and unchecked it surfaces as a
+ * crash on `.map` for every visitor, if this ships ahead of the API. Anything but a
+ * list reads as none. An entry with no title or body is dropped rather than drawn as
+ * a blank row; one with a bad link keeps its words and loses only the link. Nothing
+ * is reordered.
+ */
+export function recommendationsFrom(raw: unknown): GeneralRecommendation[] {
+  if (!Array.isArray(raw)) {
+    console.warn("score response: general_recommendations is not a list; card hidden");
+    return [];
+  }
+
+  const kept: GeneralRecommendation[] = [];
+  for (const entry of raw) {
+    if (typeof entry !== "object" || entry === null) continue;
+    const { title, body, link } = entry as Record<string, unknown>;
+    if (!isFilled(title) || !isFilled(body)) continue;
+    kept.push({ title, body, link: linkFrom(link) });
+  }
+  if (kept.length < raw.length) {
+    console.warn(
+      `score response: dropped ${raw.length - kept.length} malformed general_recommendations`,
+    );
+  }
+  return kept;
+}
+
+/**
+ * The link, when it can be followed safely, else none.
+ *
+ * Absolute http(s) only. The string goes straight into an `href`: a relative one
+ * would resolve against quiz.imageshield.com and send the visitor somewhere on this
+ * site the research never cited, and a `javascript:` one would run in this origin.
+ */
+function linkFrom(raw: unknown): RecommendationLink | null {
+  if (typeof raw !== "object" || raw === null) return null;
+  const { url, label } = raw as Record<string, unknown>;
+  if (typeof url !== "string") return null;
+
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return null;
+  }
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return null;
+
+  /* A blank label is no label: it would draw a link with nothing to click or read. */
+  return { url: parsed.href, label: isFilled(label) ? label : null };
+}
+
+/**
+ * What the link says: the research's own name for the page, or else the page's host.
+ *
+ * The host rather than "Learn more" because a screen reader can list every link on
+ * the page out of context, and three "Learn more"s say nothing about where each goes.
+ * It is also the one wording that invents nothing.
+ */
+export function linkText(link: RecommendationLink): string {
+  return link.label ?? new URL(link.url).hostname.replace(/^www\./, "");
+}
+
+function isFilled(value: unknown): value is string {
+  return typeof value === "string" && value.trim() !== "";
+}

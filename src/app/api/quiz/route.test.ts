@@ -47,8 +47,19 @@ const LIVE: QuizDefinition = {
     { key: "gender", prompt: "What is your gender?", options: ["Female", "Male"] },
   ],
 };
-/* The repo's dev fixture, which still serves the older "13-17" band. */
+/* The repo's dev fixture: likeness-health-v17, captured from the dev API. */
 const FIXTURE = fixture as unknown as QuizDefinition;
+/* An older quiz's age band, which `declaresMinor` still refuses. */
+const OLDER: QuizDefinition = {
+  quiz_version: "likeness-health-v2",
+  questions: [
+    {
+      key: "age",
+      prompt: "What's your age?",
+      options: ["13-17", "18-24", "25-34", "35-44", "45-54", "55+"],
+    },
+  ],
+};
 
 /** A full set of answers to `definition`, with the given age. */
 function answersFor(definition: QuizDefinition, age: string): QuizAnswers {
@@ -120,10 +131,10 @@ describe("POST /api/quiz", () => {
       expect(submitQuizResponses).not.toHaveBeenCalled();
     });
 
-    it('rejects "13-17" from the dev fixture', async () => {
-      vi.mocked(readLiveQuizDefinition).mockResolvedValue(FIXTURE);
+    it('rejects "13-17" from an older quiz', async () => {
+      vi.mocked(readLiveQuizDefinition).mockResolvedValue(OLDER);
 
-      const res = await post(FIXTURE, answersFor(FIXTURE, "13-17"));
+      const res = await post(OLDER, answersFor(OLDER, "13-17"));
 
       expect(res.status).toBe(403);
       expect(await res.json()).toMatchObject({ notEligible: true });

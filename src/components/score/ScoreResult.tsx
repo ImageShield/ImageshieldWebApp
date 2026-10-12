@@ -1,15 +1,15 @@
 import { SiteHeader } from "@/components/landing/SiteHeader";
 import type { Handoff } from "@/lib/handoff";
-import type { Recommendation } from "@/lib/recommendations";
+import { linkText } from "@/lib/recommendations";
 import {
   bandLabel,
   type FactorIcon,
-  reportFactors,
+  factorIconOf,
   type RiskLevel,
   riskLevelOf,
   type ScoreRecord,
 } from "@/lib/score";
-import { Calendar, Eye, Globe, Report, ShieldCheck, Venus, Wand } from "../funnel/icons";
+import { Calendar, ContactCard, Eye, Globe, Report, ShieldCheck, Wand } from "../funnel/icons";
 import { AppHandoffSection } from "./AppHandoffSection";
 import { DownloadPrompt } from "./DownloadPrompt";
 import { InsightCard, type InsightRow } from "./InsightCard";
@@ -31,7 +31,7 @@ const RISK_WORD: Record<RiskLevel, string> = {
 
 const FACTOR_ICONS: Record<FactorIcon, (props: { className?: string }) => React.ReactElement> = {
   calendar: Calendar,
-  venus: Venus,
+  person: ContactCard,
   globe: Globe,
   eye: Eye,
   report: Report,
@@ -56,8 +56,8 @@ export const WARM_CARD =
 /**
  * The result screen, laid out from the LHS Results V1 export.
  *
- * Everything above the fold comes off the stored record; the two cards under it are
- * the record plus copy. The order is the export's, and it is an argument: the number
+ * Everything on it comes off the stored record — the two lavender cards included,
+ * words and all. The order is the export's, and it is an argument: the number
  * and what it means, then the one action that follows from it, then why the number is
  * what it is, then what to do about it, then the app.
  *
@@ -68,25 +68,13 @@ export const WARM_CARD =
  * sentence moves below the gauge and its scale — the number is shown, then explained.
  * `order` does that below `lg`; at `lg` the section becomes a two-column grid whose
  * explicit placement ignores `order` and restores the export's own arrangement.
- *
- * `prompts` maps a breakdown key to the question it was asked as, from the same quiz
- * definition the visitor answered. It is only a fallback: a factor the presentation
- * table recognises gets the written copy, and one it doesn't gets the real question
- * instead of a slug like `content_type`.
- *
- * `recommendations` is passed in rather than imported so that the day the API serves
- * them, the page changes and this screen does not. See `lib/recommendations.ts`.
  */
 export function ScoreResult({
   record,
   handoff,
-  prompts,
-  recommendations,
 }: {
   record: ScoreRecord;
   handoff: Handoff;
-  prompts?: ReadonlyMap<string, string>;
-  recommendations: readonly Recommendation[];
 }) {
   const { score } = record;
   const level = riskLevelOf(score);
@@ -95,12 +83,32 @@ export function ScoreResult({
      doesn't match them (see ../../lib/score.ts). */
   const label = bandLabel(score);
 
-  const factorRows: InsightRow[] = reportFactors(score.breakdown.quiz, prompts).map(
-    (factor) => ({
-      id: factor.key,
-      icon: FACTOR_ICONS[factor.icon],
-      title: factor.title,
-      body: factor.description,
+  /* Both lists are drawn in the order served and in the words served. The API ranks
+     the factors and orders the recommendations; nothing here sorts, trims or adds. */
+  const factorRows: InsightRow[] = record.riskFactors.map((factor, index) => ({
+    /* By position, as the recommendations are: kind and key aren't unique once one
+       question can yield several rows (two platforms are both `quiz:platforms`), and
+       the list is never reordered once drawn. */
+    id: String(index),
+    icon: FACTOR_ICONS[factorIconOf(factor)],
+    title: factor.title,
+    body: factor.line,
+  }));
+
+  const recommendationRows: InsightRow[] = record.recommendations.map(
+    (recommendation, index) => ({
+      /* Served without an id, and never reordered once drawn — so its position is
+         its identity. */
+      id: String(index),
+      /* Served without a glyph too, so every row takes the one the handoff section
+         already uses for recommendations. */
+      icon: Wand,
+      title: recommendation.title,
+      body: recommendation.body,
+      link: recommendation.link && {
+        href: recommendation.link.url,
+        label: linkText(recommendation.link),
+      },
     }),
   );
 
@@ -211,22 +219,28 @@ export function ScoreResult({
           </p>
         </DownloadPrompt>
 
-        <div className="mt-6 flex flex-col gap-9 sm:mt-9 sm:gap-10">
-          {/* Absent rather than empty: an account shown its stored score (a quiz
-              answered against a retired version) may come with no breakdown, and a
-              heading over nothing reads as a screen that failed to load. */}
-          {factorRows.length > 0 && (
-            <InsightCard
-              heading="The primary risk factors that determined your initial score"
-              rows={factorRows}
-            />
-          )}
-          <InsightCard
-            heading="General recommendations"
-            rows={recommendations}
-            variant="recommendations"
-          />
-        </div>
+        {/* Each card is absent rather than empty. A list arrives empty when neither
+            the API nor the local insights have anything this visitor's answers can
+            support, and a heading over nothing reads as a screen that failed to load;
+            an account shown its stored score gets neither list at all. When both go, the wrapper goes with them, so its
+            margin doesn't stack on top of the next card's. */}
+        {(factorRows.length > 0 || recommendationRows.length > 0) && (
+          <div className="mt-6 flex flex-col gap-9 sm:mt-9 sm:gap-10">
+            {factorRows.length > 0 && (
+              <InsightCard
+                heading="The primary risk factors that determined your initial score"
+                rows={factorRows}
+              />
+            )}
+            {recommendationRows.length > 0 && (
+              <InsightCard
+                heading="General recommendations"
+                rows={recommendationRows}
+                variant="recommendations"
+              />
+            )}
+          </div>
+        )}
 
         <div className={`mt-10 lg:mt-[59px] ${WARM_CARD}`}>
           <DownloadPrompt handoff={handoff} className="sm:gap-10">

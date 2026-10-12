@@ -1,8 +1,10 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { saveLead } from "./quiz-save";
+import { saveLead, saveQuizAnswers } from "./quiz-save";
+import type { ScoreEnvelope } from "./score";
 import { patchProfile, setEmail } from "./v1/profile";
 import type { Me } from "./v1/me";
+import { submitQuizResponses } from "./v1/quiz";
 
 /* The real `SYNTHETIC_ADULT_DOB` stays in; only the two network calls are replaced.
    The assertions spell the date out rather than importing the constant, so changing
@@ -107,5 +109,40 @@ describe("saveLead", () => {
     vi.mocked(patchProfile).mockRejectedValue(new Error("400"));
     vi.spyOn(console, "error").mockImplementation(() => {});
     await expect(saveLead(contact, null)).resolves.toBe(false);
+  });
+});
+
+/* `POST /v1/quiz/responses` answers with the same envelope `GET /v1/me/score` does,
+   risk factors and recommendations included. Nothing on the way back may drop them. */
+describe("saveQuizAnswers", () => {
+  it("hands back the submit's envelope untouched, both lists included", async () => {
+    const envelope: ScoreEnvelope = {
+      score: {
+        live: 62,
+        band: "moderate risk",
+        baseline: 62,
+        recovered: 0,
+        escrow_released: 0,
+        dynamic_deduction: 0,
+        current_ceiling: 70,
+        maximum_ceiling: 100,
+        scoring_version: "likeness-score-v4",
+        quiz_version: "likeness-health-v3",
+        computed_at: "2026-10-11T09:00:00.000Z",
+        breakdown: { quiz: [], dynamic: [], escrow: { next_milestone_days: null } },
+        risk_factors: [
+          { kind: "threat", key: "evt_1", title: "Fixture", line: "Fixture line.", points: 9 },
+        ],
+      },
+      scope_note: "Fixture note.",
+      general_recommendations: [
+        { title: "Fixture", body: "Fixture body.", link: { url: "https://example.org/", label: null } },
+      ],
+    };
+    vi.mocked(submitQuizResponses).mockResolvedValue(envelope);
+
+    await expect(
+      saveQuizAnswers("likeness-health-v3", { age: "25-34" }),
+    ).resolves.toStrictEqual(envelope);
   });
 });

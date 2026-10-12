@@ -1,45 +1,50 @@
 {
   "_readme": [
-    "A REAL GET /v1/quiz response, captured from the live API on 2026-08-27.",
-    "Not invented: these are the server's own keys, prompts and option strings, so",
-    "the fixture renders what production renders.",
+    "A REAL GET /v1/quiz response, captured from the DEV API (dev.imageshield.com) on",
+    "2026-10-13. Not invented: these are the server's own keys, prompts and option",
+    "strings.",
     "",
-    "Recapture it whenever the server edits the quiz — POST /v1/auth/otp, verify,",
-    "then GET /v1/quiz with the bearer token. Nothing in src/ needs to change; the",
-    "funnel reads the definition rather than knowing it.",
+    "Dev, not prod, on purpose: this is likeness-health-v17, the quiz the published",
+    "evidence report covers, so it is the one quiz the score screen's locally built",
+    "cards can be seen working against (src/lib/local-insights). Prod served",
+    "likeness-health-v11 that day — `discovery_method` where this has `q_il8uju`, and a",
+    "different posting question.",
+    "",
+    "Recapture it whenever the server edits the quiz: GET /v1/quiz answers without a",
+    "session. Nothing in src/ needs to change for the funnel; it reads the definition",
+    "rather than knowing it.",
     "",
     "Shape:",
     "  quiz_version  string, sent back on submit to pin the answers",
     "  questions[]   key, prompt, options[], multi?, scored?, required?, requires?{key,value}",
     "",
     "Note: options are DISPLAY strings ('Female', 'Instagram'), not machine keys, so",
-    "the screens render them verbatim. And `platforms` carries required:false — the",
-    "one question a visitor may leave blank."
+    "the screens render them verbatim — and the API stores them as the answers. And",
+    "`platforms` carries required:false — the one question a visitor may leave blank."
   ],
-  "quiz_version": "likeness-health-v2",
+  "quiz_version": "likeness-health-v17",
   "questions": [
     {
       "key": "age",
-      "prompt": "What is your age?",
+      "prompt": "What's your age?",
       "scored": true,
       "options": [
-        "13-17",
+        "Under 18",
         "18-24",
         "25-34",
-        "35-44",
-        "45-54",
+        "35-54",
         "55+"
       ]
     },
     {
       "key": "gender",
-      "prompt": "What is your gender?",
+      "prompt": "What's your gender?",
       "scored": true,
       "options": [
         "Female",
+        "Male",
         "Non-Binary",
-        "Prefer not to say",
-        "Male"
+        "Prefer not to say"
       ]
     },
     {
@@ -48,61 +53,44 @@
       "prompt": "Which platforms do you use?",
       "scored": true,
       "options": [
-        "Instagram",
-        "TikTok",
-        "Snapchat",
         "X (Twitter)",
+        "Snapchat",
+        "Instagram",
         "Facebook",
+        "TikTok",
         "YouTube"
       ],
       "required": false
     },
     {
-      "key": "privacy",
-      "prompt": "Are your accounts public or private?",
+      "key": "prior_misuse",
+      "prompt": "Have your photos or likeness ever been misused before (that you know of)?",
       "scored": true,
       "options": [
-        "Public",
-        "Private"
-      ]
-    },
-    {
-      "key": "content_type",
-      "prompt": "What kind of content do you share?",
-      "scored": true,
-      "options": [
-        "Regular content",
-        "Sensitive content",
-        "Adult content"
+        "No known incidents",
+        "Once or twice",
+        "Repeated pattern"
       ]
     },
     {
       "key": "posting_volume",
-      "prompt": "How much do you post?",
+      "prompt": "How often do you post new images of yourself?",
       "scored": true,
       "options": [
-        "Minimal",
-        "Moderate",
-        "High"
+        "Rarely (less than once a month)",
+        "Around once a month",
+        "Weekly",
+        "Daily or multiple times a day"
       ]
     },
     {
-      "key": "prior_misuse",
-      "prompt": "Has your likeness been misused online before?",
+      "key": "q_il8uju",
+      "prompt": "How do you monitor how your face, your likeness is used online?",
       "scored": true,
       "options": [
-        "No",
-        "Yes"
-      ]
-    },
-    {
-      "key": "monitoring",
-      "prompt": "How do you monitor whether your likeness is being misused online?",
-      "scored": true,
-      "options": [
-        "I use a service that monitors my photos",
-        "I rely on friends and family to tell me",
-        "I don't monitor"
+        "I don’t have a way to monitor my likeness",
+        "I rely on friends and family to tell me what they've seen",
+        "I subscribe to a likeness detection/monitoring service"
       ]
     }
   ]

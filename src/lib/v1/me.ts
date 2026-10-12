@@ -11,7 +11,7 @@
  */
 import "server-only";
 
-import type { DisplayedScore, QuizFactor } from "../score";
+import type { DisplayedScore } from "../score";
 import { readAsUser, callAsUser } from "../session";
 import type { Onboarding } from "./auth";
 
@@ -45,7 +45,6 @@ export type Me = {
     total_score?: number;
     band: string;
     computed_at: string;
-    breakdown?: { quiz?: QuizFactor[] };
   } | null;
 };
 
@@ -61,18 +60,14 @@ export const fetchMe = () => callAsUser<Me>("GET", "/v1/me");
  * What an account whose quiz was answered against a retired version is shown, rather
  * than a score recomputed from the web quiz: `/v1/me/score` has no record for it,
  * but the account still carries the number it had — the same number the app's Home
- * screen falls back to. No breakdown is guaranteed here, so the result screen leaves
- * out its risk-factor card when there are none.
+ * screen falls back to. It carries neither risk factors nor recommendations, so the
+ * result screen shows it without either card.
  */
 export function storedScoreOf(me: Me): DisplayedScore | null {
   const stored = me.score;
   const live = stored?.live ?? stored?.total_score;
   if (!stored || typeof live !== "number" || !Number.isFinite(live)) return null;
-  return {
-    live,
-    band: stored.band,
-    breakdown: { quiz: stored.breakdown?.quiz ?? [] },
-  };
+  return { live, band: stored.band };
 }
 
 /** The display name for the result screen. Falls back rather than rendering "null". */

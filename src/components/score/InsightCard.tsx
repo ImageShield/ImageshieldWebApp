@@ -27,6 +27,8 @@ export type InsightRow = {
   icon: (props: { className?: string }) => React.ReactElement;
   title: string;
   body: string;
+  /** A page to read more on, opened in a new tab. Only recommendations carry one. */
+  link?: { href: string; label: string } | null;
 };
 
 export function InsightCard({
@@ -61,7 +63,7 @@ export function InsightCard({
       </h2>
 
       <ul className="mt-6 flex flex-col gap-[18px] sm:mt-8 sm:gap-9">
-        {rows.map(({ id, icon: Icon, title, body }) => (
+        {rows.map(({ id, icon: Icon, title, body, link }) => (
           <li key={id} className="flex items-start gap-3 sm:gap-6">
             {/* The disc is a fixed size and the glyphs inside it are several
                 different sizes, drawn at their own — centring rather than sizing
@@ -83,6 +85,27 @@ export function InsightCard({
               <p className="mt-1 max-w-[600px] text-[14px] leading-[19px] text-ink-body sm:mt-1.5 sm:text-base sm:leading-6">
                 {body}
               </p>
+              {/* The export draws no link, so this takes the body's size and the
+                  brand ink, underlined so it reads as a link without relying on
+                  colour alone. `noopener` stops the cited page reaching back into
+                  this tab through `window.opener`; `noreferrer` keeps a visitor's
+                  arrival from a score page out of a third party's logs.
+
+                  `wrap-anywhere`, not `wrap-break-word`: a host label is one long
+                  word (blueoceanglobaltech.com is 181px), and only `anywhere` lets
+                  it narrow the column instead of pushing the row 12px into the
+                  card's padding on a 320px screen. Where it fits, nothing wraps. */}
+              {link && (
+                <a
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1 inline-block text-[14px] leading-[19px] font-semibold wrap-anywhere text-brand underline underline-offset-2 hover:text-cta sm:mt-1.5 sm:text-base sm:leading-6"
+                >
+                  {link.label}{" "}
+                  <span className="sr-only">(opens in a new tab)</span>
+                </a>
+              )}
             </div>
           </li>
         ))}

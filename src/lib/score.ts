@@ -7,11 +7,15 @@
  *
  * Client-safe: the screen renders straight from it.
  */
+import type { GeneralRecommendation } from "./recommendations";
 
 /** One entry of `breakdown.quiz` — a question, what it was answered, what it cost. */
 export type QuizFactor = {
   key: string;
-  value: string;
+  /** The option given. A multi-select answer's shape here is unconfirmed — a list,
+   *  or the selections joined with ", " as the dev fixture once sent — so it is read
+   *  through `answersFrom` in ./local-insights/engine.ts, which takes both. */
+  value: string | string[];
   /** POSITIVE, and subtracted. The legacy backend sent this as a negative number,
    *  which is why `topFactors` now sorts the other way round. */
   deduction: number;
@@ -23,6 +27,25 @@ export type DynamicFactor = {
   id: string;
   points: number;
   active: boolean;
+};
+
+/**
+ * One entry of `score.risk_factors` — something that lowered this score.
+ *
+ * Not every factor is a quiz answer. `quiz` is an answer the visitor gave, keyed by
+ * the question's key; `threat` is a live incident affecting people who answered like
+ * this visitor, keyed by its event id. A threat lowers the score the way an answer
+ * does, which is why both sit under the same "risk factors" heading.
+ */
+export type RiskFactor = {
+  kind: "quiz" | "threat";
+  key: string;
+  /** Short — "Age". Rendered as served. */
+  title: string;
+  /** One or two sentences, drafted from cited research. Rendered as served. */
+  line: string;
+  /** What it took off the score. Not shown. */
+  points: number;
 };
 
 export type Score = {
@@ -46,6 +69,13 @@ export type Score = {
     dynamic: DynamicFactor[];
     escrow: { next_milestone_days: number | null };
   };
+  /** At most three, ranked by the API, biggest first. Empty until there is research
+   *  to explain them with — and then the card is hidden.
+   *
+   *  Optional because the API may not send it. Until the backend publishes research,
+   *  a missing, null or empty list is filled from the answers instead — see `resolve`
+   *  in ./score-record.ts. */
+  risk_factors?: RiskFactor[];
 };
 
 /**
@@ -62,6 +92,12 @@ export type Score = {
 export type ScoreEnvelope = {
   score: Score | null;
   scope_note: string;
+  /** At most three, in reading order, the same for every visitor. Beside the score
+   *  rather than inside it, so it arrives even when `score` is null.
+   *
+   *  Optional, and filled from the answers when missing, null or empty, as
+   *  `risk_factors` is. */
+  general_recommendations?: GeneralRecommendation[];
 };
 
 /**
@@ -72,9 +108,7 @@ export type ScoreEnvelope = {
  * there — it is shown the score stored on its account instead, which `GET /v1/me`
  * carries without most of these fields. Both fit this.
  */
-export type DisplayedScore = Pick<Score, "live" | "band"> & {
-  breakdown: Pick<Score["breakdown"], "quiz">;
-};
+export type DisplayedScore = Pick<Score, "live" | "band">;
 
 /** What the result screen renders: the envelope plus who is looking at it. */
 export type ScoreRecord = {
@@ -82,6 +116,11 @@ export type ScoreRecord = {
   scopeNote: string;
   /** From `GET /v1/me`, not from a cookie — the person record is the one source. */
   firstName: string;
+  /** `score.risk_factors` in the API's order when it has entries, else built from the
+   *  answers (temporarily — see `resolve`). Empty hides the card. */
+  riskFactors: RiskFactor[];
+  /** `general_recommendations` likewise. Empty hides the card. */
+  recommendations: GeneralRecommendation[];
 };
 
 export type RiskLevel = "high" | "moderate" | "low";
@@ -337,108 +376,63 @@ export const RISK_LEGEND: ReadonlyArray<{
   { level: "low", label: "Low Risk", range: "80–100", colour: "var(--color-risk-low)" },
 ];
 
-/* ── What affected your score ────────────────────────────────────────────────
+/* ── The risk factors card ───────────────────────────────────────────────────
  *
- * The design shows three cards, and a real breakdown has as many entries as the
- * quiz has scored questions. So the cards are filled from the three biggest
- * deductions and this table supplies the icon and the sentence for whichever ones
- * turn up.
+ * The API picks, ranks and words the factors (`score.risk_factors`). The screen draws
+ * them in the order served and supplies one thing the response doesn't carry: the
+ * glyph in each disc.
  *
- * Keyed by ALIAS rather than by one exact string, and this is the part that changed.
- * The legacy backend named its factors in prose ("Profile Visibility", "Content
- * Type") and this table matched them verbatim. /v1 names them by the quiz's own
- * answer keys, which are the server's to choose and are not visible from here
- * without a session. Matching on a normalised token means the same entry is found
- * whether the key arrives as `contentType`, `content_type` or `Content Type`, so the
- * marketing copy survives a naming convention this side doesn't control.
+ * The glyph is chosen on `kind` first and `key` second. A quiz factor's key is the
+ * question's own answer key, which is the server's to choose, so it is matched as a
+ * normalised alias — `posting_volume`, `postingVolume` and `Posting Volume` all find
+ * the same entry. A threat's key is an event id, which names nothing a glyph could
+ * stand for, so every threat takes one glyph; and because kind is asked first, an
+ * event id that happened to read "age" can't borrow the calendar.
  *
- * A factor no alias matches is NOT dropped and is not given someone else's sentence.
- * It falls back to the quiz's own wording for that question — see `topFactors`.
+ * This table used to carry a title and a sentence per question as well. Those were
+ * unsourced — the age line told a 55+ visitor their bracket was "the highest risk
+ * demographic" — and the API now serves both, so only the glyphs are left.
  */
 export type FactorIcon =
   | "calendar"
-  | "venus"
+  | "person"
   | "globe"
   | "eye"
   | "report"
   | "shield"
   | "wand";
 
-const FACTOR_PRESENTATION: ReadonlyArray<{
-  aliases: readonly string[];
-  title: string;
+const QUIZ_FACTOR_ICONS: ReadonlyArray<{
   icon: FactorIcon;
-  description: string;
+  aliases: readonly string[];
 }> = [
+  { icon: "calendar", aliases: ["age", "agerange", "dateofbirth"] },
+  /* A neutral glyph, not the Venus sign the export drew: that card only ever spoke
+     about women, and a factor for a non-binary or male visitor's answer drawn with
+     ♀ would misgender them in the one place the screen is about them. */
+  { icon: "person", aliases: ["gender"] },
   {
-    aliases: ["age", "agerange", "dateofbirth"],
-    title: "Age",
-    icon: "calendar",
-    description:
-      "Adults 19–35 account for 75% of deepfake victims globally. Your age bracket is the highest risk demographic",
-  },
-  {
-    aliases: ["gender"],
-    title: "Gender",
-    icon: "venus",
-    description:
-      "96% of non-consensual deepfake content targets women. Gender is one of the strongest predictors of targeting risk",
-  },
-  {
+    icon: "globe",
     aliases: [
-      /* `privacy` is the live quiz's own key for this question, and its absence
-         showed up as the card falling back to the raw prompt. */
+      /* `privacy` is the live quiz's own key for this question. */
       "privacy",
       "visibility",
       "profilevisibility",
       "accountprivacy",
       "publicsocialaccounts",
-    ],
-    title: "Privacy Settings",
-    icon: "globe",
-    description:
-      "Current social media exposure levels provide significant training data for unauthorized AI models.",
-  },
-  {
-    aliases: ["platforms", "socialplatforms"],
-    title: "Platforms",
-    icon: "globe",
-    description:
-      "Each platform your likeness sits on is another source a collector can scrape it from.",
-  },
-  {
-    aliases: ["contenttype", "typeofcontent"],
-    title: "Content Type",
-    icon: "eye",
-    description:
-      "The kind of content you share changes how valuable your likeness is to the people collecting it.",
-  },
-  {
-    aliases: [
+      "platforms",
+      "socialplatforms",
       "contentquantity",
       "contentvolume",
       "postingfrequency",
       "postingvolume",
     ],
-    title: "Social activity",
-    icon: "globe",
-    description:
-      "Regular public posting increases your likeness exposure 5×. Your social footprint puts you at a higher risk of having your likeness harvested.",
   },
-  {
-    aliases: ["pastexploitation", "priormisuse", "confirmedtakedown"],
-    title: "Past Exploitation",
-    icon: "shield",
-    description:
-      "A prior incident raises your risk: likeness that has been misused once is more likely to be misused again.",
-  },
-  {
-    aliases: ["activereports", "reports", "activematches"],
-    title: "Active Reports",
-    icon: "report",
-    description:
-      "Open reports on your account mean your likeness is being misused right now.",
-  },
+  { icon: "eye", aliases: ["contenttype", "typeofcontent"] },
+  { icon: "shield", aliases: ["pastexploitation", "priormisuse", "confirmedtakedown"] },
+  /* How the visitor watches for misuse: `q_il8uju` on v17, `discovery_method` on v11. */
+  { icon: "shield", aliases: ["qil8uju", "discoverymethod", "monitoring"] },
+  { icon: "report", aliases: ["activereports", "reports", "activematches"] },
 ];
 
 /** Lowercase, letters and digits only — so one entry catches every spelling. */
@@ -446,106 +440,57 @@ function normalizeKey(key: string): string {
   return key.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
-const BY_ALIAS = new Map(
-  FACTOR_PRESENTATION.flatMap((entry) =>
-    entry.aliases.map((alias) => [alias, entry] as const),
+const ICON_BY_ALIAS = new Map(
+  QUIZ_FACTOR_ICONS.flatMap(({ icon, aliases }) =>
+    aliases.map((alias) => [alias, icon] as const),
   ),
 );
 
-/** "content_type" → "Content type", for a factor no alias claims. */
-function humanizeKey(key: string): string {
-  const words = key.replace(/[_-]+/g, " ").replace(/([a-z])([A-Z])/g, "$1 $2");
-  return words.charAt(0).toUpperCase() + words.slice(1).toLowerCase();
+/**
+ * The glyph for one factor's disc.
+ *
+ * A threat takes the document glyph — the one this screen already drew for "Active
+ * Reports", misuse happening now, which is what a live incident is. A quiz key no
+ * alias claims takes the shield, rather than some other question's glyph.
+ */
+export function factorIconOf(factor: Pick<RiskFactor, "kind" | "key">): FactorIcon {
+  if (factor.kind === "threat") return "report";
+  return ICON_BY_ALIAS.get(normalizeKey(factor.key)) ?? "shield";
 }
 
-export type PresentedFactor = {
-  key: string;
-  title: string;
-  icon: FactorIcon;
-  description: string;
-};
-
 /**
- * The three the export names, in its order: Age, Gender, Social activity.
+ * `score.risk_factors`, checked against the contract on its way in.
  *
- * Pinned rather than picked by deduction, and that is a change worth being explicit
- * about. Sorting by what cost the most points is the more informative rule, but it
- * surfaces whichever questions happen to score worst for this person — which meant
- * the card could show "Privacy Settings" and "Platforms", two entries whose copy
- * predates this design and reads nothing like the three the export writes.
- *
- * These three are safe to pin because the live quiz asks all of them of everyone:
- * none is conditional and none is optional, so there is always an answer behind each
- * card. What is NOT guaranteed is that each cost points — a card can therefore name
- * something that did not push this particular score down, which is why the card is
- * headed "Your risk factors" rather than "What lowered your score".
+ * Checked rather than trusted because `call<T>` types an answer by assertion, so this
+ * is the first place a missing field can surface — and unchecked it surfaces as a
+ * crash on `.map` for every visitor, if this ships ahead of the API. Anything but a
+ * list reads as none, and an entry that doesn't match the contract is dropped rather
+ * than drawn as a blank or mislabelled row. The rest keep the API's order: nothing is
+ * sorted, picked or backfilled here.
  */
-const REPORT_FACTORS = ["age", "gender", "posting_volume"] as const;
-
-/** One breakdown entry, dressed for a card. */
-function present(
-  factor: QuizFactor,
-  prompts: ReadonlyMap<string, string>,
-): PresentedFactor {
-  const preset = BY_ALIAS.get(normalizeKey(factor.key));
-  if (preset) {
-    return {
-      key: factor.key,
-      title: preset.title,
-      icon: preset.icon,
-      description: preset.description,
-    };
+export function riskFactorsFrom(raw: unknown): RiskFactor[] {
+  if (!Array.isArray(raw)) {
+    console.warn("score response: risk_factors is not a list; card hidden");
+    return [];
   }
-  /* No presentation entry: show the real question and the real answer rather than a
-     generic line or a raw slug. */
-  const prompt = prompts.get(factor.key);
-  return {
-    key: factor.key,
-    title: humanizeKey(factor.key),
-    icon: "shield" as FactorIcon,
-    description: prompt
-      ? `${prompt} You answered “${factor.value}”.`
-      : `You answered “${factor.value}”.`,
-  };
+
+  const kept = raw.filter(isRiskFactor);
+  if (kept.length < raw.length) {
+    console.warn(`score response: dropped ${raw.length - kept.length} malformed risk_factors`);
+  }
+  return kept;
 }
 
-/**
- * The cards under "Your risk factors".
- *
- * `prompts` maps an answer key to the question it was asked as, read from the same
- * quiz definition the visitor answered — the fallback for a key no alias claims.
- *
- * Backfilled by deduction when the pinned set can't be filled, so a server that
- * renames or drops one of those questions costs the card one entry rather than
- * leaving a hole in the design.
- */
-export function reportFactors(
-  breakdown: QuizFactor[],
-  prompts: ReadonlyMap<string, string> = new Map(),
-  count = 3,
-): PresentedFactor[] {
-  const byKey = new Map(
-    breakdown.map((factor) => [normalizeKey(factor.key), factor] as const),
+function isRiskFactor(value: unknown): value is RiskFactor {
+  if (typeof value !== "object" || value === null) return false;
+  const { kind, key, title, line, points } = value as Record<string, unknown>;
+  return (
+    (kind === "quiz" || kind === "threat") &&
+    typeof key === "string" &&
+    typeof title === "string" &&
+    title.trim() !== "" &&
+    typeof line === "string" &&
+    line.trim() !== "" &&
+    typeof points === "number"
   );
-
-  const chosen: QuizFactor[] = [];
-  for (const key of REPORT_FACTORS) {
-    const factor = byKey.get(normalizeKey(key));
-    if (factor) chosen.push(factor);
-  }
-
-  if (chosen.length < count) {
-    const taken = new Set(chosen.map((factor) => factor.key));
-    const rest = breakdown
-      .filter((factor) => !taken.has(factor.key) && factor.deduction > 0)
-      /* /v1 sends `deduction` as a positive number of points subtracted; the legacy
-         backend sent it negative and this sorted the other way round. */
-      .sort((a, b) => b.deduction - a.deduction);
-    for (const factor of rest) {
-      chosen.push(factor);
-      if (chosen.length === count) break;
-    }
-  }
-
-  return chosen.slice(0, count).map((factor) => present(factor, prompts));
 }
