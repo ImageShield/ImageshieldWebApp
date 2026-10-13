@@ -11,6 +11,12 @@ const nextConfig: NextConfig = {
      */
     qualities: [75, 90],
   },
+  /*
+   * The share poster's rasteriser. It picks a prebuilt `.node` binary for the
+   * platform at runtime — linux-x64 on Amplify — which the bundler can't inline, so
+   * Node loads it instead and output file tracing ships the binary with the route.
+   */
+  serverExternalPackages: ["@resvg/resvg-js"],
 };
 
 export default nextConfig;

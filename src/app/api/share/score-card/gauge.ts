@@ -9,9 +9,9 @@ import { GAUGE_THEMES, type RiskLevel } from "@/lib/score";
  * meant to be the same picture the app posts, so it takes the app's numbers.
  *
  * Everything is in the app's 164×160 frame. The caller scales the whole thing by
- * giving it a pixel width, and draws the text over it itself: the renderer behind
- * `ImageResponse` rasterises SVG without any fonts loaded, so `<text>` in here would
- * come out blank. `CENTER` and `TICKS` are where that text goes.
+ * giving it a pixel width, and draws the text over it itself: the route rasterises
+ * with resvg and no fonts loaded, so `<text>` in here would come out blank. `CENTER`
+ * and `TICKS` are where that text goes.
  */
 export const FRAME = { width: 164, height: 160 } as const;
 

@@ -1,7 +1,16 @@
 /**
+ * The FAQ's "Install the App" block — the one page that still carries both badges
+ * with the landing page parked. The nav's Download link and `/get-app`'s desktop
+ * fallback both land here, so the id and the path share one constant rather than
+ * drifting apart. Declared above `SITE_NAV`, which reads it while the module loads.
+ */
+export const FAQ_INSTALL_ID = "install";
+export const FAQ_INSTALL_PATH = `/faq#${FAQ_INSTALL_ID}`;
+
+/**
  * Marketing nav, in the order the V1 design lists it.
  *
- * Only `#download`, `/quiz` and `/faq` resolve today — the rest are placeholders
+ * Only Download, `/quiz` and `/faq` resolve today — the rest are placeholders
  * pointing at the anchors those sections will claim, so wiring them up later is a
  * matter of rendering the section with the matching `id`.
  */
@@ -20,7 +29,9 @@ export const SITE_NAV: ReadonlyArray<{
    */
   mark?: "SM" | "TM";
 }> = [
-  { label: "Download", href: "#download", bright: true },
+  /* Not `#download`: that anchor lives on the parked landing page, and this bar is
+     only drawn on pages that don't have it, so the link went nowhere. */
+  { label: "Download", href: FAQ_INSTALL_PATH, bright: true },
   {
     /* Still points at the quiz intro, which is the only route to a score — the
        label names the destination's payoff rather than its first screen. */

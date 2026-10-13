@@ -4,7 +4,7 @@ import { SiteFooter } from "@/components/landing/SiteFooter";
 import { SiteHeader } from "@/components/landing/SiteHeader";
 import { ShimmerImage } from "@/components/ShimmerImage";
 import { FAQ_BREADCRUMB_JSON_LD, FAQ_JSON_LD, SITE_URL } from "@/lib/faq";
-import { STORE_LINKS } from "@/lib/site-nav";
+import { FAQ_INSTALL_ID, STORE_LINKS } from "@/lib/site-nav";
 
 export const metadata: Metadata = {
   title: "ImageShield FAQ — Likeness Monitoring Questions",
@@ -72,7 +72,7 @@ export default function FaqPage() {
 
           <FaqSections />
 
-          <div className="mt-20 text-center">
+          <div id={FAQ_INSTALL_ID} className="mt-20 text-center">
             <h2 className="mb-6 text-2xl font-bold">Install the App</h2>
             {/* Sized in em off the surrounding 16px, the way the old page did.
                 It pins the HEIGHT, not the width: the two artworks are 3.10:1

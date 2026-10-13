@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { ImageResponse } from "next/og";
+import { renderAsync } from "@resvg/resvg-js";
+import satori from "satori";
 import { bandLabel, riskLevelOf } from "@/lib/score";
 import { loadScore } from "@/lib/score-record";
 import { linkLabel, POSTER_SIZE, SHARE_PITCH, SHARE_URL } from "@/lib/score-share";
@@ -18,6 +19,14 @@ import { CENTER, FRAME, HEADROOM, posterGaugeSvg, TICKS } from "./gauge";
  * Drawn on the server, off the session cookie, so the number in it is the stored
  * score — never one a query string could edit — and so it needs no canvas or
  * screenshot library in the browser.
+ *
+ * Laid out by satori and rasterised by resvg, rather than `next/og`'s
+ * `ImageResponse`, which runs the same two steps but hands its SVG to sharp
+ * whenever sharp is installed. The first `/_next/image` request in a process
+ * blocks every sharp loader but the raster ones — SVG included, and the block is
+ * process-wide — so from then on every poster failed mid-stream with "Input buffer
+ * contains unsupported image format". satori is pinned to the version Next 16.3
+ * bundles, so the layout is the one `ImageResponse` drew.
  */
 
 /* The app lays the poster out at 405pt wide and writes it at 1080px. Every number
@@ -109,7 +118,7 @@ export async function GET() {
     posterGaugeSvg(score.live, level),
   ).toString("base64")}`;
 
-  return new ImageResponse(
+  const svg = await satori(
     (
       <div
         style={{
@@ -314,15 +323,23 @@ export async function GET() {
         </div>
       </div>
     ),
-    {
-      ...POSTER_SIZE,
-      fonts,
-      headers: {
-        /* The visitor's own score — never let a proxy hold onto it. */
-        "Cache-Control": "no-store, private",
-      },
-    },
+    { ...POSTER_SIZE, fonts },
   );
+
+  /* Off the event loop, on libuv's pool. Every glyph is already a path in `svg`,
+     so resvg is given no fonts to scan for. */
+  const png = await renderAsync(svg, {
+    fitTo: { mode: "width", value: POSTER_SIZE.width },
+    font: { loadSystemFonts: false },
+  });
+
+  return new Response(new Uint8Array(png.asPng()), {
+    headers: {
+      "Content-Type": "image/png",
+      /* The visitor's own score — never let a proxy hold onto it. */
+      "Cache-Control": "no-store, private",
+    },
+  });
 }
 
 /**

@@ -1,4 +1,4 @@
-import { STORE_LINKS } from "@/lib/site-nav";
+import { FAQ_INSTALL_PATH, STORE_LINKS } from "@/lib/site-nav";
 
 /**
  * GET /get-app — where the result screen's QR code points.
@@ -8,9 +8,11 @@ import { STORE_LINKS } from "@/lib/site-nav";
  * already installed the store page itself offers "Open", which is all a universal
  * link would add for someone scanning off a laptop screen.
  *
- * Anything that isn't an iPhone or Android phone goes to the landing page, which
- * carries both badges. That includes an iPad: iPadOS Safari sends a Mac's
- * User-Agent by default, so it can't be told apart from a desktop here.
+ * Anything that isn't an iPhone or Android phone goes to the FAQ's "Install the
+ * App" block, which carries both badges. That includes an iPad: iPadOS Safari
+ * sends a Mac's User-Agent by default, so it can't be told apart from a desktop
+ * here. It used to be the landing page, but `/` now redirects to the quiz intro,
+ * which has no badges at all.
  */
 export function GET(request: Request) {
   const ua = request.headers.get("user-agent") ?? "";
@@ -18,7 +20,7 @@ export function GET(request: Request) {
     ? STORE_LINKS.appStore
     : /Android/i.test(ua)
       ? STORE_LINKS.googlePlay
-      : "/";
+      : FAQ_INSTALL_PATH;
 
   return new Response(null, {
     // 302, not 301: a permanent redirect is cached by the phone indefinitely, and

@@ -30,9 +30,16 @@ describe("GET /get-app", () => {
     [
       "desktop Chrome",
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36",
-      "/",
+      // Spelled out rather than imported: a fallback quietly changed back to "/"
+      // would land on the quiz intro, which has no badges.
+      "/faq#install",
     ],
-    ["no User-Agent", undefined, "/"],
+    [
+      "iPadOS Safari, which sends a Mac's User-Agent",
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15",
+      "/faq#install",
+    ],
+    ["no User-Agent", undefined, "/faq#install"],
   ])("redirects %s", (_, ua, target) => {
     const res = visit(ua);
     expect(res.status).toBe(302);
