@@ -5,6 +5,7 @@ import type { GeneralRecommendation } from "@/lib/recommendations";
 import type { RiskFactor, ScoreEnvelope } from "@/lib/score";
 import { readAsUser } from "@/lib/session";
 import { ApiFailure } from "@/lib/v1/errors";
+import { GET as getScore } from "../api/score/route";
 import ScorePage from "./page";
 
 /* Only the transport to /v1 is replaced. `readMe`, `readScore`, `loadScore` and the
@@ -710,4 +711,65 @@ describe("/score — which source fills each card", () => {
     expect(String(warn.mock.calls[0][0])).toMatch(/risk_factors is not a list/);
     warn.mockRestore();
   });
+});
+
+/* The gender row on the screen follows the gender saved on the score, exactly. */
+describe("/score — the gender risk factor", () => {
+  const withGender = (gender: string) => ({
+    ...v11With([
+      { key: "age", value: "18-24", deduction: 6 },
+      { key: "gender", value: gender, deduction: 4 },
+      { key: "platforms", value: "X (Twitter)", deduction: 8 },
+    ]),
+    general_recommendations: [],
+  });
+  const factorTitles = () => rowsOf(card(FACTORS_HEADING)).map(([title]) => title);
+
+  it("shows the Non-Binary factor for a saved Non-Binary answer", async () => {
+    answers.score = withGender("Non-Binary");
+
+    render(await ScorePage());
+
+    expect(factorTitles()).toStrictEqual(["Platform: X (Twitter)", "Age: 18-24", "Gender: Non-Binary"]);
+  });
+
+  for (const [gender, expected] of [
+    ["Female", ["Platform: X (Twitter)", "Age: 18-24", "Gender: Female"]],
+    ["Male", ["Platform: X (Twitter)", "Age: 18-24"]],
+    ["Prefer not to say", ["Platform: X (Twitter)", "Age: 18-24"]],
+  ] as const) {
+    it(`never shows the Non-Binary factor for a saved ${gender} answer`, async () => {
+      answers.score = withGender(gender);
+
+      render(await ScorePage());
+
+      expect(factorTitles()).toStrictEqual(expected);
+      expect(screen.queryByText(/stereotyping nonbinary people/)).toBeNull();
+    });
+  }
+});
+
+/* The console diagnostic reads `/api/score`; the card is the page. For one saved score
+   they come from the same `loadScore`, so they can't disagree about gender. */
+describe("/score and /api/score, for the same saved score", () => {
+  for (const gender of ["Male", "Female", "Prefer not to say", "Non-Binary"]) {
+    it(`agree on the gender row for a saved ${gender} answer`, async () => {
+      answers.score = {
+        ...v11With([
+          { key: "age", value: "18-24", deduction: 6 },
+          { key: "gender", value: gender, deduction: 4 },
+          { key: "platforms", value: "X (Twitter)", deduction: 8 },
+        ]),
+        general_recommendations: [],
+      };
+
+      const body = await (await getScore()).json();
+      render(await ScorePage());
+      const rendered = rowsOf(card(FACTORS_HEADING)).map(([title]) => title);
+
+      expect(body.score.breakdown.quiz.find((e: { key: string }) => e.key === "gender").value).toBe(gender);
+      expect(body.riskFactors.map((f: { title: string }) => f.title)).toStrictEqual(rendered);
+      expect(rendered.includes("Gender: Non-Binary")).toBe(gender === "Non-Binary");
+    });
+  }
 });

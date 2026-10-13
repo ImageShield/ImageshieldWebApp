@@ -604,3 +604,72 @@ describe("describing a record for the log", () => {
     ).toBe("likeness-health-v11 / s, profile recorded, breakdown.quiz 3 [null key:absent age:number:BAD-VALUE:cost:absent]");
   });
 });
+
+/* The gender row comes from the saved gender answer and nothing else: an exact match
+   on the option, so one gender's evidence can never be shown for another. */
+describe("the gender factor", () => {
+  const NON_BINARY_LINE =
+    "Queer people reportedly bear a disproportionate share of AI-based sexual abuse content, and AI systems risk stereotyping nonbinary people.";
+  const genderRows = (insights: ReturnType<typeof localInsights>) =>
+    insights.riskFactors.filter((factor) => factor.key === "gender");
+
+  for (const [version, record] of [
+    ["v17", (gender: string | string[] | undefined) => v17(gender === undefined ? {} : { gender })],
+    ["v11", (gender: string | string[] | undefined) => v11(gender === undefined ? {} : { gender: [gender, 4] })],
+  ] as const) {
+    describe(`on a ${version} record`, () => {
+      it("is the Non-Binary factor only for a saved Non-Binary answer", () => {
+        expect(genderRows(localInsights(record("Non-Binary")))).toStrictEqual([
+          expect.objectContaining({ title: "Gender: Non-Binary", line: NON_BINARY_LINE }),
+        ]);
+      });
+
+      it("is the Female factor for Female, never Non-Binary", () => {
+        const rows = genderRows(localInsights(record("Female")));
+        expect(rows.map((row) => row.title)).toStrictEqual(["Gender: Female"]);
+        expect(rows.map((row) => row.line)).not.toContain(NON_BINARY_LINE);
+      });
+
+      /* Neither has evidence in the report, so neither gets a row — least of all the
+         Non-Binary one. */
+      for (const gender of ["Male", "Prefer not to say"]) {
+        it(`is absent for ${gender}`, () => {
+          expect(genderRows(localInsights(record(gender)))).toStrictEqual([]);
+        });
+      }
+
+      it("is absent when the saved answer is missing", () => {
+        expect(genderRows(localInsights(record(undefined)))).toStrictEqual([]);
+      });
+
+      /* Close to the option is not the option. */
+      for (const gender of ["non-binary", "Nonbinary", "Non-Binary ", "", "Other"]) {
+        it(`is absent for an unknown answer ${JSON.stringify(gender)}`, () => {
+          expect(genderRows(localInsights(record(gender)))).toStrictEqual([]);
+        });
+      }
+
+      it("is absent for a list where one answer was expected", () => {
+        expect(genderRows(localInsights(record(["Female", "Non-Binary"])))).toStrictEqual([]);
+      });
+    });
+  }
+
+  it("leaves the other factors and the recommendations as they were", () => {
+    const withMale = localInsights(
+      v11({
+        age: ["18-24", 6],
+        gender: ["Male", 1],
+        platforms: [["X (Twitter)"], 8],
+        discovery_method: [NO_MONITORING, 8],
+      }),
+    );
+    expect(withMale.riskFactors.map(({ title }) => title)).toStrictEqual([
+      "Platform: X (Twitter)",
+      "Age: 18-24",
+    ]);
+    expect(withMale.recommendations.map(({ title }) => title)).toStrictEqual([
+      "Set up alerts for your name and search for your photos",
+    ]);
+  });
+});
