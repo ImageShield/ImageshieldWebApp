@@ -34,10 +34,8 @@ export default function LandingPage() {
 //  * Concept 1, top to bottom: the pitch over the photograph, the quiz ask on coral,
 //  * the three steps, and what is left of the old footer strip.
 //  *
-//  * `font-sans` rather than the `font-site` every other marketing page carries. The
-//  * design is drawn in Plus Jakarta Sans — the app's own face, matched here against
-//  * the export glyph by glyph — where the V1 pages are drawn in Inter, so the two
-//  * faces live side by side until those are redrawn.
+//  * `font-sans`: the design is drawn in Plus Jakarta Sans — the app's own face,
+//  * matched here against the export glyph by glyph.
 //  */
 // export default function LandingPage() {
 //   return (

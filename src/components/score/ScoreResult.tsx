@@ -113,10 +113,9 @@ export function ScoreResult({
   );
 
   return (
-    /* Plus Jakarta Sans, not the marketing site's Inter. This screen is the last
-       one of the funnel rather than the first one of the site, and it is what a
-       lead sees immediately before the app — which is drawn in this face too. The
-       LHS Results V1 export is set in it, weight for weight. */
+    /* Plus Jakarta Sans: this is what a lead sees immediately before the app,
+       which is drawn in this face too. The LHS Results V1 export is set in it,
+       weight for weight. */
     <main className="relative min-h-[100dvh] bg-canvas font-sans">
       <SiteHeader />
 

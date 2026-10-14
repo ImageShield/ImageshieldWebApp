@@ -1,25 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Plus_Jakarta_Sans } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  style: ["normal", "italic"],
-  display: "swap",
-});
-
-/**
- * The marketing site is drawn in Inter — matched against the V1 export glyph by
- * glyph. The funnel screens stay on Plus Jakarta Sans to match the mobile app, so
- * both faces load and each side of the product picks its own.
- *
- * Italic is a real cut here: the hero sets "Likeness Health Score" in it, and a
- * browser-sheared roman looks nothing like the design.
- */
-const inter = Inter({
-  variable: "--font-inter",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
   style: ["normal", "italic"],
@@ -41,10 +25,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      className={`${plusJakarta.variable} ${inter.variable} h-full antialiased`}
-    >
+    <html lang="en" className={`${plusJakarta.variable} h-full antialiased`}>
       <body className="min-h-full">{children}</body>
     </html>
   );

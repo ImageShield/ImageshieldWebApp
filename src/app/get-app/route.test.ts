@@ -32,14 +32,14 @@ describe("GET /get-app", () => {
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36",
       // Spelled out rather than imported: a fallback quietly changed back to "/"
       // would land on the quiz intro, which has no badges.
-      "/faq#install",
+      "https://imageshield.com/#download",
     ],
     [
       "iPadOS Safari, which sends a Mac's User-Agent",
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15",
-      "/faq#install",
+      "https://imageshield.com/#download",
     ],
-    ["no User-Agent", undefined, "/faq#install"],
+    ["no User-Agent", undefined, "https://imageshield.com/#download"],
   ])("redirects %s", (_, ua, target) => {
     const res = visit(ua);
     expect(res.status).toBe(302);

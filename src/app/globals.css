@@ -109,29 +109,12 @@
   /*
    * Concept 1's home page. Three grounds the rest of the site has no use for: the
    * quiz band's coral, the card the hero floats over the photograph, and the barely
-   * grey the How It Works band sits on — the design draws that last one as
-   * `surface-legacy` at 30% over white, which is this flat value once composited.
+   * grey the How It Works band sits on — the design draws that last one as the old
+   * site's #f3f5f7 at 30% over white, which is this flat value once composited.
    */
   --color-coral: #ff7274;
   --color-card-night: #222222;
   --color-canvas-mist: #fbfcfd;
-
-  /*
-   * Pages carried over from the old imageshield.com — the FAQ so far. That site is
-   * a light one, and it paints every piece of copy on it in a single violet rather
-   * than the funnel's neutral ink ramp. Its page ground is `canvas-tint` to the
-   * hex and its body ink is `navbar`, so those two are aliased rather than
-   * repeated; the rest are the old site's own.
-   */
-  --color-ink-legacy: var(--color-navbar);
-  /* Rules between accordion rows, and the footer's top edge. A shade bluer than
-   * `line-soft`, which is the funnel's. */
-  --color-line-legacy: #e0e6eb;
-  /* The footer's ground. Laid over the page at 50%, the way the old site has it. */
-  --color-surface-legacy: #f3f5f7;
-  /* Its buttons lift on a blue shadow rather than a neutral one. */
-  --shadow-legacy: 0 4px 24px -4px rgb(0 128 255 / 0.15);
-  --shadow-legacy-hover: 0 8px 32px -4px rgb(0 128 255 / 0.25);
 
   /*
    * Skeletons — the blocks standing in for content that hasn't arrived, and the
@@ -155,9 +138,6 @@
 
   /* Type — Plus Jakarta Sans, same face as the app */
   --font-sans: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
-
-  /* …and Inter for the marketing site, which is what the V1 design is drawn in. */
-  --font-site: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
   /* Funnel screens are phone-sized. This is the content column everywhere. */
   --spacing-gutter: 1.25rem;

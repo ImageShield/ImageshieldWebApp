@@ -1,19 +1,20 @@
 /**
- * The FAQ's "Install the App" block — the one page that still carries both badges
- * with the landing page parked. The nav's Download link and `/get-app`'s desktop
- * fallback both land here, so the id and the path share one constant rather than
- * drifting apart. Declared above `SITE_NAV`, which reads it while the module loads.
- */
-export const FAQ_INSTALL_ID = "install";
-export const FAQ_INSTALL_PATH = `/faq#${FAQ_INSTALL_ID}`;
-
-/**
- * Marketing nav, in the order the V1 design lists it.
+ * Nav links that go to the old site rather than to pages here: Download and How It
+ * Works because their sections here are on the parked landing page, which `/` no
+ * longer reaches, and the rest because nothing here has them. Both navs read
+ * these, so they can't drift apart.
  *
- * Only Download, `/quiz` and `/faq` resolve today — the rest are placeholders
- * pointing at the anchors those sections will claim, so wiring them up later is a
- * matter of rendering the section with the matching `id`.
+ * Download is also where `/get-app` sends anything that isn't a phone, since it is
+ * the one place left that carries both store badges.
  */
+export const DOWNLOAD_URL = "https://imageshield.com/#download";
+const FAQ_URL = "https://imageshield.com/faq";
+const HOW_IT_WORKS_URL = "https://imageshield.com/#how-it-works";
+const PRICING_URL = "https://imageshield.com/pricing";
+const PRIVACY_URL = "https://imageshield.com/#privacy";
+const PATENTS_URL = "https://imageshield.com/patent-notice";
+
+/** Marketing nav, in the order the V1 design lists it. */
 export const SITE_NAV: ReadonlyArray<{
   label: string;
   href: string;
@@ -29,9 +30,9 @@ export const SITE_NAV: ReadonlyArray<{
    */
   mark?: "SM" | "TM";
 }> = [
-  /* Not `#download`: that anchor lives on the parked landing page, and this bar is
-     only drawn on pages that don't have it, so the link went nowhere. */
-  { label: "Download", href: FAQ_INSTALL_PATH, bright: true },
+  /* Not the bare `#download`: that anchor lives on the parked landing page, and this
+     bar is only drawn on pages that don't have it, so the link went nowhere. */
+  { label: "Download", href: DOWNLOAD_URL, bright: true },
   {
     /* Still points at the quiz intro, which is the only route to a score — the
        label names the destination's payoff rather than its first screen. */
@@ -40,11 +41,11 @@ export const SITE_NAV: ReadonlyArray<{
     bright: true,
     mark: "SM",
   },
-  { label: "FAQ", href: "/faq" },
-  { label: "How It Works", href: "#how-it-works" },
-  { label: "Pricing", href: "#pricing" },
-  { label: "Privacy", href: "#privacy" },
-  { label: "Patents", href: "#patents" },
+  { label: "FAQ", href: FAQ_URL },
+  { label: "How It Works", href: HOW_IT_WORKS_URL },
+  { label: "Pricing", href: PRICING_URL },
+  { label: "Privacy", href: PRIVACY_URL },
+  { label: "Patents", href: PATENTS_URL },
 ];
 
 /**
@@ -58,14 +59,14 @@ export const SITE_NAV: ReadonlyArray<{
  * all seven, so the two lists genuinely differ.
  */
 export const HERO_NAV: ReadonlyArray<{ label: string; href: string }> = [
-  { label: "FAQ", href: "/faq" },
-  { label: "How It Works", href: "#how-it-works" },
-  { label: "Pricing", href: "#pricing" },
-  { label: "Privacy", href: "#privacy" },
-  { label: "Patents", href: "#patents" },
+  { label: "FAQ", href: FAQ_URL },
+  { label: "How It Works", href: HOW_IT_WORKS_URL },
+  { label: "Pricing", href: PRICING_URL },
+  { label: "Privacy", href: PRIVACY_URL },
+  { label: "Patents", href: PATENTS_URL },
 ];
 
-/** Social accounts, in the order the footer row shows them. */
+/** Social accounts, in the order the download section's row shows them. */
 export const SOCIAL_LINKS = [
   {
     label: "Facebook",
@@ -86,38 +87,4 @@ export const STORE_LINKS = {
     "https://apps.apple.com/us/app/imageshield-ai-image-security/id6746722108",
   googlePlay:
     "https://play.google.com/store/apps/details?id=com.imageshieldmobile",
-} as const;
-
-/**
- * The old site's footer links. These four pages have not been rebuilt here yet, so
- * they point back at imageshield.com rather than at routes that would 404 — swap
- * each href for a local path as its page lands.
- */
-export const LEGAL_LINKS = [
-  { label: "Privacy Policy", href: "https://imageshield.com/privacy-policy" },
-  {
-    label: "Terms of Service",
-    href: "https://imageshield.com/terms-and-conditions",
-  },
-  { label: "Patent Notice", href: "https://imageshield.com/patent-notice" },
-  {
-    label: "Biometric Consent Agreement",
-    href: "https://imageshield.com/biometric-consent-agreement",
-  },
-  { label: "Contact Us", href: "mailto:support@imageshield.com" },
-] as const;
-
-/** Where existing subscribers on the pre-app product still sign in. */
-export const LEGACY_PLATFORM_URL = "https://app.imageshield.com/guest/login";
-
-/**
- * TrustArc's certification seal, under the registration id the old site uses. The
- * image is served from TrustArc and has to stay on their host — the seal is only
- * valid while it resolves against their validation page.
- */
-export const TRUSTE_SEAL = {
-  validation:
-    "https://privacy.truste.com/privacy-seal/validation?rid=87419b93-285d-4d77-946b-bcd0ae23b547",
-  image:
-    "https://privacy-policy.truste.com/privacy-seal/seal?rid=87419b93-285d-4d77-946b-bcd0ae23b547",
 } as const;
