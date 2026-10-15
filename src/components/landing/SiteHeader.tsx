@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { SITE_NAV } from "@/lib/site-nav";
+import { HOME_URL, SITE_NAV } from "@/lib/site-nav";
 import { Close, Menu } from "./icons";
 
 /**
@@ -36,7 +36,7 @@ export function SiteHeader() {
   return (
     <header className="absolute inset-x-0 top-0 z-20">
       <div className="flex h-[65px] items-center justify-between bg-navbar px-6 shadow-[0_4px_6px_rgba(0,0,0,0.1),0_10px_15px_rgba(0,0,0,0.1)] backdrop-blur-[2px] xl:pr-[clamp(1.5rem,3.34vw,64px)] xl:pl-[clamp(1.5rem,14.375vw,276px)]">
-        <Link href="/" aria-label="ImageShield home" className="shrink-0">
+        <Link href={HOME_URL} aria-label="ImageShield home" className="shrink-0">
           <Image
             src="/media/logo.png"
             alt="ImageShield"

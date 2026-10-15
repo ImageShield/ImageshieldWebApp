@@ -8,6 +8,8 @@
  * the one place left that carries both store badges.
  */
 export const DOWNLOAD_URL = "https://imageshield.com/#download";
+/** Where the logo goes: `/` here is the quiz intro, not the brand's home page. */
+export const HOME_URL = "https://imageshield.com/";
 const FAQ_URL = "https://imageshield.com/faq";
 const HOW_IT_WORKS_URL = "https://imageshield.com/#how-it-works";
 const PRICING_URL = "https://imageshield.com/pricing";

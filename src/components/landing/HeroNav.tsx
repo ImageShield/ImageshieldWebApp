@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { STEP_PATHS } from "@/lib/funnel";
-import { HERO_NAV } from "@/lib/site-nav";
+import { HERO_NAV, HOME_URL } from "@/lib/site-nav";
 import { Close, Menu } from "./icons";
 
 /**
@@ -42,7 +42,7 @@ export function HeroNav() {
   return (
     <header className="relative z-20 border-b border-ink-soft backdrop-blur-[10px]">
       <div className="flex h-16 items-center justify-between pr-4 pl-6 sm:pl-10 xl:h-24 xl:pr-[53px]">
-        <Link href="/" aria-label="ImageShield home" className="shrink-0">
+        <Link href={HOME_URL} aria-label="ImageShield home" className="shrink-0">
           <Image
             src="/media/logo-wordmark.svg"
             alt="ImageShield"
