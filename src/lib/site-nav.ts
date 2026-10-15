@@ -20,29 +20,14 @@ const PATENTS_URL = "https://imageshield.com/patent-notice";
 export const SITE_NAV: ReadonlyArray<{
   label: string;
   href: string;
-  /** The first two links are set in plain white; the rest in the dimmer nav ink. */
+  /** Download is set in plain white; the rest in the dimmer nav ink. */
   bright?: boolean;
-  /**
-   * Raised after the label.
-   *
-   * The LHS Results V1 export draws this link as "Likeness Health Score™", and only
-   * the label is taken from it: the mark stays ℠ across the site, because what is
-   * being marked is a service ImageShield performs rather than a product it sells.
-   * The type keeps both so a genuine ™ elsewhere doesn't need a second flag.
-   */
-  mark?: "SM" | "TM";
 }> = [
   /* Not the bare `#download`: that anchor lives on the parked landing page, and this
      bar is only drawn on pages that don't have it, so the link went nowhere. */
   { label: "Download", href: DOWNLOAD_URL, bright: true },
-  {
-    /* Still points at the quiz intro, which is the only route to a score — the
-       label names the destination's payoff rather than its first screen. */
-    label: "Likeness Health Score",
-    href: "/quiz",
-    bright: true,
-    mark: "SM",
-  },
+  /* No Likeness Health Score link: every page this bar is drawn on is already in
+     the quiz funnel, so it only sent people back to its start. */
   { label: "FAQ", href: FAQ_URL },
   { label: "How It Works", href: HOW_IT_WORKS_URL },
   { label: "Pricing", href: PRICING_URL },
@@ -53,12 +38,10 @@ export const SITE_NAV: ReadonlyArray<{
 /**
  * The same nav as Concept 1 draws it over the landing hero.
  *
- * Kept apart from `SITE_NAV` rather than derived from it: the two links this bar
- * drops — Download and the quiz — are not missing, they have been promoted to the
- * pair of pills the bar ends with, so a derived list would have to subtract them
- * again. Every label here is set in one ink, so there is no emphasis flag and no
- * service mark to carry. The funnel screens are still on the V1 bar and still need
- * all seven, so the two lists genuinely differ.
+ * Kept apart from `SITE_NAV` rather than derived from it: Download is not missing
+ * here, it has been promoted to one of the pair of pills the bar ends with, next to
+ * the quiz. Every label here is set in one ink, so there is no emphasis flag to
+ * carry.
  */
 export const HERO_NAV: ReadonlyArray<{ label: string; href: string }> = [
   { label: "FAQ", href: FAQ_URL },

@@ -12,24 +12,9 @@ import { Close, Menu } from "./icons";
  * Measured off the 1920-wide design: a 65px full-bleed bar, logo 276px in from the
  * left, the link row ending 64px from the right, 32px between links. Both paddings
  * are set in vw so that ratio holds down the range and caps at the design values on
- * anything wider. Seven links stop fitting below ~1280, so they collapse behind a
- * disclosure under `xl` (the design only specifies desktop).
+ * anything wider. The links collapse behind a disclosure under `xl` (the design
+ * only specifies desktop).
  */
-/**
- * A link's text, with the service mark where the design shows one. Its size and
- * rise are measured off the design in px — the row is a fixed 16px either way.
- */
-function NavLabel({ item }: { item: (typeof SITE_NAV)[number] }) {
-  return (
-    <>
-      {item.label}
-      {item.mark ? (
-        <sup className="align-[4.6px] text-[0.35em]">{item.mark}</sup>
-      ) : null}
-    </>
-  );
-}
-
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
 
@@ -58,7 +43,7 @@ export function SiteHeader() {
                     item.bright ? "text-white/90" : "text-ink-onnav"
                   }`}
                 >
-                  <NavLabel item={item} />
+                  {item.label}
                 </Link>
               </li>
             ))}
@@ -93,7 +78,7 @@ export function SiteHeader() {
                     item.bright ? "text-white/90" : "text-ink-onnav"
                   }`}
                 >
-                  <NavLabel item={item} />
+                  {item.label}
                 </Link>
               </li>
             ))}
