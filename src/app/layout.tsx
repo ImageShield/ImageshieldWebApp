@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
+import { ConsentManager } from "@/components/consent/ConsentManager";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -26,7 +27,12 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${plusJakarta.variable} h-full antialiased`}>
-      <body className="min-h-full">{children}</body>
+      {/* `relative` so the "Cookie settings" link can sit at the foot of the page. */}
+      <body className="relative min-h-full">
+        {/* Here, not per screen: the root layout is never remounted by a client-side
+            navigation, so the choice and the scripts it allowed load once. */}
+        <ConsentManager>{children}</ConsentManager>
+      </body>
     </html>
   );
 }

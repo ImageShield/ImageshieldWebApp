@@ -15,6 +15,8 @@ const HOW_IT_WORKS_URL = "https://imageshield.com/#how-it-works";
 const PRICING_URL = "https://imageshield.com/pricing";
 const PRIVACY_URL = "https://imageshield.com/#privacy";
 const PATENTS_URL = "https://imageshield.com/patent-notice";
+/** The policy itself. The nav's Privacy link above is a section of the homepage. */
+export const PRIVACY_POLICY_URL = "https://imageshield.com/privacy-policy";
 
 /** Marketing nav, in the order the V1 design lists it. */
 export const SITE_NAV: ReadonlyArray<{
