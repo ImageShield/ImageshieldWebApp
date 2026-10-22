@@ -5,6 +5,7 @@ import {
   type Consent,
   PENDING,
   clearTrackingCookies,
+  hasStaleConsent,
   reloadPage,
   updateGoogleConsent,
   useConsent,
@@ -60,16 +61,20 @@ export function ConsentManager({ children }: { children: ReactNode }) {
   }
 
   function save(next: Consent, byPointer: boolean) {
+    /* A choice from an older consent version reads as no choice at all, so the banner
+       asks again — but whatever its "yes" stored is still on the device. A "no" now
+       clears that too. Nothing of it is loaded on this page, so no reload. */
+    const stale = decided === null && hasStaleConsent();
     const withdrawn = {
-      analytics: Boolean(decided?.analytics) && !next.analytics,
-      marketing: Boolean(decided?.marketing) && !next.marketing,
+      analytics: (Boolean(decided?.analytics) || stale) && !next.analytics,
+      marketing: (Boolean(decided?.marketing) || stale) && !next.marketing,
     };
     writeConsent(next);
     updateGoogleConsent(next);
     close(byPointer);
     if (withdrawn.analytics || withdrawn.marketing) {
       clearTrackingCookies(withdrawn);
-      reloadPage();
+      if (!stale) reloadPage();
     }
   }
 

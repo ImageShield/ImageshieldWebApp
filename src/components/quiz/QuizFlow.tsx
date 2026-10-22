@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { Check } from "@/components/landing/icons";
+import { trackAnswer, trackComplete, trackStart } from "@/lib/analytics";
 import { NOT_ELIGIBLE_PATH, nextPath, STEP_PATHS } from "@/lib/funnel";
 import {
   readFunnel,
@@ -11,7 +12,7 @@ import {
   toggleAnswer,
   useFunnel,
 } from "@/lib/funnel-state";
-import { askedQuestions, declaresMinor } from "@/lib/quiz";
+import { askedQuestions, declaresMinor, type QuizDefinition } from "@/lib/quiz";
 import { useQuizDefinition } from "@/lib/use-quiz-definition";
 import { QuizProgress } from "./QuizProgress";
 import { QuizSkeleton } from "./QuizSkeleton";
@@ -133,6 +134,8 @@ export function QuizFlow({ signedIn }: { signedIn: boolean }) {
    * they proved a minute ago. They go straight to the write.
    */
   function finish() {
+    /* An under-18 finisher is dropped inside `track`, along with their answers. */
+    trackComplete(definition);
     /* Adults only, and checked BEFORE the signed-in shortcut below — that ordering is
        the point. Someone who has already verified (and been given an adult placeholder
        birth date) still holds a session, so they can retake the quiz, change their
@@ -167,6 +170,7 @@ export function QuizFlow({ signedIn }: { signedIn: boolean }) {
        from the store, and routing first would paint it without the answer just
        picked. `saveAnswer` returns the new state, which is that written answer. */
     const next = saveAnswer(question.key, option);
+    trackAnswer(definition, question.key);
     if (step < askedQuestions(definition, next.answers).length) go(step + 1);
     else finish();
   }
@@ -178,6 +182,7 @@ export function QuizFlow({ signedIn }: { signedIn: boolean }) {
 
   return (
     <>
+      <QuizStarted definition={definition} questionKey={question.key} />
       {/* The design only draws desktop, where the bar sits 137px under the header.
           That much dead space swallows a phone screen, so it tightens down. */}
       <div className="pt-10 sm:pt-20 lg:pt-[137px]">
@@ -264,9 +269,12 @@ export function QuizFlow({ signedIn }: { signedIn: boolean }) {
           <button
             type="button"
             disabled={!chosen.size}
-            onClick={() =>
-              step < asked.length ? go(step + 1) : finish()
-            }
+            onClick={() => {
+              /* A multi-select is answered when it's left, not on each toggle. */
+              trackAnswer(definition, question.key);
+              if (step < asked.length) go(step + 1);
+              else finish();
+            }}
             className="mt-8 mx-auto flex h-14 w-full max-w-[512px] items-center justify-center rounded-full bg-brand text-base font-semibold text-ink-inverse transition-colors hover:bg-cta disabled:opacity-40"
           >
             Continue
@@ -275,4 +283,15 @@ export function QuizFlow({ signedIn }: { signedIn: boolean }) {
       </div>
     </>
   );
+}
+
+/**
+ * `quiz_start`, once the first question a visitor reaches is on screen — the intro's
+ * button, a link straight to `/quiz/questions`, a resumed `?q=4` and a bounce back
+ * from `/details` all land here. Every later question re-runs the effect, and `track`
+ * drops the repeats, so only the first counts.
+ */
+function QuizStarted({ definition, questionKey }: { definition: QuizDefinition; questionKey: string }) {
+  useEffect(() => trackStart(definition, questionKey), [definition, questionKey]);
+  return null;
 }

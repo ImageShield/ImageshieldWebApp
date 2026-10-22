@@ -1,8 +1,20 @@
 "use client";
 
 import { type MouseEvent, useEffect, useRef, useState } from "react";
+import { ANSWER_ANALYTICS_APPROVED } from "@/lib/analytics-approval";
 import type { Consent } from "@/lib/consent";
 import { PRIVACY_POLICY_URL } from "@/lib/site-nav";
+
+/* The analytics wording live today, and the one drafted for legal review that names
+   answer-level collection. The second shows only once ANSWER_ANALYTICS_APPROVED is on,
+   which also moves consent to v2 so nobody's earlier "yes" is read as a "yes" to it. */
+const ANALYTICS_DETAIL =
+  "Google Tag Manager, and any measurement tools we run through it, such as Google Analytics where enabled: which screens people reach and where they stop.";
+export const ANALYTICS_DETAIL_WITH_ANSWERS =
+  "Google Tag Manager, and Google Analytics through it: which quiz questions people reach, where they stop, and the options chosen for some questions — which platforms you use, how often photos of you are shared, and how you monitor your likeness. Never your age, gender, experience of misuse, name, email or phone number.";
+const SUMMARY_ANALYTICS = ANSWER_ANALYTICS_APPROVED
+  ? "we use Google Tag Manager to see how the quiz is used, including some of your answers,"
+  : "we use Google Tag Manager to see how the quiz is used,";
 
 const ALL: Consent = { analytics: true, marketing: true };
 const NONE: Consent = { analytics: false, marketing: false };
@@ -15,8 +27,7 @@ const CATEGORIES: ReadonlyArray<{
   {
     key: "analytics",
     label: "Analytics",
-    detail:
-      "Google Tag Manager, and any measurement tools we run through it, such as Google Analytics where enabled: which screens people reach and where they stop.",
+    detail: ANSWER_ANALYTICS_APPROVED ? ANALYTICS_DETAIL_WITH_ANSWERS : ANALYTICS_DETAIL,
   },
   {
     key: "marketing",
@@ -128,7 +139,7 @@ export function ConsentBanner({
             </fieldset>
           ) : (
             <p className="mt-2 text-sm leading-6 text-ink-soft">
-              With your OK, we use Google Tag Manager to see how the quiz is used, and
+              With your OK, {SUMMARY_ANALYTICS} and
               HubSpot for marketing, which can include collecting what you enter in our
               forms. Neither loads unless you say yes, the quiz works the same either
               way, and you can change your mind from &ldquo;Cookie settings&rdquo; at

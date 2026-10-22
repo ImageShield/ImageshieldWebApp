@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { ANSWER_ANALYTICS_APPROVED } from "./analytics-approval";
 
 /**
  * The visitor's cookie choice for this site, kept in a first-party cookie.
@@ -14,8 +15,14 @@ import { useSyncExternalStore } from "react";
  * renders "not known yet", and the real answer arrives with hydration.
  */
 const COOKIE = "imageshield_consent";
-/** Bump to ask everyone again — when a vendor is added or the categories change. */
-const VERSION = "v1";
+/**
+ * Bump to ask everyone again — when a vendor is added or the categories change.
+ * v2 is the analytics wording that names quiz answers; it goes live with the answer
+ * collection it describes, never before (see analytics-approval.ts).
+ */
+const VERSION = ANSWER_ANALYTICS_APPROVED ? "v2" : "v1";
+/** The version choices are recorded under now — for tests that must hold either way. */
+export const CONSENT_VERSION = VERSION;
 const MAX_AGE_SECONDS = 60 * 60 * 24 * 182;
 
 export type Consent = {
@@ -67,6 +74,16 @@ export function readConsent(): Consent | null {
   const value = cookieValue(COOKIE);
   if (value !== last.value) last = { value, consent: parseConsent(value) };
   return last.consent;
+}
+
+/**
+ * Whether there is a choice on record that no longer counts: one made under an older
+ * VERSION, or a damaged cookie. Its "yes" may have left analytics or marketing cookies
+ * behind, which a fresh "no" should clear even though nothing is loaded now.
+ */
+export function hasStaleConsent(): boolean {
+  const value = cookieValue(COOKIE);
+  return value !== undefined && parseConsent(value) === null;
 }
 
 export function writeConsent(consent: Consent): void {

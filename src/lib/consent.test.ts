@@ -5,6 +5,7 @@ import {
   parseConsent,
   readConsent,
   serializeConsent,
+  CONSENT_VERSION,
   writeConsent,
 } from "./consent";
 
@@ -45,7 +46,7 @@ describe("consent cookie", () => {
     writeConsent({ analytics: true, marketing: false });
     // No `Secure` here: the test page is http://localhost.
     expect(set).toHaveBeenCalledWith(
-      "imageshield_consent=v1.a1.m0; Max-Age=15724800; Path=/; SameSite=Lax",
+      `imageshield_consent=${CONSENT_VERSION}.a1.m0; Max-Age=15724800; Path=/; SameSite=Lax`,
     );
   });
 

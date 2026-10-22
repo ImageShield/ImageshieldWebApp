@@ -234,6 +234,17 @@ export function quizIncomplete(
 const AGE_QUESTION_KEY = "age";
 const MINOR_AGE_ANSWERS: ReadonlySet<string> = new Set(["Under 18", "13-17"]);
 
+/**
+ * Whether this definition's age question still offers an under-18 option `declaresMinor`
+ * recognises. If the backend renames the question or rewords the band, `declaresMinor`
+ * silently stops matching — anything that relies on it to hold back a minor's data
+ * (analytics does) should then hold back everything instead.
+ */
+export function recognisesMinors(definition: QuizDefinition): boolean {
+  const age = definition.questions.find((q) => q.key === AGE_QUESTION_KEY);
+  return age !== undefined && age.options.some((option) => MINOR_AGE_ANSWERS.has(option));
+}
+
 /** Whether the visitor answered the age question with an under-18 option. */
 export function declaresMinor(answers: QuizAnswers): boolean {
   const age = answers[AGE_QUESTION_KEY];

@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { useEffect } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { CONSENT_VERSION as V } from "@/lib/consent";
 import { ConsentManager } from "./ConsentManager";
 
 /* `next/script` injects into the real document after hydration; what matters here is
@@ -51,7 +52,7 @@ describe("ConsentManager", () => {
     render(<ConsentManager>{screenContent}</ConsentManager>);
     fireEvent.click(screen.getByRole("button", { name: "Reject all" }));
 
-    expect(document.cookie).toContain("imageshield_consent=v1.a0.m0");
+    expect(document.cookie).toContain(`imageshield_consent=${V}.a0.m0`);
     expect(banner()).toBeNull();
     expect(scripts()).toEqual([]);
   });
@@ -90,12 +91,12 @@ describe("ConsentManager", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: /Marketing/ }));
     fireEvent.click(screen.getByRole("button", { name: "Save choices" }));
 
-    expect(document.cookie).toContain("imageshield_consent=v1.a0.m1");
+    expect(document.cookie).toContain(`imageshield_consent=${V}.a0.m1`);
     expect(scripts()).toEqual(["hs-banner-off", "hs-script-loader"]);
   });
 
   it("doesn't ask a returning visitor again", () => {
-    document.cookie = "imageshield_consent=v1.a1.m1; Path=/";
+    document.cookie = `imageshield_consent=${V}.a1.m1; Path=/`;
     render(<ConsentManager>{screenContent}</ConsentManager>);
     expect(banner()).toBeNull();
     expect(scripts()).toEqual(["gtm-init", "hs-banner-off", "hs-script-loader"]);
@@ -108,8 +109,28 @@ describe("ConsentManager", () => {
     expect(scripts()).toEqual([]);
   });
 
+  /* After a version bump the old "yes" reads as no choice; a "no" now must still clear
+     what it left behind. Nothing was loaded on this page, so there is nothing to reload. */
+  it("clears an outdated choice's cookies when the visitor now rejects", () => {
+    document.cookie = "imageshield_consent=v0.a1.m1; Path=/";
+    for (const name of ["_ga", "__hstc", "hubspotutk", "other"]) document.cookie = `${name}=1; Path=/`;
+    render(<ConsentManager>{screenContent}</ConsentManager>);
+    fireEvent.click(screen.getByRole("button", { name: "Reject all" }));
+    expect(cookieNames().sort()).toEqual(["imageshield_consent", "other"]);
+    expect(reloadPage).not.toHaveBeenCalled();
+  });
+
+  it("keeps an outdated choice's cookies when the visitor now accepts", () => {
+    document.cookie = "imageshield_consent=v0.a1.m1; Path=/";
+    document.cookie = "_ga=1; Path=/";
+    render(<ConsentManager>{screenContent}</ConsentManager>);
+    fireEvent.click(screen.getByRole("button", { name: "Accept all" }));
+    expect(cookieNames()).toContain("_ga");
+    expect(reloadPage).not.toHaveBeenCalled();
+  });
+
   it("on withdrawal tells Google, deletes the cookies and reloads", () => {
-    document.cookie = "imageshield_consent=v1.a1.m1; Path=/";
+    document.cookie = `imageshield_consent=${V}.a1.m1; Path=/`;
     for (const name of ["_ga", "__hstc", "other"]) document.cookie = `${name}=1; Path=/`;
     const dataLayer: unknown[] = [];
     (window as WithDataLayer).dataLayer = dataLayer;
@@ -120,7 +141,7 @@ describe("ConsentManager", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: /Marketing/ }));
     fireEvent.click(screen.getByRole("button", { name: "Save choices" }));
 
-    expect(document.cookie).toContain("imageshield_consent=v1.a0.m0");
+    expect(document.cookie).toContain(`imageshield_consent=${V}.a0.m0`);
     expect(cookieNames().sort()).toEqual(["imageshield_consent", "other"]);
     // An `arguments` object, as gtag() pushes — GTM ignores the same values as an array.
     const command = dataLayer.at(-1);
@@ -139,7 +160,7 @@ describe("ConsentManager", () => {
   });
 
   it("grants more without a reload", () => {
-    document.cookie = "imageshield_consent=v1.a1.m0; Path=/";
+    document.cookie = `imageshield_consent=${V}.a1.m0; Path=/`;
     const dataLayer: unknown[] = [];
     (window as WithDataLayer).dataLayer = dataLayer;
 
@@ -163,13 +184,13 @@ describe("ConsentManager", () => {
   });
 
   it("leaves the choice alone when settings are cancelled", () => {
-    document.cookie = "imageshield_consent=v1.a1.m1; Path=/";
+    document.cookie = `imageshield_consent=${V}.a1.m1; Path=/`;
     render(<ConsentManager>{screenContent}</ConsentManager>);
     fireEvent.click(screen.getByRole("button", { name: "Cookie settings" }));
     fireEvent.click(screen.getByRole("checkbox", { name: /Analytics/ }));
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
-    expect(document.cookie).toContain("imageshield_consent=v1.a1.m1");
+    expect(document.cookie).toContain(`imageshield_consent=${V}.a1.m1`);
     expect(banner()).toBeNull();
     expect(reloadPage).not.toHaveBeenCalled();
   });
@@ -208,7 +229,7 @@ describe("ConsentManager focus", () => {
   });
 
   it("opens Cookie settings on the first choice, and returns there on Cancel and Save", () => {
-    document.cookie = "imageshield_consent=v1.a1.m0; Path=/";
+    document.cookie = `imageshield_consent=${V}.a1.m0; Path=/`;
     render(<ConsentManager>{screenContent}</ConsentManager>);
 
     fireEvent.click(trigger());
