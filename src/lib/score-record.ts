@@ -134,17 +134,6 @@ function resolve(firstName: string, envelope: ScoreEnvelope): ScoreLoad {
         `general_recommendations ${shapeOf(envelope.general_recommendations)} -> ${localRecommendations ? "local" : "api"} ${recommendations.length} rows; ` +
         describeRecord(score),
     );
-    /* TEMPORARY, development only: the gender investigation of 2026-10-13. Which saved
-       score this render used (its `computed_at`), every gender value in its breakdown
-       (two would mean a duplicate key), and the gender row it produced. Nothing else
-       from the record. Remove once the mismatch report is closed. */
-    const genders = Array.isArray(score.breakdown?.quiz)
-      ? score.breakdown.quiz.filter((entry) => entry?.key === "gender").map((entry) => entry.value)
-      : [];
-    console.info(
-      `score cards gender: record computed_at ${score.computed_at}; saved gender ${JSON.stringify(genders)}; ` +
-        `factor ${riskFactors.find((factor) => factor.key === "gender")?.title ?? "none"} (${localRisk ? "local" : "api"})`,
-    );
   }
 
   return {

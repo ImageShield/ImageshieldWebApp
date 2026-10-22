@@ -773,3 +773,31 @@ describe("/score and /api/score, for the same saved score", () => {
     });
   }
 });
+
+/* The development log describes the record's shape for debugging the cards. The
+   answers themselves — age, gender, abuse history — stay out of it, as everywhere. */
+describe("/score — the development log", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("names question keys and shapes, never the saved answers", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    const info = vi.spyOn(console, "info").mockImplementation(() => {});
+    answers.score = {
+      ...v11With([
+        { key: "age", value: "18-24", deduction: 6 },
+        { key: "gender", value: "Non-Binary", deduction: 4 },
+        { key: "prior_misuse", value: "Once or twice", deduction: 9 },
+      ]),
+      general_recommendations: [],
+    };
+
+    render(await ScorePage());
+
+    const logged = info.mock.calls.flat().join("\n");
+    expect(logged).toContain("score cards:");
+    for (const value of ["18-24", "Non-Binary", "Once or twice"]) {
+      expect(logged).not.toContain(value);
+    }
+    info.mockRestore();
+  });
+});
