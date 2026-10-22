@@ -3,6 +3,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { writeFunnel } from "@/lib/funnel-state";
 import { OtpForm } from "./OtpForm";
 
+/* The full-page hop to /not-eligible, recorded rather than performed (jsdom can't navigate). */
+const leave = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/not-eligible", () => ({ leaveForNotEligible: leave }));
+beforeEach(() => leave.mockReset());
+
 const push = vi.fn();
 const replace = vi.fn();
 vi.mock("next/navigation", () => ({
@@ -38,8 +43,21 @@ describe("OtpForm", () => {
     writeFunnel({ phone: "+15551230000", answers: { age: "13-17" } });
     render(<OtpForm />);
 
-    expect(replace).toHaveBeenCalledWith("/not-eligible");
+    expect(leave).toHaveBeenCalledWith("replace");
+    expect(replace).not.toHaveBeenCalled();
     enterCode();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  /* The age changed to under 18 after this screen loaded (another tab, or back and
+     forward): the check at verify time catches it, before any code is sent. */
+  it("turns away an answer that became under-18 after the screen loaded", () => {
+    writeFunnel({ phone: "+15551230000", answers: { age: "18-24" } });
+    render(<OtpForm />);
+    expect(leave).not.toHaveBeenCalled();
+    writeFunnel({ answers: { age: "Under 18" } });
+    enterCode();
+    expect(leave).toHaveBeenCalledWith("replace");
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

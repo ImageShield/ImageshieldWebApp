@@ -4,6 +4,11 @@ import { writeFunnel } from "@/lib/funnel-state";
 import type { QuizDefinition } from "@/lib/quiz";
 import { ResumeSave } from "./ResumeSave";
 
+/* The full-page hop to /not-eligible, recorded rather than performed (jsdom can't navigate). */
+const leave = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/not-eligible", () => ({ leaveForNotEligible: leave }));
+beforeEach(() => leave.mockReset());
+
 const nav = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => nav }));
 
@@ -44,7 +49,8 @@ describe("ResumeSave", () => {
 
     render(<ResumeSave />);
 
-    await waitFor(() => expect(nav.replace).toHaveBeenCalledWith("/not-eligible"));
+    await waitFor(() => expect(leave).toHaveBeenCalledWith("replace"));
+    expect(nav.replace).not.toHaveBeenCalled();
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(nav.refresh).not.toHaveBeenCalled(); // no score read back
     expect(screen.queryByText(/couldn.t finish scoring/i)).toBeNull(); // not stuck on "Try again"

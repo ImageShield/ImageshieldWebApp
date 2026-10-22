@@ -5,6 +5,11 @@ import { writeFunnel } from "@/lib/funnel-state";
 import type { QuizDefinition } from "@/lib/quiz";
 import { QuizFlow } from "./QuizFlow";
 
+/* The full-page hop to /not-eligible, recorded rather than performed (jsdom can't navigate). */
+const leave = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/not-eligible", () => ({ leaveForNotEligible: leave }));
+beforeEach(() => leave.mockReset());
+
 const nav = vi.hoisted(() => ({ push: vi.fn(), search: "q=2" }));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: nav.push, replace: vi.fn() }),
@@ -72,20 +77,24 @@ function finishWithAge(age: string, signedIn: boolean) {
   }
 }
 
-const destinations = () => nav.push.mock.calls.map(([path]) => path);
+/* Router pushes, then full-page navigations — which only ever go to /not-eligible. */
+const destinations = () => [
+  ...nav.push.mock.calls.map(([path]) => path),
+  ...leave.mock.calls.map(([mode]) => `/not-eligible (full page, ${mode})`),
+];
 
 describe("QuizFlow finishing the quiz", () => {
   describe("with an under-18 answer", () => {
     it("sends a signed-out visitor to /not-eligible", () => {
       finishWithAge("Under 18", false);
-      expect(destinations()).toStrictEqual(["/not-eligible"]);
+      expect(destinations()).toStrictEqual(["/not-eligible (full page, push)"]);
     });
 
     /* The bypass this closes: a session sends a finished quiz straight to
        /calculating, past the details and OTP screens' own under-18 checks. */
     it("sends a signed-in visitor to /not-eligible, not the signed-in shortcut", () => {
       finishWithAge("Under 18", true);
-      expect(destinations()).toStrictEqual(["/not-eligible"]);
+      expect(destinations()).toStrictEqual(["/not-eligible (full page, push)"]);
     });
 
     it("never reaches /calculating, so no score is submitted", () => {
@@ -97,12 +106,12 @@ describe("QuizFlow finishing the quiz", () => {
     it("is checked on the multi-select Continue path too", () => {
       quiz.current = MULTI_LAST;
       finishWithAge("Under 18", true);
-      expect(destinations()).toStrictEqual(["/not-eligible"]);
+      expect(destinations()).toStrictEqual(["/not-eligible (full page, push)"]);
     });
 
     it("catches the dev fixture's 13-17 band as well", () => {
       finishWithAge("13-17", true);
-      expect(destinations()).toStrictEqual(["/not-eligible"]);
+      expect(destinations()).toStrictEqual(["/not-eligible (full page, push)"]);
     });
 
     /* `pick` writes the answer and calls `finish()` in the same handler, before a
@@ -113,7 +122,7 @@ describe("QuizFlow finishing the quiz", () => {
       writeFunnel({ quizVersion: "test-v1", answers: {} });
       render(<QuizFlow signedIn />);
       fireEvent.click(screen.getByRole("button", { name: "Under 18" }));
-      expect(destinations()).toStrictEqual(["/not-eligible"]);
+      expect(destinations()).toStrictEqual(["/not-eligible (full page, push)"]);
     });
   });
 
@@ -212,7 +221,7 @@ describe("QuizFlow Tag Manager events", () => {
   it("sends nothing for an under-18 finisher, and still turns them away", () => {
     finishWithAge("Under 18", false);
     expect(pushed()).toStrictEqual([]);
-    expect(destinations()).toStrictEqual(["/not-eligible"]);
+    expect(destinations()).toStrictEqual(["/not-eligible (full page, push)"]);
   });
 
   it("runs the quiz the same with analytics rejected", () => {

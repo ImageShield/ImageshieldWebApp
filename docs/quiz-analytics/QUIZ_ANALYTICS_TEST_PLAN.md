@@ -13,7 +13,7 @@ npx tsc --noEmit        # type check
 npx eslint src          # lint
 ```
 
-Result on 23 October 2026: **30 test files, 368 tests passed**; type check and lint clean. The suite also passes, unchanged, with `ANSWER_ANALYTICS_APPROVED` set to `true` (run with the constant edited and then restored), so the approval change needs no test edits.
+Result on 23 October 2026, with the under-18 safeguard and the separate gender-log cleanup: **31 test files, 386 tests passed**; type check and lint clean. The suite also passes, unchanged, with `ANSWER_ANALYTICS_APPROVED` set to `true` (run with the constant edited and then restored), so the approval change needs no test edits.
 
 No failures existed before this work, and none were introduced.
 
@@ -50,6 +50,9 @@ No failures existed before this work, and none were introduced.
 | Analytics can't throw into the quiz | `analytics.test.ts` | "never throws into the quiz…" |
 | Reworded or moved question gets no answer | `analytics.approved.test.ts` | "sends no answer for a question reworded in place", "…moved to another position" |
 | On-screen quiz with approval: multi-select order on Continue; single answer; no gender answer | `src/components/quiz/QuizFlow.approved.test.tsx` | 2 tests |
+| Under-18 redirects are full page loads, keeping push/replace, consent denied first | `src/lib/not-eligible.test.ts`; redirect tests in `QuizFlow`, `DetailsForm`, `OtpForm` (including an age that changes after the screen loads), `Calculating`, `ResumeSave` | |
+| No GTM or HubSpot on `/not-eligible` or for an under-18 tab, whatever the consent; adults unaffected | `ConsentManager.test.tsx` | "ConsentManager for under-18 visitors" block |
+| Back/forward-cache restore reloads a blocked page still running trackers | `not-eligible.test.ts`, `ConsentManager.test.tsx` | "reloadIfTrackingSurvived", "reloads a page restored from the back/forward cache…" |
 
 **Not covered, because the code doesn't exist:** partial-session ingestion, the backend's retention and deletion, rate limiting of ingestion, and linking anonymous and verified sessions. See section 4.
 
@@ -70,6 +73,27 @@ No failures existed before this work, and none were introduced.
 | After the review fixes (23 Oct): all scenarios above re-run | Same results; with the switch on, GTM's `answer` reads as unset straight after every answer event | Pass |
 | Reload of the score page | No new events | Pass |
 
+### Under-18 safeguard, browser checks (23 October 2026, same setup, everything accepted)
+
+Each check confirms which document actually loaded (the browser's navigation record), so a client-side hop can't pass for a full page load.
+
+| Scenario | Result |
+|---|---|
+| Answer "Under 18", finish the quiz | New page at `/not-eligible`: no GTM, no HubSpot, no `dataLayer`. The only push after the age answer was the consent denial. No Google or HubSpot requests after the answer |
+| Refresh `/not-eligible`; Back button; "Back to home" | Nothing loads on any of them |
+| Open `/not-eligible` directly, with and without accepting there | Nothing loads |
+| Open `/details` with an under-18 answer stored | New page at `/not-eligible`, nothing loads |
+| Back through the quiz, change the age to under 18, reopen `/otp` | New page at `/not-eligible`; the code is never verified |
+| `Calculating`: the server refuses (answers rewritten to under 18 in transit) | Page with GTM running → new page at `/not-eligible`, nothing loads |
+| `ResumeSave`: first save fails, then `/score` retries and the server refuses | Same |
+| Adult run | Unchanged: GTM loads, eight quiz events |
+
+**Not testable locally:**
+- **Back/forward-cache restores.** Headless Chrome reloaded the page instead of restoring it, and quiz pages are `no-store`. The reload guard is unit-tested.
+- **A Google tag's final ping on unload.** The container has no tags.
+
+Both are in the production checks below.
+
 ## 3. After release: production checks
 
 Run these once the quiz update is live, before relying on any report.
@@ -79,6 +103,12 @@ Run these once the quiz update is live, before relying on any report.
 3. GA4 DebugView shows `quiz_start`, `quiz_answer`, `quiz_complete` with the right parameters.
 4. Next day: GA4 Realtime or standard reports show the events, with `quiz_version` = `likeness-health-v11`.
 5. If answer collection has been approved and switched on: the banner asks everyone again (consent `v2`), and `answer` appears only on the three approved questions.
+6. **Under-18, in Chrome and in Safari:** handoff section 8, step 8. Expect:
+   - the page reloads at `/not-eligible` with GTM absent (`window.google_tag_manager` undefined in the console);
+   - nothing loads after Back, refresh or "Back to home";
+   - no `collect` request carrying `not-eligible`.
+
+   In Safari, press Back from `/not-eligible` and check in the console that `window.google_tag_manager` is undefined on the restored quiz page.
 
 **Until step 3 passes, GA4 delivery is unproven.** A successful push to the `dataLayer` doesn't show that GA4 received anything.
 

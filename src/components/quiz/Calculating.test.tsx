@@ -4,6 +4,11 @@ import { writeFunnel } from "@/lib/funnel-state";
 import type { QuizDefinition } from "@/lib/quiz";
 import { Calculating } from "./Calculating";
 
+/* The full-page hop to /not-eligible, recorded rather than performed (jsdom can't navigate). */
+const leave = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/not-eligible", () => ({ leaveForNotEligible: leave }));
+beforeEach(() => leave.mockReset());
+
 const nav = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => nav }));
 
@@ -48,7 +53,8 @@ describe("Calculating", () => {
 
     render(<Calculating />);
 
-    await waitFor(() => expect(nav.replace).toHaveBeenCalledWith("/not-eligible"), settled);
+    await waitFor(() => expect(leave).toHaveBeenCalledWith("replace"), settled);
+    expect(nav.replace).not.toHaveBeenCalled();
     expect(JSON.parse(fetchMock.mock.calls[0][1].body).answers.age).toBe("Under 18");
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(nav.push).not.toHaveBeenCalled(); // never on to the score

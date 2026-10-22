@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { useEffect } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CONSENT_VERSION as V } from "@/lib/consent";
+import { writeFunnel } from "@/lib/funnel-state";
 import { ConsentManager } from "./ConsentManager";
 
 /* `next/script` injects into the real document after hydration; what matters here is
@@ -13,6 +14,11 @@ vi.mock("next/script", () => ({
     </div>
   ),
 }));
+
+/* The route the manager is mounted on. Null, as outside a Next router, unless a test
+   puts the visitor on a page. */
+const route = vi.hoisted(() => ({ path: null as string | null }));
+vi.mock("next/navigation", () => ({ usePathname: () => route.path }));
 
 const { reloadPage } = vi.hoisted(() => ({ reloadPage: vi.fn() }));
 vi.mock("@/lib/consent", async (importOriginal) => ({
@@ -36,6 +42,9 @@ const screenContent = <main>Quiz screen</main>;
 
 afterEach(() => {
   cleanup();
+  route.path = null;
+  window.sessionStorage.clear();
+  writeFunnel({ answers: {} });
   for (const name of cookieNames()) document.cookie = `${name}=; Max-Age=0; Path=/`;
   delete (window as WithDataLayer).dataLayer;
   reloadPage.mockReset();
@@ -299,5 +308,60 @@ describe("ConsentManager placement", () => {
     expect(reloadPage).not.toHaveBeenCalled();
     expect((email() as HTMLInputElement).value).toBe("half-typed@");
     expect(mounts).toBe(1);
+  });
+});
+
+/* The under-18 safeguard: GTM and HubSpot never start on /not-eligible, or anywhere in a
+   tab whose answers say under 18, whatever the visitor agreed to. The screens reach
+   /not-eligible with a full page load, so this is the document that has to stay clean. */
+describe("ConsentManager for under-18 visitors", () => {
+  it("loads nothing on /not-eligible, even with everything accepted", () => {
+    document.cookie = `imageshield_consent=${V}.a1.m1; Path=/`;
+    route.path = "/not-eligible";
+    render(<ConsentManager>{screenContent}</ConsentManager>);
+    expect(scripts()).toEqual([]);
+    expect((window as WithDataLayer).dataLayer).toBeUndefined();
+  });
+
+  it("loads nothing on /not-eligible when the visitor accepts there", () => {
+    route.path = "/not-eligible";
+    render(<ConsentManager>{screenContent}</ConsentManager>);
+    fireEvent.click(screen.getByRole("button", { name: "Accept all" }));
+    expect(document.cookie).toContain(`imageshield_consent=${V}.a1.m1`);
+    expect(scripts()).toEqual([]);
+  });
+
+  it("loads nothing on any page once the answers say under 18 — refresh, back, or home", () => {
+    document.cookie = `imageshield_consent=${V}.a1.m1; Path=/`;
+    writeFunnel({ answers: { age: "Under 18" } });
+    for (const path of ["/quiz/questions", "/details", "/quiz"]) {
+      route.path = path;
+      render(<ConsentManager>{screenContent}</ConsentManager>);
+      expect(scripts()).toEqual([]);
+      cleanup();
+    }
+  });
+
+  /* Back from /not-eligible can restore the quiz page as it was, GTM and all. */
+  it("reloads a page restored from the back/forward cache with GTM still running", () => {
+    document.cookie = `imageshield_consent=${V}.a1.m0; Path=/`;
+    route.path = "/quiz/questions";
+    render(<ConsentManager>{screenContent}</ConsentManager>);
+    expect(scripts()).toEqual(["gtm-init"]);
+    (window as WithDataLayer).dataLayer = [];
+    writeFunnel({ answers: { age: "Under 18" } });
+
+    window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: false }));
+    expect(reloadPage).not.toHaveBeenCalled();
+    window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: true }));
+    expect(reloadPage).toHaveBeenCalledTimes(1);
+  });
+
+  it("still loads GTM and HubSpot for an adult", () => {
+    document.cookie = `imageshield_consent=${V}.a1.m1; Path=/`;
+    writeFunnel({ answers: { age: "25-34" } });
+    route.path = "/quiz/questions";
+    render(<ConsentManager>{screenContent}</ConsentManager>);
+    expect(scripts()).toEqual(["gtm-init", "hs-banner-off", "hs-script-loader"]);
   });
 });

@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ShieldMark } from "@/components/ShieldMark";
-import { NOT_ELIGIBLE_PATH, nextPath, STEP_PATHS } from "@/lib/funnel";
+import { nextPath, STEP_PATHS } from "@/lib/funnel";
+import { leaveForNotEligible } from "@/lib/not-eligible";
 import { readFunnel } from "@/lib/funnel-state";
 import { quizIncomplete } from "@/lib/quiz";
 import { useQuizDefinition } from "@/lib/use-quiz-definition";
@@ -65,7 +66,7 @@ export function Calculating() {
          answers would be refused again — so not the panel below either. The age is
          judged by `/api/quiz`, not here; this only follows its answer. */
       if (outcome.reason === "not-eligible") {
-        return router.replace(NOT_ELIGIBLE_PATH);
+        return leaveForNotEligible("replace");
       }
       setError(outcome.error);
     },

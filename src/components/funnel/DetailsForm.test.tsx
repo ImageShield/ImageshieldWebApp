@@ -9,6 +9,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { writeFunnel } from "@/lib/funnel-state";
 import { DetailsForm } from "./DetailsForm";
 
+/* The full-page hop to /not-eligible, recorded rather than performed (jsdom can't navigate). */
+const leave = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/not-eligible", () => ({ leaveForNotEligible: leave }));
+beforeEach(() => leave.mockReset());
+
 const push = vi.fn();
 const replace = vi.fn();
 vi.mock("next/navigation", () => ({
@@ -134,13 +139,15 @@ describe("DetailsForm", () => {
 
     it("is sent to the not-eligible page", () => {
       render(<DetailsForm />);
-      expect(replace).toHaveBeenCalledWith("/not-eligible");
+      expect(leave).toHaveBeenCalledWith("replace");
+      expect(replace).not.toHaveBeenCalled();
     });
 
     it("is sent there on the live quiz's spelling too", () => {
       writeFunnel({ answers: { age: "Under 18" } });
       render(<DetailsForm />);
-      expect(replace).toHaveBeenCalledWith("/not-eligible");
+      expect(leave).toHaveBeenCalledWith("replace");
+      expect(replace).not.toHaveBeenCalled();
     });
 
     it("cannot send a code, even with the box ticked", () => {

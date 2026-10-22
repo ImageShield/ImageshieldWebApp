@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { Check } from "@/components/landing/icons";
 import { trackAnswer, trackComplete, trackStart } from "@/lib/analytics";
-import { NOT_ELIGIBLE_PATH, nextPath, STEP_PATHS } from "@/lib/funnel";
+import { nextPath, STEP_PATHS } from "@/lib/funnel";
 import {
   readFunnel,
   saveAnswer,
@@ -12,6 +12,7 @@ import {
   toggleAnswer,
   useFunnel,
 } from "@/lib/funnel-state";
+import { leaveForNotEligible } from "@/lib/not-eligible";
 import { askedQuestions, declaresMinor, type QuizDefinition } from "@/lib/quiz";
 import { useQuizDefinition } from "@/lib/use-quiz-definition";
 import { QuizProgress } from "./QuizProgress";
@@ -146,7 +147,7 @@ export function QuizFlow({ signedIn }: { signedIn: boolean }) {
        Read from the store rather than `answers`: `pick` calls this straight after
        writing the last answer, and the render-time copy doesn't have it yet. */
     if (declaresMinor(readFunnel().answers)) {
-      router.push(NOT_ELIGIBLE_PATH);
+      leaveForNotEligible("push");
       return;
     }
     const onwards = signedIn

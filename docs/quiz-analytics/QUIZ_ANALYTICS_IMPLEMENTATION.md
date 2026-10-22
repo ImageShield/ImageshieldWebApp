@@ -153,12 +153,19 @@ While it's `false`, the banner, the consent cookie and the consent behaviour are
 
 With the switch off, this only affects a damaged consent cookie. Tests cover reject (cookies cleared) and accept (cookies kept).
 
-### Open issue: the under-18 page in GA4
+### The under-18 page: kept free of trackers
 
-The quiz sends no events after an "Under 18" answer, but Google's own automatic events (`user_engagement`, `scroll`) record the current page address and title. After the in-app navigation to `/not-eligible`, both say the visitor is under 18. This will matter as soon as GA4 tags exist.
+Status: **built and tested locally, not yet committed with the analytics release or deployed.**
 
-- **Interim:** the handoff tells the UK team to set up a GA4 "Modify event" rule that replaces that address and title, and to exclude the page from the Google tag.
-- **Permanent, proposed but not built:** go to `/not-eligible` with a full page load and render no GTM on that page. It changes quiz navigation in five places (`QuizFlow`, `DetailsForm`, `OtpForm`, `Calculating`, `ResumeSave`), so it needs product sign-off first.
+**The problem it solves.** A GTM container already running can't be unloaded. Google's own automatic events (`user_engagement`, `scroll`) record the current page address and title. After an in-app hop to `/not-eligible`, both would say the visitor is under 18.
+
+| Part | Where | What it does |
+|---|---|---|
+| Full page load | `leaveForNotEligible()` in `src/lib/not-eligible.ts` | All seven redirects (`QuizFlow`; `DetailsForm` ×2; `OtpForm` ×2; `Calculating`; `ResumeSave`) call this instead of `router.push`/`replace`. It keeps the push/replace history behaviour. Before leaving it sends a Google consent update to **denied**, so tags still running send nothing identifiable on the way out |
+| No trackers on the page | `trackingBlocked()` in `not-eligible.ts`, checked by `TrackingScripts` | GTM and HubSpot render nothing on `/not-eligible`, or on any page while the tab's stored answers say under 18 (refresh, back, "Back to home", direct visits), regardless of consent |
+| Back/forward cache | `reloadIfTrackingSurvived()`, on `pageshow` | A restored page that is now blocked but still has GTM or HubSpot running reloads itself, and the fresh page loads nothing |
+
+`TrackingScripts` is the only place GTM or HubSpot are loaded. There's no middleware or server-side redirect, and `/public` holds only media. A blocked page's server HTML contains no tracker, because the scripts are only rendered after consent has been read in the browser.
 
 ## 6. Data flow of one answer (v11, "platforms")
 
@@ -266,6 +273,9 @@ Any figure that splits by `age`, `gender` or `prior_misuse` is suppressed when t
 | `src/components/consent/ConsentBanner.tsx` | Current and drafted analytics wording |
 | `src/components/quiz/QuizFlow.tsx` | Calls `trackStart`, `trackAnswer`, `trackComplete` |
 | `src/lib/quiz.ts` | `recognisesMinors()`, so analytics can fail closed |
+| `src/lib/not-eligible.ts` | Full-page redirect for under-18s, tracker block, back/forward-cache guard |
+| `src/components/consent/TrackingScripts.tsx` | Loads nothing when `trackingBlocked`; registers the cache guard |
+| `QuizFlow`, `DetailsForm`, `OtpForm`, `Calculating`, `ResumeSave` | Redirect through `leaveForNotEligible` |
 | `src/components/consent/ConsentManager.tsx` | Clears an outdated choice's cookies on a new "no" |
 | `src/lib/analytics.fixtures.ts` | Test helper: definitions built from the map |
 | Tests | `analytics.test.ts`, `analytics.approved.test.ts`, `analytics.denylist.test.ts`, `QuizFlow.test.tsx`, `QuizFlow.approved.test.tsx`, `ConsentBanner.test.tsx`, `ConsentBanner.approved.test.tsx`, `ConsentManager.test.tsx`, `consent.test.ts` |

@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ShieldMark } from "@/components/ShieldMark";
-import { NOT_ELIGIBLE_PATH, STEP_PATHS } from "@/lib/funnel";
+import { STEP_PATHS } from "@/lib/funnel";
+import { leaveForNotEligible } from "@/lib/not-eligible";
 import { readFunnel } from "@/lib/funnel-state";
 import { quizIncomplete } from "@/lib/quiz";
 import { useQuizDefinition } from "@/lib/use-quiz-definition";
@@ -60,7 +61,7 @@ export function ResumeSave() {
          this screen rather than onto its "Try again" panel. `/api/quiz` judges the
          age; this only follows its answer. */
       if (outcome.reason === "not-eligible") {
-        return router.replace(NOT_ELIGIBLE_PATH);
+        return leaveForNotEligible("replace");
       }
       setFailed(outcome.error);
     },

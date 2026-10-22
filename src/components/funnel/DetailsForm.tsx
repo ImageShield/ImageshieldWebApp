@@ -9,7 +9,8 @@ import {
   DEFAULT_CALLING_CODE,
   DEFAULT_COUNTRY,
 } from "@/lib/calling-codes";
-import { backPath, NOT_ELIGIBLE_PATH, nextPath, STEP_PATHS } from "@/lib/funnel";
+import { backPath, nextPath, STEP_PATHS } from "@/lib/funnel";
+import { leaveForNotEligible } from "@/lib/not-eligible";
 import { readFunnel, writeFunnel } from "@/lib/funnel-state";
 import { declaresMinor, quizIncomplete } from "@/lib/quiz";
 import { useQuizDefinition } from "@/lib/use-quiz-definition";
@@ -81,7 +82,7 @@ export function DetailsForm() {
      definition like the guard below, because it needs nothing from it: the answer
      is either in this tab's store or it isn't. */
   useEffect(() => {
-    if (declaresMinor(readFunnel().answers)) router.replace(NOT_ELIGIBLE_PATH);
+    if (declaresMinor(readFunnel().answers)) leaveForNotEligible("replace");
   }, [router]);
 
   /* No quiz behind this form means there is no score to send anywhere, so there is
@@ -120,7 +121,7 @@ export function DetailsForm() {
     /* Again at the moment of sending, so the code can't go out in the gap before the
        redirect above lands. */
     if (declaresMinor(readFunnel().answers)) {
-      router.replace(NOT_ELIGIBLE_PATH);
+      leaveForNotEligible("replace");
       return;
     }
 

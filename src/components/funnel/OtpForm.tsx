@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { backPath, NOT_ELIGIBLE_PATH, nextPath, STEP_PATHS } from "@/lib/funnel";
+import { backPath, nextPath, STEP_PATHS } from "@/lib/funnel";
+import { leaveForNotEligible } from "@/lib/not-eligible";
 import { readFunnel, useFunnel } from "@/lib/funnel-state";
 import { declaresMinor } from "@/lib/quiz";
 
@@ -64,7 +65,7 @@ export function OtpForm() {
        Verifying is what writes the adult placeholder birth date, so this screen
        checks too. */
     if (declaresMinor(readFunnel().answers)) {
-      router.replace(NOT_ELIGIBLE_PATH);
+      leaveForNotEligible("replace");
       return;
     }
     // No number means the details step never completed, so no code was ever sent.
@@ -85,7 +86,7 @@ export function OtpForm() {
     async (entered: string) => {
       if (submitted.current === entered) return;
       if (declaresMinor(readFunnel().answers)) {
-        router.replace(NOT_ELIGIBLE_PATH);
+        leaveForNotEligible("replace");
         return;
       }
       submitted.current = entered;

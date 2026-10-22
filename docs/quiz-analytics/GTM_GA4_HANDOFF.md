@@ -2,7 +2,7 @@
 
 **For:** the UK analytics team setting up Google Tag Manager and Google Analytics 4 for the ImageShield quiz at `https://quiz.imageshield.com`.
 **Container:** `GTM-NM7B8G3X`
-**Prepared:** 23 October 2026
+**Prepared:** 23 October 2026 (updated the same day for the under-18 safeguard)
 
 This document should be enough on its own: you shouldn't have to guess an event name, a variable key or a setting. Where a step depends on another team, it says so.
 
@@ -17,7 +17,7 @@ A note on the separator character. Multi-select answers are joined with a vertic
 | GTM loads only after a visitor accepts analytics cookies | **Live.** Checked on the live site on 22 October | Done |
 | Container `GTM-NM7B8G3X` | **Published version has no tags, triggers or GA4 ID** (read from the public container file on 22 October). Nothing reaches GA4 today | You |
 | GA4 property for the quiz | **Not created** (see 5.4) | You |
-| The under-18 page safeguard (section 6, item 6) | **Required before publishing** | You, and the dev team for the permanent fix |
+| Under-18 safeguard in the quiz | **Built and tested locally, not yet released.** Once released, under-18 visitors reach `/not-eligible` with a full page load, and GTM and HubSpot never load on that page or anywhere else in their browser tab | ImageShield dev team: release |
 
 You can build everything now. The quiz events will only appear in GTM Preview once the dev team confirms the release. **Do not publish the container** until section 8 passes.
 
@@ -39,7 +39,7 @@ You can build everything now. The quiz events will only appear in GTM Preview on
 - before the visitor accepts analytics cookies, or after they decline;
 - for steps taken before a mid-quiz "Accept" (tracking starts at that point);
 - after the visitor withdraws consent (stops immediately);
-- once the visitor answers "Under 18" (no further quiz events, including that answer).
+- once the visitor answers "Under 18" (no further quiz events, including that answer). The quiz still asks the remaining questions; at the end it loads the not-eligible page as a new page, where GTM is never loaded.
 
 ## 3. Fields
 
@@ -223,7 +223,7 @@ Create a **new GA4 property** for the quiz:
 | Setting | Reason |
 |---|---|
 | Hostname conditions | imageshield.com loads this same container and has its own GA4 tag. Without them, every page view there would be counted twice |
-| `not-eligible` exclusion | That page's address and title say the visitor is under 18 |
+| `not-eligible` exclusion | Extra protection only: that page's address and title say the visitor is under 18, and the quiz already never loads GTM there |
 | `cookie_domain` | Keeps GA's cookies on `quiz.imageshield.com`, where the quiz deletes them when someone withdraws consent. On the default setting they'd land on `.imageshield.com` and survive |
 | Signals and ad personalisation off | Quiz data must not feed advertising |
 | No consent tags | Don't add a consent-mode template or tag. The quiz sets Google's consent signals itself, before the container starts |
@@ -244,7 +244,8 @@ Create a **new GA4 property** for the quiz:
 | 3 | Data retention | Admin → Data collection and modification → Data retention | Event data retention **2 months**. Detailed explorations reach back 2 months; standard reports are unaffected |
 | 4 | Google signals | Admin → Data collection and modification → Data collection | **Off** (property-wide) |
 | 5 | Enhanced measurement page views | Admin → Data streams → quiz stream → Enhanced measurement → Page views (gear) → Show advanced settings | "Page changes based on browser history events" **Off**. There is no URL exclusion option |
-| 6 | Under-18 safeguard | Admin → Data display → Events → Modify event → Create | Name `mask not-eligible`. Condition: `page_location` contains `not-eligible`. Modify parameters: `page_location` → `https://quiz.imageshield.com/`, `page_title` → `ImageShield`. Google's own automatic events (`user_engagement`, `scroll`) can still be sent while a visitor is on `/not-eligible`; this stops their address and title being stored. **The dev team has a permanent fix pending approval: a full page load to that page, with no GTM on it** |
+| 6 | Under-18 masking (optional) | Admin → Data display → Events → Modify event → Create | **Optional extra protection.** The quiz itself now keeps GTM off `/not-eligible`, so nothing should arrive from that page. If you want a second layer: name `mask not-eligible`; condition `page_location` contains `not-eligible`; modify `page_location` → `https://quiz.imageshield.com/` and `page_title` → `ImageShield` |
+| 6a | Consent check on GA4 tags | GTM → each GA4 tag → Advanced Settings → Consent Settings | **Require additional consent for tag to fire:** `analytics_storage`. Before leaving for `/not-eligible`, the quiz tells running Google tags that consent is denied; this setting makes your tags stop rather than send cookieless pings |
 | 7 | Redaction | Admin → Data streams → quiz stream → Redact data | Email redaction **On**; query parameter redaction for `email`, `phone` |
 | 8 | User-provided data | Admin → Data collection and modification → Data collection | **Off** |
 | 9 | Test traffic | Admin → Data collection and modification → Data filters → Create | Filter type **Developer traffic**, state **Active**. GTM Preview traffic is marked as debug traffic, so this keeps test runs out of reports |
@@ -287,10 +288,13 @@ Use GTM Preview, after the dev team confirms the release. Use test answers only:
 5. **Duplicates.** Go back to question 2, change the answer, continue: no second `quiz_answer` for `gender`. Refresh a question page: no second `quiz_start`.
 6. **Reject.** New private window, **Reject all**, take the quiz. Tag Assistant never connects; DebugView shows nothing new.
 7. **Withdraw.** Accept, answer two questions, click **Cookie settings** at the foot of the page, untick Analytics, **Save choices**. The page reloads and Tag Assistant shows disconnected. Nothing new in DebugView for two minutes.
-8. **Under 18.** New private window, **Accept all**, answer "Under 18".
-   - Expect `quiz_start` only, then nothing from the quiz.
-   - In DebugView, no event may show `page_location` or `page_title` mentioning `not-eligible` or "18 or older": the Modify-event rule (section 6, item 6) should have replaced them.
-   - Repeat with the order reversed: answer "Under 18" first, then **Accept all** on the not-eligible page. Expect nothing at all in DebugView.
+8. **Under 18.** New private window, **Accept all**, answer "Under 18", then answer the remaining questions.
+   - Expect `quiz_start` only, then nothing from the quiz. Under Consent you'll see a final update to **denied** just before the page changes.
+   - After the last question the page **reloads** at `/not-eligible`, and Tag Assistant shows disconnected: GTM isn't on that page.
+   - In DebugView, no event may show `page_location` or `page_title` mentioning `not-eligible` or "18 or older".
+   - Press the browser's **Back** button, then refresh `/not-eligible`. Tag Assistant stays disconnected each time.
+   - Repeat with the order reversed: open `https://quiz.imageshield.com/not-eligible` directly and click **Accept all** there. Expect nothing in DebugView.
+   - In the browser's developer tools (Network, filter `collect`), check whether any request was sent while the page changed. Expect none if 6a is set. If one appears, it must carry no `not-eligible` in its `dl` and `gcs=G100` (consent denied); report it otherwise.
 9. **imageshield.com.** In Tag Assistant, add `https://imageshield.com` (accept its cookie banner if shown). Neither quiz tag appears under Tags Fired.
 
 Then **Submit → Publish**. Realtime shows events within minutes; standard reports fill in over 24–48 hours.
@@ -304,7 +308,7 @@ Then **Submit → Publish**. Realtime shows events within minutes; standard repo
 | Trigger never fires | The regex was pasted with backslashes; retype it as in 5.5 |
 | `answer` filled on `age`, `gender` or `prior_misuse` | Must never happen. Pause the GA4 Event tag and report it to the dev team immediately |
 | Page views doubled on imageshield.com | A hostname condition is missing |
-| `not-eligible` in any stored event | The Modify-event rule is missing or wrong |
+| `not-eligible` in any stored event, or Tag Assistant connected on `/not-eligible` | Must not happen once the quiz update is live. Pause the GA4 tags and report it to the dev team |
 
 **When reporting a problem, send:**
 - the exact error text or a screenshot;
