@@ -7,8 +7,14 @@ import { QuizFlow } from "./QuizFlow";
 
 /* The full-page hop to /not-eligible, recorded rather than performed (jsdom can't navigate). */
 const leave = vi.hoisted(() => vi.fn());
-vi.mock("@/lib/not-eligible", () => ({ leaveForNotEligible: leave }));
-beforeEach(() => leave.mockReset());
+vi.mock("@/lib/not-eligible", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/not-eligible")>()),
+  leaveForNotEligible: leave,
+}));
+beforeEach(() => {
+  leave.mockReset();
+  window.sessionStorage.removeItem("imageshield.under18");
+});
 
 const nav = vi.hoisted(() => ({ push: vi.fn(), search: "q=2" }));
 vi.mock("next/navigation", () => ({
@@ -216,6 +222,20 @@ describe("QuizFlow Tag Manager events", () => {
     finishWithAge("18-24", false);
     expect(pushed()).toStrictEqual([start(2), answer("gender", 2), complete]);
     expect(destinations()).toStrictEqual(["/details", "/details"]);
+  });
+
+  /* The quiz carries on to the end, as before, but tracking stops at the answer. */
+  it("denies consent the moment Under 18 is picked, and carries on to question 2", () => {
+    nav.search = "q=1";
+    writeFunnel({ quizVersion: v, answers: {} });
+    render(<QuizFlow signedIn={false} />);
+    fireEvent.click(screen.getByRole("button", { name: "Under 18" }));
+    expect(destinations()).toStrictEqual(["/quiz/questions?q=2"]);
+    const raw = (window as Window & { dataLayer?: unknown[] }).dataLayer ?? [];
+    const consent = raw.filter((e) => Object.prototype.toString.call(e) === "[object Arguments]");
+    expect(consent.map((e) => Array.from(e as ArrayLike<unknown>).slice(0, 2))).toEqual([["consent", "update"]]);
+    expect(pushed()).toStrictEqual([start(1)]);
+    expect(window.sessionStorage.getItem("imageshield.under18")).toBe("1");
   });
 
   it("sends nothing for an under-18 finisher, and still turns them away", () => {

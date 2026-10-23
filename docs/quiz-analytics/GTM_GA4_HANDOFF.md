@@ -289,7 +289,7 @@ Use GTM Preview, after the dev team confirms the release. Use test answers only:
 6. **Reject.** New private window, **Reject all**, take the quiz. Tag Assistant never connects; DebugView shows nothing new.
 7. **Withdraw.** Accept, answer two questions, click **Cookie settings** at the foot of the page, untick Analytics, **Save choices**. The page reloads and Tag Assistant shows disconnected. Nothing new in DebugView for two minutes.
 8. **Under 18.** New private window, **Accept all**, answer "Under 18", then answer the remaining questions.
-   - Expect `quiz_start` only, then nothing from the quiz. Under Consent you'll see a final update to **denied** just before the page changes.
+   - Expect `quiz_start` only, then nothing from the quiz. Under **Consent** you'll see one update to **denied** straight after the "Under 18" answer; the remaining questions are still asked, with consent denied.
    - After the last question the page **reloads** at `/not-eligible`, and Tag Assistant shows disconnected: GTM isn't on that page.
    - In DebugView, no event may show `page_location` or `page_title` mentioning `not-eligible` or "18 or older".
    - Press the browser's **Back** button, then refresh `/not-eligible`. Tag Assistant stays disconnected each time.

@@ -133,7 +133,7 @@ The quiz itself sends nothing after an "Under 18" answer. However, a GA4 Google 
 - **No exposure today.** The container has no GA4 tags.
 - **The safeguard (decision F), built and tested locally, not yet deployed:**
   - All five screens that turn an under-18 visitor away now load `/not-eligible` as a new page instead of an in-app hop (seven call sites).
-  - Just before leaving, tags already running are told consent is denied. The visitor's stored choice is unchanged.
+  - At the moment of the "Under 18" answer (the quiz still asks the remaining questions), tags already running are told consent is denied, and the browser tab is flagged as under 18. The visitor's stored choice is unchanged. The flag outlives the answers, so the tab stays untracked even if a new quiz version clears them.
   - GTM and HubSpot never load on `/not-eligible`, nor on any page in a browser tab whose stored answers say under 18. That covers refresh, the back button, "Back to home" and opening the page directly, whatever the visitor accepted.
   - A page restored from the browser's back/forward cache with a tracker still running reloads itself.
 - **Optional extra protection, for the UK team:** exclude `/not-eligible` from the Google tag's trigger, turn off history-based page views, and add a GA4 "Modify event" rule that masks the address and title. With the safeguard live, none of these should ever have anything to act on.

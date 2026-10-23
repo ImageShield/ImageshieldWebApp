@@ -258,6 +258,16 @@ describe("track", () => {
       loadContainer();
     });
 
+    /* Their answers were wiped (a new quiz version) and now read as an adult's. */
+    it("sends nothing in a tab that said under 18 earlier", () => {
+      window.sessionStorage.setItem("imageshield.under18", "1");
+      writeFunnel({ quizVersion: V, answers: { age: "25-34" } });
+      track(START);
+      track(ANSWER);
+      track(COMPLETE);
+      expect(dataLayer()).toStrictEqual([]);
+    });
+
     it("sends nothing once the visitor has said they are under 18", () => {
       writeFunnel({ quizVersion: V, answers: { age: "Under 18" } });
       track(ANSWER);

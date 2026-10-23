@@ -24,23 +24,62 @@ export function leaveForNotEligible(
   mode: "push" | "replace",
   location: Pick<Location, "assign" | "replace"> = window.location,
 ): void {
-  updateGoogleConsent({ analytics: false, marketing: false });
+  markUnder18();
   if (mode === "replace") location.replace(NOT_ELIGIBLE_PATH);
   else location.assign(NOT_ELIGIBLE_PATH);
 }
 
+/** Set in this tab once the visitor says they are under 18. Never cleared by the quiz. */
+const UNDER_18_KEY = "imageshield.under18";
+
+/**
+ * Called the moment an under-18 answer is given, not only when the visitor is sent
+ * away: the quiz still asks the remaining questions first, and the tags already running
+ * would otherwise keep reporting page changes and engagement for them until then. Tells
+ * those tags consent is denied (the visitor's stored choice is untouched) and records
+ * the fact for this tab, so it outlives the answers — a new quiz version clears those.
+ */
+export function markUnder18(): void {
+  /* Once per tab: every later page in it loads no tags, so there's nothing new to tell. */
+  if (flaggedUnder18()) return;
+  try {
+    window.sessionStorage.setItem(UNDER_18_KEY, "1");
+  } catch {
+    // Private mode or quota: the stored answers still say it, for as long as they last.
+  }
+  updateGoogleConsent({ analytics: false, marketing: false });
+}
+
+function flaggedUnder18(): boolean {
+  try {
+    return window.sessionStorage.getItem(UNDER_18_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Whether this tab belongs to someone who said they are under 18 — by their current
+ * answers, or at any point before. Correcting the age afterwards lets them on through
+ * the quiz, as before, but this tab stays untracked: a misclick costs one visit's
+ * analytics, a real minor never gets tracked.
+ */
+export function saidUnder18(): boolean {
+  return declaresMinor(readFunnel().answers) || flaggedUnder18();
+}
+
 /**
  * Whether this document must load no tracking at all: the /not-eligible page itself,
- * and any page in a tab whose stored answers say the visitor is under 18 — a refresh,
- * the back button, or "Back to home" from /not-eligible would otherwise load GTM and
- * HubSpot for them again.
+ * and any page in a tab that has said the visitor is under 18 (`saidUnder18`) — a
+ * refresh, the back button, or "Back to home" from /not-eligible would otherwise load
+ * GTM and HubSpot for them again.
  *
  * Read from the store directly rather than through `useFunnel`, whose first value is
  * the empty server snapshot: TrackingScripts only renders once consent has been read
  * in the browser, so the store is always readable here.
  */
 export function trackingBlocked(pathname: string | null): boolean {
-  return pathname === NOT_ELIGIBLE_PATH || declaresMinor(readFunnel().answers);
+  return pathname === NOT_ELIGIBLE_PATH || saidUnder18();
 }
 
 /**

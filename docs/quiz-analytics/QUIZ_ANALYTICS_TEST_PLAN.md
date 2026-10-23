@@ -13,7 +13,7 @@ npx tsc --noEmit        # type check
 npx eslint src          # lint
 ```
 
-Result on 23 October 2026, with the under-18 safeguard and the separate gender-log cleanup: **31 test files, 386 tests passed**; type check and lint clean. The suite also passes, unchanged, with `ANSWER_ANALYTICS_APPROVED` set to `true` (run with the constant edited and then restored), so the approval change needs no test edits.
+Result on 23 October 2026, including the answer-time under-18 stop: **31 test files, 393 tests passed**; type check and lint clean. The suite also passes, unchanged, with `ANSWER_ANALYTICS_APPROVED` set to `true` (run with the constant edited and then restored), so the approval change needs no test edits.
 
 No failures existed before this work, and none were introduced.
 
@@ -73,13 +73,15 @@ No failures existed before this work, and none were introduced.
 | After the review fixes (23 Oct): all scenarios above re-run | Same results; with the switch on, GTM's `answer` reads as unset straight after every answer event | Pass |
 | Reload of the score page | No new events | Pass |
 
-### Under-18 safeguard, browser checks (23 October 2026, same setup, everything accepted)
+### Under-18 safeguard, browser checks (23 October 2026, everything accepted)
+
+Re-run for the release review on a production build made the way Amplify builds it: Node 22, `npm install`, `npm run build`, served by `next start` against the offline API behind a local HTTPS proxy.
 
 Each check confirms which document actually loaded (the browser's navigation record), so a client-side hop can't pass for a full page load.
 
 | Scenario | Result |
 |---|---|
-| Answer "Under 18", finish the quiz | New page at `/not-eligible`: no GTM, no HubSpot, no `dataLayer`. The only push after the age answer was the consent denial. No Google or HubSpot requests after the answer |
+| Answer "Under 18", finish the quiz | Consent denied once, at the age answer; the remaining questions are still asked. Then a new page at `/not-eligible`: no GTM, no HubSpot, no `dataLayer`. No Google or HubSpot requests after the answer |
 | Refresh `/not-eligible`; Back button; "Back to home" | Nothing loads on any of them |
 | Open `/not-eligible` directly, with and without accepting there | Nothing loads |
 | Open `/details` with an under-18 answer stored | New page at `/not-eligible`, nothing loads |

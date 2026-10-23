@@ -357,6 +357,15 @@ describe("ConsentManager for under-18 visitors", () => {
     expect(reloadPage).toHaveBeenCalledTimes(1);
   });
 
+  it("loads nothing in a tab that said under 18 earlier, even if the answers now read adult", () => {
+    document.cookie = `imageshield_consent=${V}.a1.m1; Path=/`;
+    window.sessionStorage.setItem("imageshield.under18", "1");
+    writeFunnel({ answers: { age: "25-34" } });
+    route.path = "/details";
+    render(<ConsentManager>{screenContent}</ConsentManager>);
+    expect(scripts()).toEqual([]);
+  });
+
   it("still loads GTM and HubSpot for an adult", () => {
     document.cookie = `imageshield_consent=${V}.a1.m1; Path=/`;
     writeFunnel({ answers: { age: "25-34" } });

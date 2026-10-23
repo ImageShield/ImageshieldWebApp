@@ -155,14 +155,15 @@ With the switch off, this only affects a damaged consent cookie. Tests cover rej
 
 ### The under-18 page: kept free of trackers
 
-Status: **built and tested locally, not yet committed with the analytics release or deployed.**
+Status: **committed and tested on a production build; not yet deployed.**
 
 **The problem it solves.** A GTM container already running can't be unloaded. Google's own automatic events (`user_engagement`, `scroll`) record the current page address and title. After an in-app hop to `/not-eligible`, both would say the visitor is under 18.
 
 | Part | Where | What it does |
 |---|---|---|
-| Full page load | `leaveForNotEligible()` in `src/lib/not-eligible.ts` | All seven redirects (`QuizFlow`; `DetailsForm` ×2; `OtpForm` ×2; `Calculating`; `ResumeSave`) call this instead of `router.push`/`replace`. It keeps the push/replace history behaviour. Before leaving it sends a Google consent update to **denied**, so tags still running send nothing identifiable on the way out |
-| No trackers on the page | `trackingBlocked()` in `not-eligible.ts`, checked by `TrackingScripts` | GTM and HubSpot render nothing on `/not-eligible`, or on any page while the tab's stored answers say under 18 (refresh, back, "Back to home", direct visits), regardless of consent |
+| Stop at the answer | `markUnder18()` in `not-eligible.ts`, from `QuizFlow` when the age answer is under 18, and from `leaveForNotEligible` | Once per tab: sends a Google consent update to **denied** to the tags already running, and sets `imageshield.under18` in sessionStorage. The quiz still asks the remaining questions, as before; nothing is tracked from the answer on |
+| Full page load | `leaveForNotEligible()` in `src/lib/not-eligible.ts` | All seven redirects (`QuizFlow`; `DetailsForm` ×2; `OtpForm` ×2; `Calculating`; `ResumeSave`) call this instead of `router.push`/`replace`. It keeps the push/replace history behaviour |
+| No trackers on the page | `trackingBlocked()` in `not-eligible.ts`, checked by `TrackingScripts`; `saidUnder18()` also checked by `track()` | GTM and HubSpot render nothing, and no quiz event is pushed, on `/not-eligible` or on any page in a tab that has said under 18 (current answers, or the flag), regardless of consent. That covers refresh, back, "Back to home" and direct visits. Correcting the age afterwards lets the visitor continue, as before, but the tab stays untracked |
 | Back/forward cache | `reloadIfTrackingSurvived()`, on `pageshow` | A restored page that is now blocked but still has GTM or HubSpot running reloads itself, and the fresh page loads nothing |
 
 `TrackingScripts` is the only place GTM or HubSpot are loaded. There's no middleware or server-side redirect, and `/public` holds only media. A blocked page's server HTML contains no tracker, because the scripts are only rendered after consent has been read in the browser.

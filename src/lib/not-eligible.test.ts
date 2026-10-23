@@ -1,6 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { writeFunnel } from "./funnel-state";
-import { leaveForNotEligible, reloadIfTrackingSurvived, trackingBlocked } from "./not-eligible";
+import {
+  leaveForNotEligible,
+  markUnder18,
+  reloadIfTrackingSurvived,
+  saidUnder18,
+  trackingBlocked,
+} from "./not-eligible";
 
 const { reloadPage } = vi.hoisted(() => ({ reloadPage: vi.fn() }));
 vi.mock("./consent", async (importOriginal) => ({
@@ -11,6 +17,7 @@ vi.mock("./consent", async (importOriginal) => ({
 const fakeLocation = () => ({ assign: vi.fn(), replace: vi.fn() });
 
 beforeEach(() => {
+  window.sessionStorage.clear();
   writeFunnel({ answers: {} });
   reloadPage.mockReset();
 });
@@ -96,5 +103,38 @@ describe("reloadIfTrackingSurvived", () => {
     writeFunnel({ answers: { age: "Under 18" } });
     reloadIfTrackingSurvived();
     expect(reloadPage).not.toHaveBeenCalled();
+  });
+});
+
+describe("markUnder18", () => {
+  it("denies consent to running tags and flags the tab", () => {
+    const dataLayer: unknown[] = [];
+    vi.stubGlobal("dataLayer", dataLayer);
+    markUnder18();
+    expect(Array.from(dataLayer[0] as ArrayLike<unknown>).slice(0, 2)).toEqual(["consent", "update"]);
+    expect(window.sessionStorage.getItem("imageshield.under18")).toBe("1");
+  });
+
+  it("tells the tags only once per tab", () => {
+    const dataLayer: unknown[] = [];
+    vi.stubGlobal("dataLayer", dataLayer);
+    markUnder18();
+    markUnder18();
+    leaveForNotEligible("push", fakeLocation());
+    expect(dataLayer).toHaveLength(1);
+  });
+
+  /* A new quiz version clears the stored answers; the tab must stay untracked. */
+  it("keeps the tab blocked after the answers are wiped", () => {
+    writeFunnel({ answers: { age: "Under 18" } });
+    markUnder18();
+    writeFunnel({ answers: {} });
+    expect(saidUnder18()).toBe(true);
+    expect(trackingBlocked("/quiz/questions")).toBe(true);
+  });
+
+  it("is set by leaving for /not-eligible too (the server's refusal)", () => {
+    leaveForNotEligible("replace", fakeLocation());
+    expect(saidUnder18()).toBe(true);
   });
 });

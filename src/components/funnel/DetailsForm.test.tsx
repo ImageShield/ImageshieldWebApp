@@ -11,8 +11,14 @@ import { DetailsForm } from "./DetailsForm";
 
 /* The full-page hop to /not-eligible, recorded rather than performed (jsdom can't navigate). */
 const leave = vi.hoisted(() => vi.fn());
-vi.mock("@/lib/not-eligible", () => ({ leaveForNotEligible: leave }));
-beforeEach(() => leave.mockReset());
+vi.mock("@/lib/not-eligible", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/not-eligible")>()),
+  leaveForNotEligible: leave,
+}));
+beforeEach(() => {
+  leave.mockReset();
+  window.sessionStorage.removeItem("imageshield.under18");
+});
 
 const push = vi.fn();
 const replace = vi.fn();

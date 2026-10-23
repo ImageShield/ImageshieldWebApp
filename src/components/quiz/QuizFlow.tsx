@@ -12,7 +12,7 @@ import {
   toggleAnswer,
   useFunnel,
 } from "@/lib/funnel-state";
-import { leaveForNotEligible } from "@/lib/not-eligible";
+import { leaveForNotEligible, markUnder18 } from "@/lib/not-eligible";
 import { askedQuestions, declaresMinor, type QuizDefinition } from "@/lib/quiz";
 import { useQuizDefinition } from "@/lib/use-quiz-definition";
 import { QuizProgress } from "./QuizProgress";
@@ -171,6 +171,8 @@ export function QuizFlow({ signedIn }: { signedIn: boolean }) {
        from the store, and routing first would paint it without the answer just
        picked. `saveAnswer` returns the new state, which is that written answer. */
     const next = saveAnswer(question.key, option);
+    /* The quiz carries on to the end either way; tracking stops here. */
+    if (declaresMinor(next.answers)) markUnder18();
     trackAnswer(definition, question.key);
     if (step < askedQuestions(definition, next.answers).length) go(step + 1);
     else finish();

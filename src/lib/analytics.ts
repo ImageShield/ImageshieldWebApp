@@ -4,8 +4,8 @@ import { ANSWER_ANALYTICS_APPROVED } from "./analytics-approval";
 import { type MappedQuestion, QUIZ_ANALYTICS_MAP } from "./analytics-quiz-map";
 import { readConsent } from "./consent";
 import { readFunnel } from "./funnel-state";
+import { saidUnder18 } from "./not-eligible";
 import {
-  declaresMinor,
   missingAnswers,
   type QuizDefinition,
   type QuizQuestion,
@@ -194,7 +194,7 @@ export function track(e: AnalyticsEvent): void {
   if (readConsent()?.analytics !== true) return;
   const dataLayer = (window as Window & { dataLayer?: unknown[] }).dataLayer;
   if (!Array.isArray(dataLayer)) return;
-  if (declaresMinor(readFunnel().answers)) return;
+  if (saidUnder18()) return;
 
   const payload = payloadOf(e);
   if (!payload) return;
