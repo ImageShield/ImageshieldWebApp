@@ -74,6 +74,23 @@ describe("DetailsForm", () => {
     expect((box as HTMLInputElement).required).toBe(true);
   });
 
+  it("gives HubSpot the phone with its country code, in a field it will read", () => {
+    const { container } = render(<DetailsForm />);
+    fillDetails();
+    fireEvent.change(screen.getByLabelText("Country calling code"), {
+      target: { value: "United Kingdom" },
+    });
+
+    const fields = container.querySelectorAll<HTMLInputElement>('input[name="phone"]');
+    expect(fields).toHaveLength(1);
+    expect(fields[0].type).not.toBe("hidden");
+    expect(fields[0].value).toBe("+445551230000");
+    // The visible field keeps only the local digits, under a name that isn't "phone".
+    expect((screen.getByLabelText("Phone number") as HTMLInputElement).name).toBe(
+      "national-number",
+    );
+  });
+
   it("no longer asks for a date of birth", () => {
     const { container } = render(<DetailsForm />);
     expect(screen.queryByLabelText(/date of birth/i)).toBeNull();

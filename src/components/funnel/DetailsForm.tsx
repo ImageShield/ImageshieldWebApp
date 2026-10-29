@@ -255,7 +255,7 @@ export function DetailsForm() {
           </label>
           <input
             id={`${ids}-phone`}
-            name="phone"
+            name="national-number"
             type="tel"
             inputMode="tel"
             autoComplete="tel-national"
@@ -264,6 +264,27 @@ export function DetailsForm() {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             className={`${FIELD} border-line-soft pl-[120px] focus:border-brand`}
+          />
+          {/*
+           * What HubSpot's collected-forms script reads as the phone: the full
+           * number with its country code, composed exactly as it is sent for the
+           * OTP. The field above only ever holds the local digits — the code lives
+           * in the <select> — so HubSpot used to store a number with no country.
+           *
+           * Off-screen rather than `type="hidden"`, because HubSpot ignores hidden
+           * fields. Out of the tab order and the accessibility tree, so nobody
+           * meets it but the script. It goes after the visible field so that if
+           * HubSpot still matches both, this one is read last.
+           */}
+          <input
+            name="phone"
+            type="tel"
+            tabIndex={-1}
+            aria-hidden
+            autoComplete="off"
+            readOnly
+            value={composePhone(callingCode, phone)}
+            className="pointer-events-none absolute -left-[9999px] size-px opacity-0"
           />
           <label htmlFor={`${ids}-code`} className="sr-only">
             Country calling code
