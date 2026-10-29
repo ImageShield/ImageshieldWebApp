@@ -86,6 +86,20 @@ export async function loadScore(): Promise<ScoreLoad> {
     if (typeof envelope === "string") {
       return resolveFromAccount(me, envelope);
     }
+
+    /* When the cached POST envelope was used, also call GET /v1/me/score so
+       that any fields the backend populates after the submit (e.g.
+       general_recommendations) are picked up. The GET's non-empty lists win
+       over the cache's empty ones; the cache's non-empty lists are kept. */
+    if (cached !== null) {
+      try {
+        const fresh = await callAsUser<ScoreEnvelope>("GET", "/v1/me/score");
+        return resolve(firstNameOf(me), mergeEnvelopes(envelope, fresh));
+      } catch {
+        /* GET failed — proceed with the cached envelope as-is. */
+      }
+    }
+
     return resolve(firstNameOf(me), envelope);
   } catch (error) {
     if (error instanceof ApiFailure) {
@@ -94,6 +108,31 @@ export async function loadScore(): Promise<ScoreLoad> {
     }
     throw error;
   }
+}
+
+/**
+ * Picks the richer of two envelopes' insight lists. A non-empty list from the
+ * GET wins over an empty one from the cached POST, and vice-versa. When both
+ * are non-empty, the GET (fresher) wins.
+ */
+function mergeEnvelopes(cached: ScoreEnvelope, fresh: ScoreEnvelope): ScoreEnvelope {
+  if (fresh.score === null) return cached;
+
+  const riskFactors =
+    (fresh.score.risk_factors?.length ?? 0) > 0
+      ? fresh.score.risk_factors
+      : cached.score?.risk_factors;
+
+  const generalRecs =
+    (fresh.general_recommendations?.length ?? 0) > 0
+      ? fresh.general_recommendations
+      : cached.general_recommendations;
+
+  return {
+    ...fresh,
+    score: { ...fresh.score, risk_factors: riskFactors },
+    general_recommendations: generalRecs,
+  };
 }
 
 function resolve(firstName: string, envelope: ScoreEnvelope): ScoreLoad {

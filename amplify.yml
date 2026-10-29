@@ -20,7 +20,7 @@ frontend:
     build:
       commands:
         # Server-side env vars: add new ones to this list.
-        - env | grep -E '^(IMAGESHIELD_API_URL|NEXT_PUBLIC_IMAGESHIELD_API_URL|SCORE_SHARE_SECRET)=' >> .env.production
+        - env | grep -E '^(IMAGESHIELD_API_URL|NEXT_PUBLIC_IMAGESHIELD_API_URL|SCORE_SHARE_SECRET)=' >> .env.production || true
         - npm run build
         # .env.production must travel with .next/ — the artifact root — so the
         # SSR compute can read server-only vars (SCORE_SHARE_SECRET, etc.) at

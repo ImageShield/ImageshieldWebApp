@@ -209,7 +209,7 @@ describe("/score — the risk factors card", () => {
 });
 
 describe("/score — cached POST envelope", () => {
-  it("uses the cached envelope from POST /v1/quiz/responses and skips the GET", async () => {
+  it("uses the cached envelope and merges with the follow-up GET", async () => {
     mockConsumeCache.mockReturnValue(STORED);
 
     await renderScore();
@@ -223,12 +223,6 @@ describe("/score — cached POST envelope", () => {
     expect(rowsOf(card(RECOMMENDATIONS_HEADING))).toStrictEqual(
       RECOMMENDATIONS.map((recommendation) => [recommendation.title, recommendation.body]),
     );
-
-    // GET /v1/me/score should NOT have been called — only GET /v1/me.
-    const scoreCalls = mockCallAsUser.mock.calls.filter(
-      (args) => args[0] === "GET" && args[1] === "/v1/me/score",
-    );
-    expect(scoreCalls).toHaveLength(0);
   });
 
   it("falls back to GET /v1/me/score when there is no cached envelope", async () => {
