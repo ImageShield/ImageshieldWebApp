@@ -319,9 +319,12 @@ export function DetailsForm() {
                  focused control drawn below 16px. */
               className="peer absolute inset-0 size-full cursor-pointer appearance-none text-base opacity-0"
             >
+              {/* Name first: the browser's type-ahead matches the start of each
+                  option's text, and a leading flag left nothing for a typed
+                  letter to match. */}
               {CALLING_CODES.map((option) => (
                 <option key={option.label} value={option.label}>
-                  {option.flag} {option.label} (+{option.code})
+                  {option.label} {option.flag} (+{option.code})
                 </option>
               ))}
             </select>

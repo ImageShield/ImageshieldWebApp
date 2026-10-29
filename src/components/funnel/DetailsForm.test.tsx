@@ -91,6 +91,17 @@ describe("DetailsForm", () => {
     );
   });
 
+  it("starts every country option with its name, so typing a letter finds it", () => {
+    render(<DetailsForm />);
+    const options = Array.from(
+      (screen.getByLabelText("Country calling code") as HTMLSelectElement).options,
+    );
+    for (const option of options) {
+      expect(option.text.startsWith(option.value)).toBe(true);
+    }
+    expect(options.find((o) => o.value === "India")?.text).toBe("India 🇮🇳 (+91)");
+  });
+
   it("no longer asks for a date of birth", () => {
     const { container } = render(<DetailsForm />);
     expect(screen.queryByLabelText(/date of birth/i)).toBeNull();
