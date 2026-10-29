@@ -14,6 +14,12 @@ vi.mock("@/lib/browser-session", () => ({
   clearSession: vi.fn(),
 }));
 
+/* Mock the cached envelope from quiz-submit. Defaults to null (no cache). */
+const mockConsumeCache = vi.fn<() => ScoreEnvelope | null>(() => null);
+vi.mock("@/lib/quiz-submit", () => ({
+  consumeCachedEnvelope: () => mockConsumeCache(),
+}));
+
 /* Mock the api-client's callAsUser to return test data. */
 const mockCallAsUser = vi.fn();
 vi.mock("@/lib/api-client", async () => {
@@ -134,6 +140,7 @@ let answers: { me: unknown; score: ScoreEnvelope | ApiFailure };
 
 beforeEach(() => {
   answers = { me: ME, score: STORED };
+  mockConsumeCache.mockReset().mockReturnValue(null);
   mockCallAsUser.mockReset().mockImplementation(async (method: string, path: string) => {
     if (method === "GET" && path === "/v1/me") return answers.me;
     if (method === "GET" && path === "/v1/me/score") {
@@ -198,6 +205,45 @@ describe("/score — the risk factors card", () => {
     expect(rowsOf(card(FACTORS_HEADING))).toStrictEqual(
       RISK_FACTORS.map((factor) => [factor.title, factor.line]),
     );
+  });
+});
+
+describe("/score — cached POST envelope", () => {
+  it("uses the cached envelope from POST /v1/quiz/responses and skips the GET", async () => {
+    mockConsumeCache.mockReturnValue(STORED);
+
+    await renderScore();
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: FACTORS_HEADING })).toBeTruthy();
+    });
+    expect(rowsOf(card(FACTORS_HEADING))).toStrictEqual(
+      RISK_FACTORS.map((factor) => [factor.title, factor.line]),
+    );
+    expect(rowsOf(card(RECOMMENDATIONS_HEADING))).toStrictEqual(
+      RECOMMENDATIONS.map((recommendation) => [recommendation.title, recommendation.body]),
+    );
+
+    // GET /v1/me/score should NOT have been called — only GET /v1/me.
+    const scoreCalls = mockCallAsUser.mock.calls.filter(
+      (args) => args[0] === "GET" && args[1] === "/v1/me/score",
+    );
+    expect(scoreCalls).toHaveLength(0);
+  });
+
+  it("falls back to GET /v1/me/score when there is no cached envelope", async () => {
+    mockConsumeCache.mockReturnValue(null);
+
+    await renderScore();
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: FACTORS_HEADING })).toBeTruthy();
+    });
+
+    const scoreCalls = mockCallAsUser.mock.calls.filter(
+      (args) => args[0] === "GET" && args[1] === "/v1/me/score",
+    );
+    expect(scoreCalls.length).toBeGreaterThanOrEqual(1);
   });
 });
 

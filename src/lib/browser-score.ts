@@ -9,6 +9,7 @@
 import { callAsUser, ApiFailure } from "./api-client";
 import { hasSession, isAccessExpired } from "./browser-session";
 import { handoffFor, type Handoff } from "./handoff";
+import { consumeCachedEnvelope } from "./quiz-submit";
 import { recommendationsFrom } from "./recommendations";
 import { riskFactorsFrom, type ScoreEnvelope, type ScoreRecord } from "./score";
 
@@ -61,17 +62,25 @@ export async function loadScore(): Promise<ScoreLoad> {
   }
 
   try {
+    /* The POST response is the authoritative first copy of the envelope —
+       `score.risk_factors` and `general_recommendations` may only be served
+       there. If the submit just happened (same tab, same session), use its
+       envelope rather than re-fetching from GET which may not carry those
+       fields. The cache is consumed: a page reload falls back to the GET. */
+    const cached = consumeCachedEnvelope();
+
     const [me, envelope] = await Promise.all([
       callAsUser<Me>("GET", "/v1/me"),
-      callAsUser<ScoreEnvelope>("GET", "/v1/me/score").catch((error: unknown) => {
-        if (
-          error instanceof ApiFailure &&
-          (error.code === "NO_QUIZ_RESPONSE" || error.code === "QUIZ_OUTDATED")
-        ) {
-          return error.code;
-        }
-        throw error;
-      }),
+      cached ??
+        callAsUser<ScoreEnvelope>("GET", "/v1/me/score").catch((error: unknown) => {
+          if (
+            error instanceof ApiFailure &&
+            (error.code === "NO_QUIZ_RESPONSE" || error.code === "QUIZ_OUTDATED")
+          ) {
+            return error.code;
+          }
+          throw error;
+        }),
     ]);
 
     if (typeof envelope === "string") {

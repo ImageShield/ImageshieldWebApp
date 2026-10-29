@@ -25,6 +25,24 @@ export type SubmitOutcome =
       error: string;
     };
 
+/* ── Cached POST response ───────────────────────────────────────────────────
+ *
+ * `POST /v1/quiz/responses` returns the same `ScoreEnvelope` that
+ * `GET /v1/me/score` does — including `score.risk_factors` and
+ * `general_recommendations`. The GET may not carry those fields for every
+ * account, so the POST response is the authoritative first copy. It is
+ * stashed here and consumed once by `browser-score.ts` when the score page
+ * loads; after that a reload falls back to the GET as before.
+ */
+let cachedEnvelope: ScoreEnvelope | null = null;
+
+/** Returns (and clears) the envelope from the last successful submit, if any. */
+export function consumeCachedEnvelope(): ScoreEnvelope | null {
+  const envelope = cachedEnvelope;
+  cachedEnvelope = null;
+  return envelope;
+}
+
 /**
  * Reads the live quiz definition from the API (authenticated).
  */
@@ -108,9 +126,10 @@ export async function submitAnswers(): Promise<SubmitOutcome> {
 
   // Submit answers directly to the backend
   try {
-    await callAsUser<ScoreEnvelope>("POST", "/v1/quiz/responses", {
+    const envelope = await callAsUser<ScoreEnvelope>("POST", "/v1/quiz/responses", {
       body: { quiz_version: live.quiz_version, answers: parsed.answers },
     });
+    cachedEnvelope = envelope;
   } catch (error) {
     if (error instanceof ApiFailure) {
       if (error.status === 401) {
