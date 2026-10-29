@@ -12,8 +12,8 @@ const HUBSPOT_PORTAL_ID = "20495177";
 
 /**
  * Tag Manager and HubSpot, each rendered only once the visitor has opted into its
- * category. Nothing here is in the page before that — Google's "basic" consent mode
- * — so a visitor who declines, or never answers, sends neither company anything.
+ * category. Nothing here is in the page before that - Google's "basic" consent mode
+ * - so a visitor who declines, or never answers, sends neither company anything.
  *
  * The consent defaults go out in the same inline script as the container, ahead of
  * it, so no tag can ever run before the signals it checks exist. HubSpot's own
@@ -24,7 +24,7 @@ const HUBSPOT_PORTAL_ID = "20495177";
  * load either a second time.
  *
  * Neither loads, whatever the visitor chose, on /not-eligible or for anyone whose
- * answers say they are under 18 — see `trackingBlocked`. The screens reach that page
+ * answers say they are under 18 - see `trackingBlocked`. The screens reach that page
  * with a full page load for the same reason: a container already running can't be
  * unloaded, only never started.
  */

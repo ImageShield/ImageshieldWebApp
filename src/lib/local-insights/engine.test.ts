@@ -114,9 +114,9 @@ describe("risk factors from a visitor's answers", () => {
   });
 
   /* Equal points fall back to the report's own order: age, gender, platforms,
-     prior_misuse, posting_volume, q_il8uju — then each question's answer order. */
+     prior_misuse, posting_volume, q_il8uju - then each question's answer order. */
   it("break ties in points the same way every time", () => {
-    // 6 and 6, then 3 and 3, then 4 and 4 — across questions each time.
+    // 6 and 6, then 3 and 3, then 4 and 4 - across questions each time.
     expect(titles({ gender: "Female", age: "18-24" })).toStrictEqual(["Age: 18-24", "Gender: Female"]);
     expect(titles({ platforms: ["Facebook"], age: "55+" })).toStrictEqual(["Age: 55+", "Platform: Facebook"]);
     expect(titles({ platforms: ["Instagram"], gender: "Non-Binary" })).toStrictEqual([
@@ -363,7 +363,7 @@ describe("reading the breakdown", () => {
   });
 });
 
-/* Prod's quiz. The breakdown shape — { key, value, deduction, type } per question —
+/* Prod's quiz. The breakdown shape - { key, value, deduction, type } per question -
    is the one the v17 path reads and the one an earlier real response showed the
    old card (commit 3acf825); a live v11 response hasn't been captured to confirm
    it, nor the scoring version string, which is why `scoring_version` here is a
@@ -630,7 +630,7 @@ describe("the gender factor", () => {
         expect(rows.map((row) => row.line)).not.toContain(NON_BINARY_LINE);
       });
 
-      /* Neither has evidence in the report, so neither gets a row — least of all the
+      /* Neither has evidence in the report, so neither gets a row - least of all the
          Non-Binary one. */
       for (const gender of ["Male", "Prefer not to say"]) {
         it(`is absent for ${gender}`, () => {

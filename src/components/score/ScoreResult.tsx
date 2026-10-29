@@ -20,7 +20,7 @@ import { ShareScoreButton } from "./ShareScoreButton";
 /**
  * The accent colour on the risk word, per band.
  *
- * Written out rather than built as `text-risk-${level}` — Tailwind scans source for
+ * Written out rather than built as `text-risk-${level}` - Tailwind scans source for
  * whole class names, and an interpolated one is never generated.
  */
 const RISK_WORD: Record<RiskLevel, string> = {
@@ -40,13 +40,13 @@ const FACTOR_ICONS: Record<FactorIcon, (props: { className?: string }) => React.
 };
 
 /**
- * The warm card both download prompts sit in — its shape, padding and ground.
+ * The warm card both download prompts sit in - its shape, padding and ground.
  * Exported so the loading skeleton paints the same card rather than a copy of it.
  *
  * The ground on a phone is two gradients, as the mobile export draws them: the
  * desktop's horizontal cream wash with a vertical amber→red overlay laid over it.
  * That overlay runs from the card's top edge to y=1151 on a card that ends at y=964,
- * so only its first 61% is ever seen — the end stop here is that gradient sampled at
+ * so only its first 61% is ever seen - the end stop here is that gradient sampled at
  * 61%, not its own final stop, which would land a far redder card than the export
  * shows.
  */
@@ -56,7 +56,7 @@ export const WARM_CARD =
 /**
  * The result screen, laid out from the LHS Results V1 export.
  *
- * Everything on it comes off the stored record — the two lavender cards included,
+ * Everything on it comes off the stored record - the two lavender cards included,
  * words and all. The order is the export's, and it is an argument: the number
  * and what it means, then the one action that follows from it, then why the number is
  * what it is, then what to do about it, then the app.
@@ -65,7 +65,7 @@ export const WARM_CARD =
  * the gauge sits BESIDE the headline, so the sentence under the headline is read
  * before the eye reaches the arc; on a phone the gauge sits UNDER the headline, and
  * the same sentence placed under the headline would separate the two. So the
- * sentence moves below the gauge and its scale — the number is shown, then explained.
+ * sentence moves below the gauge and its scale - the number is shown, then explained.
  * `order` does that below `lg`; at `lg` the section becomes a two-column grid whose
  * explicit placement ignores `order` and restores the export's own arrangement.
  */
@@ -97,7 +97,7 @@ export function ScoreResult({
 
   const recommendationRows: InsightRow[] = record.recommendations.map(
     (recommendation, index) => ({
-      /* Served without an id, and never reordered once drawn — so its position is
+      /* Served without an id, and never reordered once drawn - so its position is
          its identity. */
       id: String(index),
       /* Served without a glyph too, so every row takes the one the handoff section
@@ -127,17 +127,17 @@ export function ScoreResult({
 
         {/* Below `lg` this is a column and `order` runs it; at `lg` it is a grid and
             the explicit row/column placement takes over. The gauge holds its drawn
-            width in both — an arc that reflows with the column drags its printed
+            width in both - an arc that reflows with the column drags its printed
             scale out of step with it. The phone's own treatments (centred copy, the
             arc's caption, the smaller scale) end at `sm`, one breakpoint sooner than
             the stacking does: they are answers to a 403px measure, not to a single
             column, and a 700px tablet is a single column with room to spare. */}
         <section className="mt-[15px] flex flex-col sm:mt-10 lg:mt-[37px] lg:grid lg:grid-cols-[1fr_333px] lg:items-start lg:gap-x-10">
           {/* Capped at the export's own measure so it breaks after "risk of",
-              not mid-phrase — the line the accent word lands on is the point. */}
+              not mid-phrase - the line the accent word lands on is the point. */}
           <h1 className="order-1 text-center text-[28px] leading-[1.2] font-bold tracking-[-0.5px] text-ink-report sm:text-left sm:text-[32px] sm:leading-[1.5] lg:col-start-1 lg:row-start-1 lg:max-w-[440px] lg:pt-2 lg:text-[40px] lg:leading-[60px]">
             {record.firstName}, your risk of likeness abuse is{" "}
-            {/* One weight heavier than the sentence it ends, not just a colour —
+            {/* One weight heavier than the sentence it ends, not just a colour -
                 the export sets the risk word in ExtraBold. The closing mark is
                 inside the span rather than after it: it belongs to the word, so it
                 takes the band's colour and weight with it.
@@ -173,7 +173,7 @@ export function ScoreResult({
             <div className="relative mx-auto mt-6 w-[191px] lg:mt-0">
               <ScoreGauge score={score.live} level={level} band={score.band} />
               {/* With no caption above the arc on a wider screen, the button sits
-                  off the gauge's top-right corner instead — in the column's spare
+                  off the gauge's top-right corner instead - in the column's spare
                   width beside the arc, positioned so it moves nothing. Both
                   instances share one poster fetch. */}
               <div className="absolute top-0 left-full ml-3 max-sm:hidden">
@@ -191,7 +191,7 @@ export function ScoreResult({
               {/* The figure is marked up as the emphasis it is, and the weight
                   follows the export on each side: the desktop one sets this span at
                   700 against the sentence's 400, and the phone one sets the whole
-                  sentence — risk word and figure alike — flat at 400. On a
+                  sentence - risk word and figure alike - flat at 400. On a
                   403px measure a bolded number mid-sentence reads as a second
                   headline under the one already above it. */}
               <strong className="font-normal sm:font-bold">{score.live}</strong>{" "}
@@ -259,7 +259,7 @@ export function ScoreResult({
               "you're safe", never "across the web", and 100 is never an all-clear.
               `ink-soft` rather than the page's `ink-faint`: on the phone the card
               fades to orange at its foot, where #888 drops to ~2.3:1 and #666 to
-              ~3.7:1 — both under AA for 14px text. #333 holds ~8:1. */}
+              ~3.7:1 - both under AA for 14px text. #333 holds ~8:1. */}
           <p className="mt-8 text-sm leading-5 text-ink-soft sm:mt-10">
             {record.scopeNote}
           </p>

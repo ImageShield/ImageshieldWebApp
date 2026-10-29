@@ -8,7 +8,7 @@
  * and the NEXT run of this command silently talks to a stale server. Supervising both
  * from Node makes shutdown explicit instead of incidental.
  *
- * Not a production concern in any way — this file is only ever run by `npm run
+ * Not a production concern in any way - this file is only ever run by `npm run
  * dev:offline`.
  */
 import { spawn } from "node:child_process";
@@ -48,13 +48,13 @@ const web = start(join("node_modules", ".bin", "next"), ["dev"], {
 });
 
 /* The fixture dying on its own is nearly always "port already in use", and the dev
-   server would otherwise carry on talking to nothing — or worse, to whatever is
+   server would otherwise carry on talking to nothing - or worse, to whatever is
    already on that port. Take the pair down and say why. */
 api.on("exit", (code) => {
   if (stopping) return;
   console.error(
     `\n  The /v1 fixture exited (code ${String(code)}). If port ${PORT} is already in ` +
-      `use, stop what is on it — or set DEV_API_PORT to something else.\n`,
+      `use, stop what is on it - or set DEV_API_PORT to something else.\n`,
   );
   stopAll();
   process.exitCode = code ?? 1;

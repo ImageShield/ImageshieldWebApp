@@ -4,14 +4,14 @@ import { Skeleton } from "@/components/Skeleton";
  * The question screen, before the questions arrive.
  *
  * `QuizFlow` renders this while `GET /api/quiz-definition` is in flight. The
- * layout is the same screen's, measurement for measurement — the progress row's
+ * layout is the same screen's, measurement for measurement - the progress row's
  * 920px track, the 600px column under it, and option rows at the 53.7px the
- * design draws — so the words drop into boxes that are already where they will
+ * design draws - so the words drop into boxes that are already where they will
  * stay. Both files have to move together; the reasoning behind each number is
  * in `QuizFlow` and `QuizProgress`, beside the real thing.
  *
  * The prompt is reserved at one line and the answers at five rows, which is
- * not an average — it is question one exactly. This only ever shows when the
+ * not an average - it is question one exactly. This only ever shows when the
  * definition is not already in the tab, and `useQuizDefinition` keeps it for
  * the tab's whole life, so what it stands in for is very nearly always the
  * first screen of a fresh visit: a one-line prompt over five options. Averaging
@@ -43,11 +43,11 @@ export function QuizSkeleton() {
       </div>
 
       <div className="mx-auto w-full max-w-[600px] px-5 pb-24">
-        {/* "LIKENESS HEALTH QUIZ (1/6)" — the tracked uppercase eyebrow. */}
+        {/* "LIKENESS HEALTH QUIZ (1/6)" - the tracked uppercase eyebrow. */}
         <Skeleton className="mt-10 h-4 w-[240px] rounded lg:mt-[70px]" />
 
         {/* The prompt. One line, at a width that reads as a question rather
-            than as a full measure of body copy — the real one is 24/36 Bold and
+            than as a full measure of body copy - the real one is 24/36 Bold and
             rarely runs the whole 560. */}
         <Skeleton className="mt-[16px] h-9 w-[62%] rounded-md" />
 

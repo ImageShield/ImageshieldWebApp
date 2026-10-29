@@ -35,7 +35,7 @@ export type ClassifiedAnswer = {
   answer: string;
   /** Null when the report has no such question or answer: `unmatched`. */
   evidence: AnswerEvidence | null;
-  /** The report's own position — question, then answer. Breaks ties in points. */
+  /** The report's own position - question, then answer. Breaks ties in points. */
   order: number;
 };
 
@@ -94,8 +94,8 @@ export function deductionsFrom(breakdown: unknown): Record<string, number> {
  *
  * The breakdown's shape for one is unconfirmed: a list is the obvious reading, but the
  * dev fixture once sent the selections joined with ", ". Both are read. A joined
- * string is split only when every piece is an exact option — none of the v17
- * platforms contains a comma, so that split can't mistake one option for two — and is
+ * string is split only when every piece is an exact option - none of the v17
+ * platforms contains a comma, so that split can't mistake one option for two - and is
  * otherwise kept whole, to fail as unmatched rather than be guessed at.
  */
 function selectionsOf(given: string | string[], options: ReadonlySet<string>): string[] {
@@ -209,10 +209,10 @@ export function riskFactorsByRecord(
 
 /**
  * The recommendations card: each entry whose answers the visitor gave, ranked by the
- * most any of those answers cost — the report's points by default, or the record's
- * own deductions — then by catalogue order.
+ * most any of those answers cost - the report's points by default, or the record's
+ * own deductions - then by catalogue order.
  *
- * Each entry is shown once however many of the visitor's answers call for it —
+ * Each entry is shown once however many of the visitor's answers call for it -
  * picking both Instagram and Facebook is one reporting tip, not two. A trigger with
  * no known cost still counts; it only sorts after those with one.
  */
@@ -253,7 +253,7 @@ function inReportTerms<T>(byKey: Record<string, T>, questions: ReadonlyMap<strin
   return translated;
 }
 
-/** The version's profile, or none — own keys only, so "constructor" isn't a version. */
+/** The version's profile, or none - own keys only, so "constructor" isn't a version. */
 function profileFor(score: Pick<Score, "quiz_version" | "scoring_version">) {
   const profile: VersionProfile | undefined = Object.hasOwn(VERSIONS, score.quiz_version)
     ? VERSIONS[score.quiz_version]
@@ -273,7 +273,7 @@ export function shapeOf(value: unknown): string {
 }
 
 /**
- * The record as the engine sees it, for a log line — structure only.
+ * The record as the engine sees it, for a log line - structure only.
  *
  * Versions, whether there is a profile for them, and per breakdown entry its question
  * key, the shape of its value, whether that value is an option the report lists (for
@@ -313,7 +313,7 @@ export function describeRecord(
 /**
  * Both cards for one score record.
  *
- * Only for a quiz version ./versions.ts lists, and only from the questions it maps —
+ * Only for a quiz version ./versions.ts lists, and only from the questions it maps -
  * any other version asked other questions, so it gets nothing, which hides both cards
  * rather than laying v17 research over answers it was never written about.
  *
@@ -370,7 +370,7 @@ export function localInsights(
     );
   }
 
-  /* The factor names the question as this record's quiz does — `discovery_method` on
+  /* The factor names the question as this record's quiz does - `discovery_method` on
      v11, not the report's `q_il8uju`. */
   return {
     riskFactors: riskFactors.map((factor) => ({ ...factor, key: recordKey.get(factor.key) ?? factor.key })),

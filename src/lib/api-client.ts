@@ -104,7 +104,7 @@ const sleep = (ms: number) => new Promise<void>((done) => setTimeout(done, ms));
 
 /**
  * Sends a request directly to the backend API from the browser.
- * Does NOT handle auto-refresh — use `callAsUser` for that.
+ * Does NOT handle auto-refresh - use `callAsUser` for that.
  */
 export async function call<T>(
   method: string,
@@ -171,7 +171,7 @@ let inflightRefresh: Promise<boolean> | null = null;
  * Refreshes the session by spending the refresh token for a new pair.
  * Returns true on success, false if the session is dead.
  *
- * Concurrent callers share a single in-flight request — the refresh token is
+ * Concurrent callers share a single in-flight request - the refresh token is
  * single-use, so only one call may present it.
  */
 export async function refreshSession(): Promise<boolean> {

@@ -2,7 +2,7 @@
 
 /*
  * Design tokens. Mirrored from the mobile app (src/styles/ + screen usage) so the
- * funnel and the app read as one product. When designs land, change values HERE —
+ * funnel and the app read as one product. When designs land, change values HERE -
  * components should never hardcode a hex or a px size.
  */
 @theme {
@@ -10,13 +10,13 @@
   --color-brand: #380e99;
   --color-brand-bright: #7f48ff;
   --color-brand-soft: #c6adff;
-  /* Brand ink on a white surface — the secondary button's label. Deeper than
+  /* Brand ink on a white surface - the secondary button's label. Deeper than
    * `brand`, which is a fill colour and reads muddy as small bold text. */
   --color-brand-ink: #25007a;
 
   /* Surfaces */
   --color-canvas: #ffffff;
-  /* The barely-violet white the quiz screens sit on — not pure `canvas`. */
+  /* The barely-violet white the quiz screens sit on - not pure `canvas`. */
   --color-canvas-tint: #fbfaff;
   --color-surface: #f1f2f6;
   --color-surface-dark: #1a1a2e;
@@ -28,22 +28,22 @@
   --color-ink-muted: #666666;
   --color-ink-faint: #888888;
   /* Form placeholders. A step lighter than `ink-faint`, which is already spoken for
-   * as real (if quiet) copy — a placeholder has to read as "not filled in yet". */
+   * as real (if quiet) copy - a placeholder has to read as "not filled in yet". */
   --color-ink-placeholder: #999999;
   /* The result screen's body copy: a warmed grey-violet, not a neutral one. */
   --color-ink-body: #494454;
-  /* …and the near-black above it — the report label, the headline and the sentence
+  /* …and the near-black above it - the report label, the headline and the sentence
    * that explains the score. A notch lighter than `ink`, which is the funnel's own
    * black, and the LHS export sets all three of those in it rather than in `ink`. */
   --color-ink-report: #212121;
-  /* The warm card's copy — a slate rather than a neutral, and the one ink on this
+  /* The warm card's copy - a slate rather than a neutral, and the one ink on this
    * screen that is the same value at both sizes. */
   --color-ink-warm: #1f2937;
   /* The lavender cards' headings and row titles, desktop. */
   --color-ink-card: #1a1c1d;
-  /* The deepest of them — the second download prompt's copy. */
+  /* The deepest of them - the second download prompt's copy. */
   --color-ink-deep: #0c0c0e;
-  /* `ink-body` one step lighter, same warm grey-violet family — the feature cards'
+  /* `ink-body` one step lighter, same warm grey-violet family - the feature cards'
    * copy under "Benefits of the app". */
   --color-ink-body-soft: #5c5966;
   --color-ink-inverse: #ffffff;
@@ -51,11 +51,11 @@
   /* Lines */
   --color-line: #dedede;
   --color-line-soft: #e5e7eb;
-  /* Neutral where `line-soft` is faintly blue — the factor cards sit on white and
+  /* Neutral where `line-soft` is faintly blue - the factor cards sit on white and
    * the blue cast is visible at a 339px width. */
   --color-line-card: #e2e2e4;
   /* The multi-select checkbox's resting outline. A step darker than `line-soft`,
-   * which is the option card's own border — at `line-soft` the empty box washes
+   * which is the option card's own border - at `line-soft` the empty box washes
    * out against the card it sits inside. */
   --color-line-strong: #d1d5dc;
   /* Unfilled part of the quiz progress bar. A hair warmer than `line-soft`, which
@@ -68,7 +68,7 @@
   --color-success: #39beb7;
 
   /*
-   * Likeness Health Score bands, as flat ink — the risk word in the headline. The
+   * Likeness Health Score bands, as flat ink - the risk word in the headline. The
    * backend owns the thresholds (>=80 low, >=51 moderate, else high) and returns
    * the band; these are only how each one is drawn.
    *
@@ -79,7 +79,7 @@
    * app doesn't see their band change colour. `high` was #E44625 for a while, from
    * an earlier export of the result screen; the LHS Results V1 export sets both the
    * headline's risk word and the scale rule under the gauge to #FF3B5C, which is
-   * also what the app has always used — so the divergence is gone rather than
+   * also what the app has always used - so the divergence is gone rather than
    * merely swapped.
    */
   --color-risk-high: #ff3b5c;
@@ -88,12 +88,12 @@
 
   /*
    * Marketing site. The landing page runs on a black canvas rather than the
-   * funnel's white one, so it needs its own ink ramp — `ink-muted` and friends
+   * funnel's white one, so it needs its own ink ramp - `ink-muted` and friends
    * are tuned for light surfaces and go invisible here.
    */
   --color-night: #000000;
   --color-cta: #521eb3;
-  /* The funnel's nav bar is its own purple — lighter than `brand`, darker than
+  /* The funnel's nav bar is its own purple - lighter than `brand`, darker than
    * `cta`. The landing hero runs V3's glass bar instead; this is what every screen
    * behind the quiz still sits under. */
   --color-navbar: #3e1787;
@@ -109,7 +109,7 @@
   /*
    * Concept 1's home page. Three grounds the rest of the site has no use for: the
    * quiz band's coral, the card the hero floats over the photograph, and the barely
-   * grey the How It Works band sits on — the design draws that last one as the old
+   * grey the How It Works band sits on - the design draws that last one as the old
    * site's #f3f5f7 at 30% over white, which is this flat value once composited.
    */
   --color-coral: #ff7274;
@@ -117,7 +117,7 @@
   --color-canvas-mist: #fbfcfd;
 
   /*
-   * Skeletons — the blocks standing in for content that hasn't arrived, and the
+   * Skeletons - the blocks standing in for content that hasn't arrived, and the
    * band of light that travels across them. See the `.skeleton` rules below.
    *
    * The light pair is `surface` pulled a step toward the brand violet rather
@@ -136,7 +136,7 @@
   --color-skeleton-night: #17171c;
   --color-skeleton-night-sheen: #2c2836;
 
-  /* Type — Plus Jakarta Sans, same face as the app */
+  /* Type - Plus Jakarta Sans, same face as the app */
   --font-sans: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
 
   /* Funnel screens are phone-sized. This is the content column everywhere. */
@@ -158,7 +158,7 @@
     background: var(--color-canvas);
     color: var(--color-ink);
     font-family: var(--font-sans);
-    /* Funnel is a fixed flow — sideways scroll is always a bug here. */
+    /* Funnel is a fixed flow - sideways scroll is always a bug here. */
     overflow-x: hidden;
   }
 
@@ -174,8 +174,8 @@
   }
 
   /*
-   * Accepting a browser suggestion — a saved name or number, or the SMS code chip
-   * on the OTP row — leaves the field in `:-webkit-autofill`, which Chrome and
+   * Accepting a browser suggestion - a saved name or number, or the SMS code chip
+   * on the OTP row - leaves the field in `:-webkit-autofill`, which Chrome and
    * Safari repaint in their own yellow. That colour comes from the UA sheet and
    * outranks the field's `bg-canvas`; `background-color` cannot take it back, so
    * the fix is an inset shadow wide enough to fill the box. The text and caret
@@ -191,7 +191,7 @@
     caret-color: var(--color-ink);
   }
 
-  /* Respect users who asked for less motion — the funnel is animation-heavy. */
+  /* Respect users who asked for less motion - the funnel is animation-heavy. */
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -211,7 +211,7 @@
  *
  * `translateX` rather than a sliding `background-position`, which is the other
  * common way to write this. A transform is composited and a background is
- * repainted every frame — and these only ever appear on the slow connections
+ * repainted every frame - and these only ever appear on the slow connections
  * that make them necessary, on the devices least able to afford a repaint. The
  * hero placeholder is a full viewport of gradient; animating its paint is
  * exactly the wrong thing to spend that budget on.
@@ -220,7 +220,7 @@
  *
  *   .skeleton        a block standing in for content, on a light page
  *   .skeleton-night  the same, on the landing page's black canvas
- *   .shimmer         the sweep ALONE, over whatever the element already is —
+ *   .shimmer         the sweep ALONE, over whatever the element already is -
  *                    a submit button that keeps its brand purple while it waits
  *
  * Each sets `--shimmer-sheen`, which is the only thing the shared `::after`
@@ -255,7 +255,7 @@
     --shimmer-sheen: var(--color-skeleton-night-sheen);
   }
 
-  /* No ground of its own — it lights whatever it is laid over. */
+  /* No ground of its own - it lights whatever it is laid over. */
   .shimmer {
     --shimmer-sheen: rgb(255 255 255 / 0.22);
   }
@@ -280,7 +280,7 @@
    * simply dropped rather than shortened.
    *
    * It needs saying explicitly: the blanket rule in the base layer sets every
-   * animation to one 0.01ms iteration, which does not stop this one — it runs it
+   * animation to one 0.01ms iteration, which does not stop this one - it runs it
    * to the end instantly, and with no fill mode the sheen then springs back to
    * its resting `translateX(0)`. That leaves a bright stripe parked across the
    * middle of every placeholder on the page, which is worse than no shimmer and

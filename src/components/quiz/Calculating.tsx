@@ -17,7 +17,7 @@ import { submitAnswers, type SubmitOutcome } from "@/lib/quiz-submit";
  * The quiz is answered several screens back, so by the time this runs the answers have
  * been in sessionStorage for a minute or two and the code entered on the previous
  * screen has bought the session to write them with. This is a real wait, not a staged
- * one — but the floor below still earns its keep: the write usually answers in well
+ * one - but the floor below still earns its keep: the write usually answers in well
  * under a second, and a loader that appears and vanishes inside 200ms reads as a
  * glitch rather than as progress.
  */
@@ -40,12 +40,12 @@ export function Calculating() {
   const { quiz, error: definitionError, reload } = useQuizDefinition();
   /* React runs effects twice in development, and this one writes. */
   const started = useRef(false);
-  /* The in-flight write, held across those two passes. See the effect below — this
+  /* The in-flight write, held across those two passes. See the effect below - this
      ref is what stops the pair of guards from cancelling each other. */
   const pending = useRef<Promise<SubmitOutcome> | null>(null);
 
   /* Applies an outcome. A `useCallback` rather than inline so the effect below hands
-     it to a promise instead of calling setState in its own body — a synchronous
+     it to a promise instead of calling setState in its own body - a synchronous
      setState inside an effect is what triggers cascading renders. */
   const apply = useCallback(
     (outcome: SubmitOutcome) => {
@@ -56,14 +56,14 @@ export function Calculating() {
         return router.replace(STEP_PATHS.details);
       }
       /* The quiz moved between the questions being read and the answers being sent.
-         Back to the quiz — and not back to the details form, which is why `QuizFlow`
+         Back to the quiz - and not back to the details form, which is why `QuizFlow`
          takes `signedIn`: the session survives this, so re-answering costs no second
          code. */
       if (outcome.reason === "retake") {
         return router.replace(STEP_PATHS["quiz-questions"]);
       }
-      /* The API refused an under-18 answer. Not an error to retry — the same
-         answers would be refused again — so not the panel below either. The age is
+      /* The API refused an under-18 answer. Not an error to retry - the same
+         answers would be refused again - so not the panel below either. The age is
          judged by `/api/quiz`, not here; this only follows its answer. */
       if (outcome.reason === "not-eligible") {
         return leaveForNotEligible("replace");
@@ -92,7 +92,7 @@ export function Calculating() {
    * The two guards here have to stay separate, and combining them is a deadlock that
    * only shows up in development. React's StrictMode mounts an effect, tears it down,
    * and mounts it again; with `started` guarding the whole body, the second pass
-   * returned early — so the request from the first pass resolved into a `live` that
+   * returned early - so the request from the first pass resolved into a `live` that
    * its own cleanup had already set false, `apply` was never called, and the loader
    * span forever on a score that had in fact been saved.
    *
@@ -132,8 +132,8 @@ export function Calculating() {
     };
   }, [apply, quiz, router, run]);
 
-  /* A definition that will not load stalls this screen — the write cannot be made
-     without a version to pin it to — so it is reported rather than spun on. Reuses the
+  /* A definition that will not load stalls this screen - the write cannot be made
+     without a version to pin it to - so it is reported rather than spun on. Reuses the
      panel below by feeding it the same state; `reload` re-fetches the definition and
      the effect then starts the write on its own. */
   const stalled = error ?? (quiz === null ? definitionError : null);
@@ -149,7 +149,7 @@ export function Calculating() {
             the answers are still in this tab and the number is already verified, so
             retrying costs nothing and needs no new code. */}
         <p className="mt-4 max-w-[420px] text-base text-ink-muted">
-          {stalled} Your answers are still here and your number is verified — nothing
+          {stalled} Your answers are still here and your number is verified - nothing
           needs re-sending.
         </p>
         <button

@@ -126,7 +126,7 @@ describe("track", () => {
     });
 
     /* Between quiz events GTM's model would otherwise still hold the last answer for
-       any other tag — a page view on the navigation that follows, say. */
+       any other tag - a page view on the navigation that follows, say. */
     it("clears every field again straight after each event", () => {
       track(ANSWER);
       const all = (window as Window & { dataLayer?: Record<string, unknown>[] }).dataLayer ?? [];
@@ -313,7 +313,7 @@ describe("the quiz helpers", () => {
     expect(dataLayer()).toStrictEqual([{ ...START, question_number: 4 }]);
   });
 
-  /* An unreviewed version keeps the shape but uses the backend's own keys — camelCase
+  /* An unreviewed version keeps the shape but uses the backend's own keys - camelCase
      ones included, as v1 served. */
   it("reports an unknown version's questions by their backend keys", () => {
     const v99: QuizDefinition = {
@@ -332,7 +332,7 @@ describe("the quiz helpers", () => {
   });
 
   /* `declaresMinor` matches exact option strings. If the backend rewords the band or
-     renames the question, it would stop recognising minors — so nothing is sent. */
+     renames the question, it would stop recognising minors - so nothing is sent. */
   it.each([
     ["the under-18 band is reworded", [{ key: "age", prompt: "Age?", options: ["Under 18 years", "18-24"] }]],
     ["there is no age question", [{ key: "gender", prompt: "Gender?", options: ["Female"] }]],

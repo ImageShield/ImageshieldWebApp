@@ -4,7 +4,7 @@
  * Every one is lifted from the design file's own paths rather than an icon package,
  * so weights and corner radii match what was drawn.
  *
- * Each renders at the size it was drawn at, and those sizes genuinely differ — the
+ * Each renders at the size it was drawn at, and those sizes genuinely differ - the
  * eye is 22×15, the shield 16×20. Sizing them all to one width (or one height) is
  * what makes a row of them look wrong: forcing the 16×20 shield to 22 wide renders
  * it 27.5 tall, overhanging the 18px label beside it. Callers that need a tidy
@@ -47,7 +47,7 @@ function Glyph({
 
 /* ── Details form fields ──────────────────────────────────────────────────── */
 
-/** Contact card — the Full Name field. */
+/** Contact card - the Full Name field. */
 export function ContactCard({ className }: IconProps) {
   return (
     <Glyph
@@ -60,7 +60,7 @@ export function ContactCard({ className }: IconProps) {
   );
 }
 
-/** Envelope — the Email field. */
+/** Envelope - the Email field. */
 export function Envelope({ className }: IconProps) {
   return (
     <Glyph
@@ -73,7 +73,7 @@ export function Envelope({ className }: IconProps) {
   );
 }
 
-/** Chat bubble — the Cellphone field, and the OTP screen's code boxes. */
+/** Chat bubble - the Cellphone field, and the OTP screen's code boxes. */
 export function ChatBubble({ className }: IconProps) {
   return (
     <Glyph
@@ -88,7 +88,7 @@ export function ChatBubble({ className }: IconProps) {
 
 /* ── Result screen ────────────────────────────────────────────────────────── */
 
-/** Calendar — the Age factor. */
+/** Calendar - the Age factor. */
 export function Calendar({ className }: IconProps) {
   return (
     <Glyph
@@ -101,7 +101,7 @@ export function Calendar({ className }: IconProps) {
   );
 }
 
-/** Venus sign — the Gender factor. */
+/** Venus sign - the Gender factor. */
 export function Venus({ className }: IconProps) {
   return (
     <Glyph
@@ -114,7 +114,7 @@ export function Venus({ className }: IconProps) {
   );
 }
 
-/** Globe — the Privacy Settings factor. */
+/** Globe - the Privacy Settings factor. */
 export function Globe({ className }: IconProps) {
   return (
     <Glyph
@@ -127,7 +127,7 @@ export function Globe({ className }: IconProps) {
   );
 }
 
-/** Eye — 24/7 Monitoring. */
+/** Eye - 24/7 Monitoring. */
 export function Eye({ className }: IconProps) {
   return (
     <Glyph
@@ -140,7 +140,7 @@ export function Eye({ className }: IconProps) {
   );
 }
 
-/** Shield with a tick — Privacy Always, and the fallback factor icon. */
+/** Shield with a tick - Privacy Always, and the fallback factor icon. */
 export function ShieldCheck({ className }: IconProps) {
   return (
     <Glyph
@@ -153,7 +153,7 @@ export function ShieldCheck({ className }: IconProps) {
   );
 }
 
-/** Document — Weekly Reports, and the Active Reports factor. */
+/** Document - Weekly Reports, and the Active Reports factor. */
 export function Report({ className }: IconProps) {
   return (
     <Glyph
@@ -166,7 +166,7 @@ export function Report({ className }: IconProps) {
   );
 }
 
-/** Wand — Personalized Recommendations, and the Content Volume factor. */
+/** Wand - Personalized Recommendations, and the Content Volume factor. */
 export function Wand({ className }: IconProps) {
   return (
     <Glyph
@@ -182,16 +182,16 @@ export function Wand({ className }: IconProps) {
 /* ── General recommendations ─────────────────────────────────────────────────
  *
  * Both are drawn as outlines rather than solids, which is what the results export
- * shows and why `Glyph` needed an even-odd rule: each is a ring — one contour inside
- * another — and the nonzero default fills the gap between them.
+ * shows and why `Glyph` needed an even-odd rule: each is a ring - one contour inside
+ * another - and the nonzero default fills the gap between them.
  */
 
-/** YouTube's play badge — the likeness-detection recommendation. */
+/** YouTube's play badge - the likeness-detection recommendation. */
 export function PlayBadge({ className }: IconProps) {
   return (
     <Glyph
       className={className}
-      /* Windowed rather than translated to the origin — see `Lock`. The export
+      /* Windowed rather than translated to the origin - see `Lock`. The export
          draws this one centred on its 84px disc, at 29×23 sitting at (27.5, 30.5). */
       viewBox="27.5 30.5 29 23"
       width={29}
@@ -201,7 +201,7 @@ export function PlayBadge({ className }: IconProps) {
   );
 }
 
-/** Padlock — the keep-your-accounts-private recommendation. */
+/** Padlock - the keep-your-accounts-private recommendation. */
 export function Lock({ className }: IconProps) {
   return (
     <Glyph
@@ -209,7 +209,7 @@ export function Lock({ className }: IconProps) {
       /* Windowed rather than translated to the origin: the export draws this glyph
          inside its own 84px disc, at 25×28 sitting at (29.5, 26.5). Keeping the
          path's own coordinates and moving the viewBox to meet them is what lets it
-         be pasted in verbatim — there is no arithmetic here to get wrong. */
+         be pasted in verbatim - there is no arithmetic here to get wrong. */
       viewBox="29.5 26.5 25 28"
       width={25}
       height={28}
@@ -221,7 +221,7 @@ export function Lock({ className }: IconProps) {
 /* ── Result screen actions ─────────────────────────────────────────────────── */
 
 /**
- * Share — a box with an arrow leaving it. Not traced from an export: it is Lucide's
+ * Share - a box with an arrow leaving it. Not traced from an export: it is Lucide's
  * `share`, which is what the app's score card draws (`lucide-react-native`), so the
  * same action looks the same on both. An outline on a 24 grid, hence a stroke here
  * where every other glyph in this file is a fill.

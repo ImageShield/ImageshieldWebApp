@@ -98,7 +98,7 @@ export function ScoreLoader() {
               We couldn&apos;t load your score just now
             </h1>
             <p className="mt-4 max-w-[420px] text-base text-ink-muted">
-              It&apos;s saved against your account — this is on us. Try again in a
+              It&apos;s saved against your account - this is on us. Try again in a
               moment.
             </p>
             <Link

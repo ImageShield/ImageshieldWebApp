@@ -5,7 +5,7 @@ import { QUESTIONS, REPORT } from "./evidence-v17";
 import { VERSIONS } from "./versions";
 
 /* `GET /v1/quiz` on 2026-10-13: prod.imageshield.com served v11, dev.imageshield.com
-   v17 — the quiz the evidence report covers. */
+   v17 - the quiz the evidence report covers. */
 const V11: QuizDefinition = {
   quiz_version: "likeness-health-v11",
   questions: [

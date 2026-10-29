@@ -1,10 +1,10 @@
 /**
  * A stand-in for the ImageShield /v1 API, for developing the funnel without it.
  *
- * NOT part of the app and never imported by it — nothing under src/ may reference
+ * NOT part of the app and never imported by it - nothing under src/ may reference
  * this directory. It exists so the funnel can be walked end to end without the real
  * API: offline, against a branch, or into the states a real backend will not produce
- * on demand — a score that isn't ready, a write that fails once, an access token about
+ * on demand - a score that isn't ready, a write that fails once, an access token about
  * to expire.
  *
  *   npm run dev:api       this alone, on port 5099
@@ -33,7 +33,7 @@
  * answers. Nothing about how the funnel renders a score depends on the number being
  * derived, and inventing a second scoring implementation is precisely the mistake the
  * real API's docs warn about. The breakdown DOES carry the account's own answers,
- * because the score screen builds its cards from them — see `scoreFor`.
+ * because the score screen builds its cards from them - see `scoreFor`.
  */
 import { createServer } from "node:http";
 import { readFileSync } from "node:fs";
@@ -50,14 +50,14 @@ const config = {
   score: Number(process.env.DEV_API_SCORE ?? 62),
   /** One of: low risk · moderate risk · high risk · severe risk. */
   band: process.env.DEV_API_BAND ?? "moderate risk",
-  /** Answers accepted, number not ready — the `pending` state on the score screen. */
+  /** Answers accepted, number not ready - the `pending` state on the score screen. */
   pendingScore: process.env.DEV_API_PENDING_SCORE === "1",
   /** Fail the first quiz write, to reach the save-failed → resume recovery path. */
   failQuizOnce: process.env.DEV_API_FAIL_QUIZ_ONCE === "1",
   /**
    * `risk_factors` and `general_recommendations`, which the real API doesn't send yet:
    *   unset     leave both out, as prod does today. Both cards hide.
-   *   empty     send both as [] — the API saying it has no research; both cards hide.
+   *   empty     send both as [] - the API saying it has no research; both cards hide.
    *   fixture   send the placeholder rows below, to see both cards with test data.
    */
   insights: process.env.DEV_API_INSIGHTS ?? "absent",
@@ -99,7 +99,7 @@ const accountFor = (phone) => {
   return accounts.get(phone);
 };
 
-/** What a field is sent as, if at all — see `config.insights`. */
+/** What a field is sent as, if at all - see `config.insights`. */
 const insight = (rows) =>
   config.insights === "fixture" ? rows : config.insights === "empty" ? [] : undefined;
 
@@ -117,7 +117,7 @@ const scoreFor = (account) => ({
   quiz_version: quiz.quiz_version,
   computed_at: new Date().toISOString(),
   breakdown: {
-    /* One entry per answered question, carrying the account's own answer — the score
+    /* One entry per answered question, carrying the account's own answer - the score
        screen builds its cards from these. The deductions are placeholders, like the
        number: this is not a scorer. A multi-select answer is echoed as the list it was
        posted as; whether the real API sends a list or a joined string is unconfirmed,
@@ -134,7 +134,7 @@ const scoreFor = (account) => ({
   risk_factors: insight(RISK_FACTORS),
 });
 
-/* Placeholder rows in the contract's shape — NOT copy. The real strings are drafted
+/* Placeholder rows in the contract's shape - NOT copy. The real strings are drafted
    from cited research and approved by an operator; nothing here is either, and none
    of it may be lifted into src/. Chosen to reach every branch of the two cards: both
    kinds of factor, and a link labelled, unlabelled and absent. */
@@ -256,7 +256,7 @@ const ROUTES = {
     return send(res, 202, {
       challenge_id: id,
       expires_at: new Date(Date.now() + 10 * 60_000).toISOString(),
-      /* An ISO instant, NOT a count of seconds, whatever the name suggests — that
+      /* An ISO instant, NOT a count of seconds, whatever the name suggests - that
          is what the live API sends, and a fixture saying otherwise is how the
          funnel came to relay a string into a numeric countdown. */
       resend_after: new Date(Date.now() + 30_000).toISOString(),
@@ -265,7 +265,7 @@ const ROUTES = {
 
   "POST /v1/auth/otp/verify": (req, res, body) => {
     const challenge = challenges.get(body.challenge_id);
-    // 404, not 401 — matches the live API, not the collection.
+    // 404, not 401 - matches the live API, not the collection.
     if (challenge === undefined) {
       return fail(res, 404, "NOT_FOUND", "unknown challenge");
     }
@@ -297,13 +297,13 @@ const ROUTES = {
   },
 
   /* Answered WITHOUT a session, like the real API. It used to require one, and that
-     401 is why this repo once carried its own copy of the questions — the funnel asks
+     401 is why this repo once carried its own copy of the questions - the funnel asks
      the quiz before the phone number, so there was no token to read them with. The
      endpoint is public now, so the copy is gone and both ends read this: the screens
      once at the start, `/api/quiz` again at submit.
 
      The submit-time re-read is still the drift check, and it still reproduces locally
-     — but the way to trigger it has changed. Editing quiz.json no longer diverges from
+     - but the way to trigger it has changed. Editing quiz.json no longer diverges from
      anything, because nothing local is being compared against; edit it WHILE a tab is
      mid-quiz and that tab's answers meet a definition that has moved, which is the
      real-world case (a deploy mid-funnel) the 409 retake path exists for.
@@ -447,15 +447,15 @@ createServer((req, res) => {
   console.log(
     [
       "",
-      "  ImageShield /v1 — DEVELOPMENT FIXTURE, not the API",
+      "  ImageShield /v1 - DEVELOPMENT FIXTURE, not the API",
       `  http://localhost:${String(config.port)}`,
       "",
       `  OTP code        ${config.otpCode} (any other 6 digits is rejected)`,
       `  quiz            ${quiz.quiz_version}, ${String(quiz.questions.length)} questions, INVENTED keys`,
       `  score           ${String(config.score)} · ${config.band}`,
       `  access token    ${String(config.accessTtl)}s`,
-      config.pendingScore ? "  pending score   on — the score screen shows 'being worked out'" : null,
-      config.failQuizOnce ? "  fail-quiz-once  on — the first quiz write 503s" : null,
+      config.pendingScore ? "  pending score   on - the score screen shows 'being worked out'" : null,
+      config.failQuizOnce ? "  fail-quiz-once  on - the first quiz write 503s" : null,
       "",
     ]
       .filter((line) => line !== null)

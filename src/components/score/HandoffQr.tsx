@@ -5,15 +5,15 @@ import { useCallback, useState } from "react";
 /**
  * The QR code on the result screen, with a shimmering plate until it arrives.
  *
- * `/api/handoff/qr` is drawn once at build time and is the same for everyone —
- * it points at `/get-app` — so it usually lands with the badges beside it. The
+ * `/api/handoff/qr` is drawn once at build time and is the same for everyone -
+ * it points at `/get-app` - so it usually lands with the badges beside it. The
  * plate and the failure line below are for the slow network and the failed
  * request, where an empty square would read as broken.
  *
  * A plain `<img>` rather than `next/image` (and so not `ShimmerImage`): the
  * optimizer refuses SVG unless `dangerouslyAllowSVG` is switched on site-wide,
  * and a vector code gains nothing from resizing anyway. That means the
- * cached-image guarantee `next/image` provides has to be written by hand — see
+ * cached-image guarantee `next/image` provides has to be written by hand - see
  * `settle` below.
  *
  * The placeholder sits UNDER the code rather than over it, for the reason
@@ -39,7 +39,7 @@ export function HandoffQr({
    * Resolves a picture the browser already had.
    *
    * An `<img>` that is complete before React attaches its handlers fires
-   * neither `load` nor `error` — the events are long gone — and the placeholder
+   * neither `load` nor `error` - the events are long gone - and the placeholder
    * would then sit over a perfectly good code until the page was left. This ref
    * runs on mount and settles that case from `complete`, with `naturalWidth`
    * telling a decoded picture from a failed request, which reports complete
@@ -70,7 +70,7 @@ export function HandoffQr({
         ref={settle}
         onLoad={() => setState("ready")}
         onError={() => setState("failed")}
-        /* `relative` puts it over the placeholder — see the note above. It is
+        /* `relative` puts it over the placeholder - see the note above. It is
            hidden only on failure, where what it would otherwise draw is a
            broken-image glyph on top of the line explaining the breakage. */
         className={`relative size-full ${padding} ${
@@ -86,7 +86,7 @@ export function HandoffQr({
           under the line. */}
       {state === "failed" ? (
         <span className="absolute inset-0 flex items-center justify-center px-2 text-center text-[11px] leading-[14px] font-medium text-ink-faint">
-          Code unavailable — use the badges
+          Code unavailable - use the badges
         </span>
       ) : null}
     </span>

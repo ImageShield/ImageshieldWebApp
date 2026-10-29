@@ -1,5 +1,5 @@
 /**
- * "General recommendations" — served by the API, rendered as served.
+ * "General recommendations" - served by the API, rendered as served.
  *
  * `general_recommendations` sits at the top level of the score envelope, beside
  * `scope_note`: at most three, already in the order they are meant to be read, and the
@@ -12,7 +12,7 @@
 
 export type RecommendationLink = {
   url: string;
-  /** Null when the research gave the page no name of its own — see `linkText`. */
+  /** Null when the research gave the page no name of its own - see `linkText`. */
   label: string | null;
 };
 
@@ -29,7 +29,7 @@ export type GeneralRecommendation = {
  * The served list, checked against the contract on its way in.
  *
  * Checked rather than trusted because `call<T>` types an answer by assertion, so this
- * is the first place a missing field can surface — and unchecked it surfaces as a
+ * is the first place a missing field can surface - and unchecked it surfaces as a
  * crash on `.map` for every visitor, if this ships ahead of the API. Anything but a
  * list reads as none. An entry with no title or body is dropped rather than drawn as
  * a blank row; one with a bad link keeps its words and loses only the link. Nothing

@@ -169,7 +169,7 @@ describe("/score", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole("img", { name: "Likeness Health Score 89 out of 100 — low risk" }),
+        screen.getByRole("img", { name: "Likeness Health Score 89 out of 100 - low risk" }),
       ).toBeTruthy();
     });
     expect(screen.getByText("89", { selector: "strong" })).toBeTruthy();
@@ -185,7 +185,7 @@ describe("/score", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole("img", { name: "Likeness Health Score 74 out of 100 — moderate risk" }),
+        screen.getByRole("img", { name: "Likeness Health Score 74 out of 100 - moderate risk" }),
       ).toBeTruthy();
     });
     expect(screen.getByText("74", { selector: "strong" })).toBeTruthy();
@@ -195,7 +195,7 @@ describe("/score", () => {
   });
 });
 
-describe("/score — the risk factors card", () => {
+describe("/score - the risk factors card", () => {
   it("draws score.risk_factors in the API's order, word for word", async () => {
     await renderScore();
 
@@ -208,7 +208,7 @@ describe("/score — the risk factors card", () => {
   });
 });
 
-describe("/score — cached POST envelope", () => {
+describe("/score - cached POST envelope", () => {
   it("uses the cached envelope and merges with the follow-up GET", async () => {
     mockConsumeCache.mockReturnValue(STORED);
 
@@ -241,7 +241,7 @@ describe("/score — cached POST envelope", () => {
   });
 });
 
-describe("/score — the general recommendations card", () => {
+describe("/score - the general recommendations card", () => {
   it("draws general_recommendations in the API's order, word for word", async () => {
     await renderScore();
 

@@ -9,20 +9,20 @@ import { Skeleton } from "@/components/Skeleton";
  * `/score` renders on the server off the session cookie, and reading the score
  * means a round trip to the API before a single byte of the page can be sent.
  * Without this the browser sits on the previous screen for the whole of that
- * trip — on a slow connection, several seconds in which tapping the button did
+ * trip - on a slow connection, several seconds in which tapping the button did
  * nothing visible. Next wraps the page in a Suspense boundary for us and
  * streams this immediately in its place.
  *
  * Laid out against `ScoreResult`, block for block and gap for gap, because a
  * skeleton whose shape is a guess is worse than none: the real screen then
  * lands with everything a few dozen pixels off where the eye had already put
- * it. The two files have to be changed together — the comments there carry the
+ * it. The two files have to be changed together - the comments there carry the
  * reasoning behind every measurement repeated here.
  *
  * One state this cannot help: a visitor with no session at all is redirected to
  * `/details`, and a redirect decided on the server arrives after this has
  * already painted, so they see a beat of skeleton on the way past. That is the
- * price of streaming, and it is worth paying — the visitors who DO have a score
+ * price of streaming, and it is worth paying - the visitors who DO have a score
  * are the ones this page is for, and they are the ones waiting on the API.
  *
  * `SiteHeader` is the real one, not a placeholder. It needs no data, and a bar
@@ -39,7 +39,7 @@ export default function ScoreLoading() {
 
       {/* One announcement for the whole screen. Every block below is
           `aria-hidden`, so a reader hears this sentence once rather than
-          walking two dozen empty boxes — and it is a `<p>` inside the landmark
+          walking two dozen empty boxes - and it is a `<p>` inside the landmark
           rather than a role on the `<main>` itself, which would take the
           landmark away from anyone navigating by them. */}
       <p role="status" className="sr-only">
@@ -47,13 +47,13 @@ export default function ScoreLoading() {
       </p>
 
       <div className="mx-auto w-full max-w-[958px] px-5 pt-[65px] sm:px-6">
-        {/* "Your Likeness Health Report" — centred on a phone, flush left from
+        {/* "Your Likeness Health Report" - centred on a phone, flush left from
             `sm`, which is what the real label does. */}
         <Skeleton className="mt-[29px] h-6 w-[210px] rounded-md max-sm:mx-auto sm:mt-12 sm:h-8 sm:w-[300px] lg:mt-[79px]" />
 
         <section className="mt-[15px] flex flex-col sm:mt-10 lg:mt-[37px] lg:grid lg:grid-cols-[1fr_333px] lg:items-start lg:gap-x-10">
           {/* The headline, which runs to three lines at every width the design
-              draws — two of them full measure and a short one under. */}
+              draws - two of them full measure and a short one under. */}
           <div className="order-1 flex flex-col gap-3 max-sm:items-center lg:col-start-1 lg:row-start-1 lg:max-w-[440px] lg:pt-2">
             <Skeleton className="h-8 w-full rounded-md lg:h-12" />
             <Skeleton className="h-8 w-[85%] rounded-md lg:h-12" />
@@ -66,7 +66,7 @@ export default function ScoreLoading() {
 
             {/*
              * The gauge. 191px wide by the 153 its 300×240 viewBox scales to,
-             * and a dome rather than a disc — the thing it is holding a space
+             * and a dome rather than a disc - the thing it is holding a space
              * for is a 228° arc with a numeral under it, so a full circle would
              * be the wrong silhouette by a third of its height.
              *
@@ -93,7 +93,7 @@ export default function ScoreLoading() {
             </div>
           </div>
 
-          {/* The sentence explaining the number — four lines on a phone, three
+          {/* The sentence explaining the number - four lines on a phone, three
               at the desktop measure. */}
           <div className="order-3 mt-[41px] flex flex-col gap-2 max-sm:items-center lg:col-start-1 lg:row-start-2 lg:mt-5 lg:max-w-[520px]">
             <Skeleton className="h-4 w-full rounded" />
@@ -105,7 +105,7 @@ export default function ScoreLoading() {
 
         {/* The two warm download cards. Their ground is a gradient rather than a
             flat fill and needs no data to draw, so it is painted for real and
-            only the contents are stood in for — the card is most of what the
+            only the contents are stood in for - the card is most of what the
             eye registers here, and a grey rectangle in its place would be a
             bigger change than the copy it holds. */}
         <div className={`mt-7 flex flex-col items-start gap-8 md:flex-row md:items-center md:justify-between sm:gap-10 lg:mt-[62px] ${WARM_CARD}`}>
@@ -143,7 +143,7 @@ export default function ScoreLoading() {
       </div>
 
       {/* The real section, not a stand-in. "Benefits of the app" takes no data
-          — it is a static pitch with a mockup beside it — so there is nothing
+          - it is a static pitch with a mockup beside it - so there is nothing
           here to wait for, and drawing a grey copy of content we already have
           would be the one piece of this file that made the page slower to read
           rather than faster. Its own mockup shimmers on its own account, via
@@ -156,7 +156,7 @@ export default function ScoreLoading() {
 /**
  * The QR-and-badges block, which `DownloadPrompt` draws in both warm cards.
  *
- * The sizes are that component's — see the notes there.
+ * The sizes are that component's - see the notes there.
  */
 function DownloadCodes() {
   return (
@@ -177,7 +177,7 @@ function DownloadCodes() {
  * One lavender card: a heading over `rows` rows, each a disc beside two lines.
  *
  * The row count is passed in rather than fixed because the two cards hold
- * different numbers of them — four risk factors and three recommendations is
+ * different numbers of them - four risk factors and three recommendations is
  * the usual shape, so that is what each reserves.
  */
 function InsightCardSkeleton({ rows }: { rows: number }) {
@@ -192,7 +192,7 @@ function InsightCardSkeleton({ rows }: { rows: number }) {
         {Array.from({ length: rows }, (_, i) => (
           <li key={i} className="flex items-start gap-3 sm:gap-6">
             {/* The disc is white on the real card, and the one piece of it that
-                is already correct — so it is drawn rather than stood in for,
+                is already correct - so it is drawn rather than stood in for,
                 and only the glyph inside it is missing. */}
             <span className="flex size-[59px] shrink-0 items-center justify-center rounded-full bg-canvas sm:size-[84px]">
               <Skeleton className="size-6 rounded-md sm:size-8" />

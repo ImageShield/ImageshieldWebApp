@@ -11,7 +11,7 @@ import { PRIVACY_POLICY_URL } from "@/lib/site-nav";
 const ANALYTICS_DETAIL =
   "Google Tag Manager, and any measurement tools we run through it, such as Google Analytics where enabled: which screens people reach and where they stop.";
 export const ANALYTICS_DETAIL_WITH_ANSWERS =
-  "Google Tag Manager, and Google Analytics through it: which quiz questions people reach, where they stop, and the options chosen for some questions — which platforms you use, how often photos of you are shared, and how you monitor your likeness. Never your age, gender, experience of misuse, name, email or phone number.";
+  "Google Tag Manager, and Google Analytics through it: which quiz questions people reach, where they stop, and the options chosen for some questions - which platforms you use, how often photos of you are shared, and how you monitor your likeness. Never your age, gender, experience of misuse, name, email or phone number.";
 const SUMMARY_ANALYTICS = ANSWER_ANALYTICS_APPROVED
   ? "we use Google Tag Manager to see how the quiz is used, including some of your answers,"
   : "we use Google Tag Manager to see how the quiz is used,";
@@ -55,7 +55,7 @@ const byPointer = (event: MouseEvent) => event.detail > 0;
  *
  * Focus follows the visitor, never the page load: a first-visit banner appearing
  * doesn't take it, but switching views moves it into the view that replaced the
- * button just pressed — otherwise that button is removed while focused and the
+ * button just pressed - otherwise that button is removed while focused and the
  * browser drops focus back to the top of the document.
  */
 export function ConsentBanner({

@@ -38,7 +38,7 @@ export function QuizFlow() {
      they are dropped rather than shown as ticks beside questions nobody was asked.
 
      The clearing happens in an effect because it writes to the store, and the store
-     is what this component renders from — writing during render would notify
+     is what this component renders from - writing during render would notify
      subscribers mid-render. The render doesn't wait for it: `answers` already ignores
      answers whose version doesn't match, so the first paint is correct and the
      effect only makes the storage agree with it.
@@ -57,12 +57,12 @@ export function QuizFlow() {
        in it. A spinner would throw that away and then hand the whole layout back
        at once; the skeleton reserves it, so the questions land in boxes the eye
        has already found. On a fast connection or a cached definition none of this
-       is seen at all — `useQuizDefinition` starts `ready` when the tab has it. */
+       is seen at all - `useQuizDefinition` starts `ready` when the tab has it. */
     return <QuizSkeleton />;
   }
 
-  /* Failing HERE, on the first question, is the point. The alternative — rendering
-     questions from a bundled copy the server may have moved past — fails at the very
+  /* Failing HERE, on the first question, is the point. The alternative - rendering
+     questions from a bundled copy the server may have moved past - fails at the very
      END, after the visitor has answered everything and verified a phone number. */
   if (status === "failed" || quiz === null) {
     return (
@@ -83,7 +83,7 @@ export function QuizFlow() {
 
   /* Re-bound after the guard above so the closures below see a non-null definition.
      `pick` is a hoisted function declaration, which TypeScript will not narrow a
-     captured binding for — it cannot prove the guard ran first. */
+     captured binding for - it cannot prove the guard ran first. */
   const definition = quiz;
 
   const answers =
@@ -92,7 +92,7 @@ export function QuizFlow() {
   const asked = askedQuestions(definition, answers);
 
   /* A definition with nothing to ask is not a state this screen can render its way
-     out of, and it should be impossible — but `asked[step - 1]` would be undefined
+     out of, and it should be impossible - but `asked[step - 1]` would be undefined
      and every line below dereferences it. */
   if (asked.length === 0) {
     return (
@@ -125,20 +125,20 @@ export function QuizFlow() {
   /**
    * Where the last answer leads.
    *
-   * Normally the details form — the questions are asked first precisely so the phone
+   * Normally the details form - the questions are asked first precisely so the phone
    * number is asked of someone who has a score waiting for them.
    *
    * `signedIn` is not a shortcut for returning visitors; it exists for one path that
    * would otherwise cost a second code. When a deploy moves the quiz mid-funnel,
    * `/api/quiz` answers 409 and the screens send the visitor back HERE to answer
-   * again — and by then the code has already been spent and a session already exists.
+   * again - and by then the code has already been spent and a session already exists.
    * Routing that visitor to `/details` would text them a fresh code to prove a number
    * they proved a minute ago. They go straight to the write.
    */
   function finish() {
     /* An under-18 finisher is dropped inside `track`, along with their answers. */
     trackComplete(definition);
-    /* Adults only, and checked BEFORE the signed-in shortcut below — that ordering is
+    /* Adults only, and checked BEFORE the signed-in shortcut below - that ordering is
        the point. Someone who has already verified (and been given an adult placeholder
        birth date) still holds a session, so they can retake the quiz, change their
        age to under 18 and finish again; the shortcut would take them straight to
@@ -164,7 +164,7 @@ export function QuizFlow() {
     }
     /* Counted against the list THIS answer produces, not the one on screen when it
        was tapped. `asked` is a render-time value, so inside this handler it is still
-       the previous answers' copy — and answering `prior_misuse` with a trigger is
+       the previous answers' copy - and answering `prior_misuse` with a trigger is
        exactly the tap that grows it from 5 to 6. Reading `asked.length` here would
        finish the quiz one question early, on the very question that opens the sixth.
 
@@ -198,13 +198,13 @@ export function QuizFlow() {
           Likeness Health Quiz ({step}/{asked.length})
         </p>
 
-        {/* 24/36 Bold in flat black — the funnel's usual heading size and weight,
+        {/* 24/36 Bold in flat black - the funnel's usual heading size and weight,
             in the same black the option labels underneath use. */}
         <h1 className="mt-[16px] text-[24px] leading-9 font-bold text-black">
           {question.prompt}
         </h1>
 
-        {/* 14/21 regular in black at 45% — a qualifier on the question rather
+        {/* 14/21 regular in black at 45% - a qualifier on the question rather
             than copy in its own right. The translucent black is the design's
             own value, and it sits a touch lighter than `ink-faint` would.
             The definition carries no hint field, so this is derived the way the
@@ -226,13 +226,13 @@ export function QuizFlow() {
                 onClick={() => pick(option)}
                 aria-pressed={question.multi ? on : undefined}
                 /* Picked rows keep the white fill and the regular weight the design
-                   draws — only the border and the label take the brand colour. A
+                   draws - only the border and the label take the brand colour. A
                    tinted fill reads as a disabled row next to the plain ones. The
                    resting label is the export's flat black, not `ink`: these rows
                    are the one place the design sets the label off the body grey. */
                 /* The 1.61px outline is an inset shadow, not a border, for two
                    reasons the export makes plain: a border snaps to whole device
-                   pixels (1.5px on a 2x screen, 2px on a 1x one — never 1.61),
+                   pixels (1.5px on a 2x screen, 2px on a 1x one - never 1.61),
                    and CSS measures padding inside a border where Figma measures
                    it from the frame edge and lays the stroke over it. The shadow
                    antialiases to its true width and overlays the padding box, so
@@ -244,7 +244,7 @@ export function QuizFlow() {
                 }`}
               >
                 {/* "Select all that apply" is the only thing separating a multi
-                    question from a single one, so the box is what carries it —
+                    question from a single one, so the box is what carries it -
                     single-answer rows advance on tap and never show a checked
                     state to draw. 20px on a 4px radius, per the design. */}
                 {question.multi ? (
@@ -268,7 +268,7 @@ export function QuizFlow() {
         {/* Single-answer questions advance on tap, so only the "select all that
             apply" ones need a way to say they're done. The design insets it 24px
             either side of the option column rather than running it to the full
-            560 — it's the one control on the screen that isn't a row. */}
+            560 - it's the one control on the screen that isn't a row. */}
         {question.multi ? (
           <button
             type="button"
@@ -290,7 +290,7 @@ export function QuizFlow() {
 }
 
 /**
- * `quiz_start`, once the first question a visitor reaches is on screen — the intro's
+ * `quiz_start`, once the first question a visitor reaches is on screen - the intro's
  * button, a link straight to `/quiz/questions`, a resumed `?q=4` and a bounce back
  * from `/details` all land here. Every later question re-runs the effect, and `track`
  * drops the repeats, so only the first counts.

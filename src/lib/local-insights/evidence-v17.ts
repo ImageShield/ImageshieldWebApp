@@ -1,17 +1,17 @@
 /**
  * The published quiz evidence report for likeness-health-v17, transcribed.
  *
- * Source: "Published quiz evidence report — likeness-health-v17 — 2026-10-13.pdf",
+ * Source: "Published quiz evidence report - likeness-health-v17 - 2026-10-13.pdf",
  * from the ImageShield control room (release 14, published 9 Oct 2026). TEMPORARY:
  * this folder exists only until the API serves `score.risk_factors` and
- * `general_recommendations`, and is deleted with it — see `localInsights`.
+ * `general_recommendations`, and is deleted with it - see `localInsights`.
  *
  * Three kinds of answer, and the difference is the point of the file:
  *
  *   backed       the report shows answer-specific reasoning and the evidence behind
  *                it. The only kind that can become a risk factor.
- *   unbacked     "Set before evidence was recorded". The points are real — they are
- *                what the score deducted — but no research stands behind them, so
+ *   unbacked     "Set before evidence was recorded". The points are real - they are
+ *                what the score deducted - but no research stands behind them, so
  *                there is nothing to say about them.
  *   unavailable  counted as backed on the report's summary page, but every part of
  *                its reasoning and evidence reads "Couldn't load this part". Backed
@@ -23,7 +23,7 @@
  * states a pattern the research found, never that it has happened to this visitor.
  *
  * Answers are the option strings `GET /v1/quiz` serves for v17, which are what the
- * API validates and stores — checked character for character against the dev API's
+ * API validates and stores - checked character for character against the dev API's
  * definition on 2026-10-13, curly apostrophe included.
  */
 
@@ -213,7 +213,7 @@ export const QUESTIONS: readonly EvidenceQuestion[] = [
           "Instagram has C2PA-based AI labeling, NCII reporting and prohibition, and teen-account protections. However, it is not covered by face-likeness scanning like YouTube's.",
         title: "Platform: Instagram",
         /* "C2PA-based": it labels content carrying provenance metadata, not all AI
-           content — see the influencermarketinghub.com excerpt in the report. */
+           content - see the influencermarketinghub.com excerpt in the report. */
         line: "Instagram has intimate-image reporting and labels AI content carrying C2PA provenance data, but isn't covered by face-likeness scanning like YouTube's.",
         sources: [IMH_LABELS, META_NCII, AIR_LIKENESS],
       },
@@ -293,7 +293,7 @@ export const QUESTIONS: readonly EvidenceQuestion[] = [
     ],
   },
   {
-    /* "How do you monitor how your face, your likeness is used online?" — the key is
+    /* "How do you monitor how your face, your likeness is used online?" - the key is
        the server's generated id for it on v17, and the v11 quiz calls the same
        question `discovery_method`. */
     key: "q_il8uju",

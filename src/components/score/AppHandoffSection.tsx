@@ -4,25 +4,25 @@ import { useId, useRef, useState } from "react";
 import { ShimmerImage } from "@/components/ShimmerImage";
 
 /**
- * "Benefits of the app" — the foot of the result screen.
+ * "Benefits of the app" - the foot of the result screen.
  *
  * The score is already saved against the phone number the visitor just verified, so
  * there is no token to redeem and nothing to carry across: the handoff is "install
  * the app, sign in with that number". The store badges and the QR now sit further up
- * the page, in the two `DownloadPrompt` blocks — which is why this takes no `handoff`
+ * the page, in the two `DownloadPrompt` blocks - which is why this takes no `handoff`
  * any more: it is purely the pitch, with nothing in it addressed to one visitor.
  *
- * The feature list is a control, not a static list — the design's comment on the
+ * The feature list is a control, not a static list - the design's comment on the
  * mockup reads "This image can change based on the feature selected", so picking a
  * feature swaps the phone beside it. Built as a vertical tablist: four tabs, one
  * panel, which is what this is even though each tab keeps its own copy visible.
  *
  * The LHS Results V1 export draws these as four plain cards beside a fixed mockup,
- * with no selected state — but only ever produced the one app screen, so a static
+ * with no selected state - but only ever produced the one app screen, so a static
  * version would be four cards pointing at the same picture. The tabs are kept and
  * restyled to the export's card, ready for the three screens that don't exist yet.
  *
- * Not `<DownloadSection>` from the landing page — that one is the black, centred
+ * Not `<DownloadSection>` from the landing page - that one is the black, centred
  * store-badge footer.
  *
  * The phone export stacks the three parts heading / mockup / cards rather than
@@ -71,7 +71,7 @@ const FEATURES: ReadonlyArray<{
 
 export function AppHandoffSection() {
   /* The design draws the first feature selected, and that is also the only one
-     whose mockup exists — so it is the one the section opens on. */
+     whose mockup exists - so it is the one the section opens on. */
   const [selected, setSelected] = useState(0);
   const ids = useId();
   const tabs = useRef<Array<HTMLButtonElement | null>>([]);
@@ -153,7 +153,7 @@ export function AppHandoffSection() {
           {/*
            * The export draws four plain cards with the first one a shade darker.
            * That shade is exactly what a selected tab needs, so the list is still a
-           * tablist and the darker card is the selection — every row keeps the same
+           * tablist and the darker card is the selection - every row keeps the same
            * padding and only the ground changes, which is what stops the column
            * shifting as the selection moves.
            */}

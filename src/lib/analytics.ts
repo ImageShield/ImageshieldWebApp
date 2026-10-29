@@ -16,7 +16,7 @@ import {
  * Quiz funnel events for Tag Manager, pushed from the code rather than scraped off the
  * page.
  *
- * GTM can't see inside a client-rendered quiz — no page loads between questions, and
+ * GTM can't see inside a client-rendered quiz - no page loads between questions, and
  * click triggers keyed on classes or button text break with the next redesign. So the
  * quiz pushes named events, and the container listens with Custom Event triggers:
  *
@@ -43,7 +43,7 @@ export type AnalyticsEvent =
       quiz_version: string;
       question: string;
       question_number: number;
-      /** Only for an approved question — see `answerAllowed`. */
+      /** Only for an approved question - see `answerAllowed`. */
       answer?: string;
     }
   | { event: "quiz_complete"; quiz_version: string; question_count: number };
@@ -105,13 +105,13 @@ function answerAllowed(version: string, id: string, answer: string): boolean {
   const mapped = mapFor(version)?.find((q) => q.id === id);
   if (!mapped?.forwardAnswer || NEVER_FORWARDED.has(mapped.key)) return false;
   const values = mapped.multi ? answer.split(ANSWER_SEPARATOR) : [answer];
-  /* Defined options only, each once, in the quiz's own order — the one encoding. */
+  /* Defined options only, each once, in the quiz's own order - the one encoding. */
   const canonical = mapped.options.filter((option) => values.includes(option));
   return canonical.length === values.length && canonical.join(ANSWER_SEPARATOR) === answer;
 }
 
 /**
- * The object pushed, built field by field — never by spreading the argument, so a
+ * The object pushed, built field by field - never by spreading the argument, so a
  * field a caller slipped past the type can't ride along. Null for an unknown name or a
  * payload out of bounds.
  */
@@ -143,7 +143,7 @@ function payloadOf(e: AnalyticsEvent): Payload | null {
  * Each event counts once per tab and quiz version: the funnel's own state lives in
  * sessionStorage for the same span. Without this, a reload, stepping back and
  * re-answering, or React running an effect twice would each count again. A changed
- * answer to a question already reported is not sent again — the first committed
+ * answer to a question already reported is not sent again - the first committed
  * answer is the one counted. A retake against a new quiz version is a new quiz.
  */
 const SENT_KEY = "imageshield.analytics.v1";
@@ -206,7 +206,7 @@ export function track(e: AnalyticsEvent): void {
   dataLayer.push(payload);
   /* And cleared again straight away. The reset at the start of the next quiz event
      only helps quiz events: in between, GTM's model would still hold this answer for
-     any other tag that read it — a page view on the navigation that follows, say. A
+     any other tag that read it - a page view on the navigation that follows, say. A
      push with no `event` changes the model and fires nothing. */
   dataLayer.push({ ...CLEARED });
 }
@@ -216,7 +216,7 @@ const ungated = (definition: QuizDefinition) => definition.questions.filter((q) 
 
 /**
  * The number a question is reported under: its place among the questions everyone
- * is asked. A gated question is left out entirely, and the numbering skips it —
+ * is asked. A gated question is left out entirely, and the numbering skips it -
  * reporting it, or letting it shift the numbers after it, would tell the container
  * which answers opened it. (No live version gates a question.)
  */
@@ -227,8 +227,8 @@ export function reportedQuestionNumber(definition: QuizDefinition, key: string):
 
 /**
  * This question's reviewed entry, if the live definition still matches it exactly.
- * Anything else — an unknown version, a question added, reworded, reordered or given
- * different options — has no entry, and reports its backend key with no answer.
+ * Anything else - an unknown version, a question added, reworded, reordered or given
+ * different options - has no entry, and reports its backend key with no answer.
  */
 function reviewed(definition: QuizDefinition, question: QuizQuestion): MappedQuestion | undefined {
   const mapped = mapFor(definition.quiz_version)?.find((q) => q.key === question.key);
@@ -244,7 +244,7 @@ function reviewed(definition: QuizDefinition, question: QuizQuestion): MappedQue
 
 /**
  * The committed answer, encoded for the dataLayer: the option itself, or a
- * multi-select's options joined with `|` in the definition's order — so the same
+ * multi-select's options joined with `|` in the definition's order - so the same
  * picks always read the same, whatever order they were ticked in. Read from the store,
  * which already holds the answer when this runs. Only options the definition lists.
  */
@@ -257,8 +257,8 @@ function encodedAnswer(question: QuizQuestion): string | undefined {
 }
 
 /**
- * Runs a quiz helper so that analytics can never break the quiz — these are called from
- * the answer handlers, before the navigation — and so that nothing is sent at all for a
+ * Runs a quiz helper so that analytics can never break the quiz - these are called from
+ * the answer handlers, before the navigation - and so that nothing is sent at all for a
  * definition whose age question no longer recognises an under-18 answer.
  */
 function guarded(definition: QuizDefinition, run: () => void): void {
@@ -270,7 +270,7 @@ function guarded(definition: QuizDefinition, run: () => void): void {
   }
 }
 
-/** `quiz_start`, for the first question a visitor is shown — wherever they came in. */
+/** `quiz_start`, for the first question a visitor is shown - wherever they came in. */
 export function trackStart(definition: QuizDefinition, key: string): void {
   guarded(definition, () => {
     const n = reportedQuestionNumber(definition, key);
@@ -304,7 +304,7 @@ function answerEvent(definition: QuizDefinition, key: string): void {
 }
 
 /**
- * `quiz_complete`, with the number of questions reported — only when every question
+ * `quiz_complete`, with the number of questions reported - only when every question
  * has an answer. A link straight to the last question can reach `finish()` with the
  * rest unanswered; counting that as a completion would also use up the one completion
  * this tab can send, so the real one later would be lost.
@@ -314,7 +314,7 @@ export function trackComplete(definition: QuizDefinition): void {
     if (missingAnswers(definition, readFunnel().answers).length > 0) return;
     const asked = ungated(definition);
     /* Start first, as for an answer: it can't have gone yet if consent was given on
-       the last question, and that question's answer would have sent it — unless it
+       the last question, and that question's answer would have sent it - unless it
        is a gated question, which sends nothing. */
     if (asked.length > 0) trackStart(definition, asked[asked.length - 1].key);
     track({

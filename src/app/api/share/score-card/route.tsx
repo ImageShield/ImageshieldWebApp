@@ -8,7 +8,7 @@ import { verifyShareToken } from "@/lib/share-token";
 import { CENTER, FRAME, HEADROOM, posterGaugeSvg, TICKS } from "./gauge";
 
 /**
- * GET /api/share/score-card — the picture a visitor shares: their score card on the
+ * GET /api/share/score-card - the picture a visitor shares: their score card on the
  * app's branded 9:16 poster, as a PNG.
  *
  * The app's `ScoreSharePoster` + `ScoreShareCard`, measurement for measurement. Why
@@ -18,19 +18,19 @@ import { CENTER, FRAME, HEADROOM, posterGaugeSvg, TICKS } from "./gauge";
  *
  * Authenticity: the score is carried in an HMAC-signed, expiring token issued by
  * `/api/share/score-token`, which independently reads the score from the backend.
- * The token is verified here — arbitrary query params are not accepted.
+ * The token is verified here - arbitrary query params are not accepted.
  *
  * Laid out by satori and rasterised by resvg, rather than `next/og`'s
  * `ImageResponse`, which runs the same two steps but hands its SVG to sharp
  * whenever sharp is installed. The first `/_next/image` request in a process
- * blocks every sharp loader but the raster ones — SVG included, and the block is
- * process-wide — so from then on every poster failed mid-stream with "Input buffer
+ * blocks every sharp loader but the raster ones - SVG included, and the block is
+ * process-wide - so from then on every poster failed mid-stream with "Input buffer
  * contains unsupported image format". satori is pinned to the version Next 16.3
  * bundles, so the layout is the one `ImageResponse` drew.
  */
 
 /* The app lays the poster out at 405pt wide and writes it at 1080px. Every number
-   below is the app's own, in points, run through this — so each one can be checked
+   below is the app's own, in points, run through this - so each one can be checked
    against the app's source rather than against a second set of pixel values. */
 const K = POSTER_SIZE.width / 405;
 const px = (pt: number) => pt * K;
@@ -75,7 +75,7 @@ const topFor = (baseline: number, size: number) => baseline - 0.908 * size;
 /**
  * A line of text whose ℠ is drawn the way the card title draws its own: the font
  * has no ℠ glyph, so the mark is "SM" at 7/16 of the text's size on a line half as
- * tall, which a flex row hangs from the top of the line — a superscript. The
+ * tall, which a flex row hangs from the top of the line - a superscript. The
  * caller's div sets the size and weight; these are the numbers it set them to.
  */
 function Marked({ text, size, lineHeight }: { text: string; size: number; lineHeight: number }) {
@@ -128,7 +128,7 @@ export async function GET(request: Request) {
           alignItems: "center",
           width: "100%",
           height: "100%",
-          /* The colour it falls back to if the gradient doesn't draw — never white. */
+          /* The colour it falls back to if the gradient doesn't draw - never white. */
           backgroundColor: "#380E99",
           backgroundImage: "linear-gradient(180deg, #7F48FF 0%, #380E99 100%)",
           padding: `${px(56)}px ${px(21.5)}px ${px(48)}px`,
@@ -196,7 +196,7 @@ export async function GET(request: Request) {
                   {String(score.live)}
                 </div>
                 {/* The app's month-trend slot. A score from the funnel is brand new
-                    and has no month behind it, so the slot stays empty — at its
+                    and has no month behind it, so the slot stays empty - at its
                     height, so the legend sits where the app's does. */}
                 <div style={{ display: "flex", minHeight: px(12), marginTop: px(4.9), marginBottom: px(19.2) }} />
                 <div style={{ display: "flex", flexDirection: "column", gap: px(6) }}>
@@ -250,7 +250,7 @@ export async function GET(request: Request) {
                 <Centred x={CENTER.x} baseline={CENTER.labelY} size={CENTER.labelSize} weight={500} colour="#212121">
                   Risk Level
                 </Centred>
-                {/* The served band, as the page's headline names it — the app works
+                {/* The served band, as the page's headline names it - the app works
                     its own word out from the number, which this site never does. */}
                 <Centred
                   x={CENTER.x}
@@ -280,7 +280,7 @@ export async function GET(request: Request) {
           <div style={{ display: "flex", fontSize: px(22), lineHeight: `${px(30)}px`, fontWeight: 700 }}>
             {`is ${score.live} out of 100.`}
           </div>
-          {/* The pitch to whoever sees the post, above the link it points to — the
+          {/* The pitch to whoever sees the post, above the link it points to - the
               caption's own closing words, broken where `SHARE_PITCH` breaks them. */}
           <div
             style={{
@@ -337,7 +337,7 @@ export async function GET(request: Request) {
   return new Response(new Uint8Array(png.asPng()), {
     headers: {
       "Content-Type": "image/png",
-      /* The visitor's own score — never let a proxy hold onto it. */
+      /* The visitor's own score - never let a proxy hold onto it. */
       "Cache-Control": "no-store, private",
       /* The token is in the URL; keep it out of Referer headers. */
       "Referrer-Policy": "no-referrer",
@@ -346,7 +346,7 @@ export async function GET(request: Request) {
 }
 
 /**
- * One line of gauge text, centred on `x` with its baseline on `baseline` — both in
+ * One line of gauge text, centred on `x` with its baseline on `baseline` - both in
  * the app's 164-wide gauge frame, as its export gives them.
  */
 function Centred({

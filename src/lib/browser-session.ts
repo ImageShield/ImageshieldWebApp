@@ -5,7 +5,7 @@
  * sessionStorage so a reload mid-funnel does not cost the visitor a second OTP.
  *
  * Replaces the httpOnly cookie session that the proxy managed. Tokens are now
- * JS-accessible — an intentional trade-off of removing the server-side proxy.
+ * JS-accessible - an intentional trade-off of removing the server-side proxy.
  */
 
 const STORAGE_KEY = "imageshield.session.v1";
@@ -23,7 +23,7 @@ export type TokenPair = {
 type StoredSession = {
   access: string;
   refresh: string;
-  /** Epoch seconds — already skewed by EXPIRY_SKEW_S. */
+  /** Epoch seconds - already skewed by EXPIRY_SKEW_S. */
   accessExp: number;
 };
 
@@ -37,7 +37,7 @@ function persist(s: StoredSession): void {
   try {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(s));
   } catch {
-    // Storage unavailable — works for the current tab, gone on reload.
+    // Storage unavailable - works for the current tab, gone on reload.
   }
 }
 
@@ -91,7 +91,7 @@ export function hasSession(): boolean {
   return session !== null;
 }
 
-/** Clears the session — used when a refresh is rejected. */
+/** Clears the session - used when a refresh is rejected. */
 export function clearSession(): void {
   session = null;
   try {

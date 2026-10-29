@@ -7,7 +7,7 @@
     "Dev, not prod, on purpose: this is likeness-health-v17, the quiz the published",
     "evidence report covers, so it is the one quiz the score screen's locally built",
     "cards can be seen working against (src/lib/local-insights). Prod served",
-    "likeness-health-v11 that day — `discovery_method` where this has `q_il8uju`, and a",
+    "likeness-health-v11 that day - `discovery_method` where this has `q_il8uju`, and a",
     "different posting question.",
     "",
     "Recapture it whenever the server edits the quiz: GET /v1/quiz answers without a",
@@ -19,8 +19,8 @@
     "  questions[]   key, prompt, options[], multi?, scored?, required?, requires?{key,value}",
     "",
     "Note: options are DISPLAY strings ('Female', 'Instagram'), not machine keys, so",
-    "the screens render them verbatim — and the API stores them as the answers. And",
-    "`platforms` carries required:false — the one question a visitor may leave blank."
+    "the screens render them verbatim - and the API stores them as the answers. And",
+    "`platforms` carries required:false - the one question a visitor may leave blank."
   ],
   "quiz_version": "likeness-health-v17",
   "questions": [

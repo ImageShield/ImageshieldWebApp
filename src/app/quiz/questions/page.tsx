@@ -4,11 +4,11 @@ import { SiteHeader } from "@/components/landing/SiteHeader";
 import { QuizFlow } from "@/components/quiz/QuizFlow";
 
 export const metadata: Metadata = {
-  title: "ImageShield — Likeness Health Quiz",
+  title: "ImageShield - Likeness Health Quiz",
 };
 
 /**
- * The questions themselves — one screen each, all served from this route with
+ * The questions themselves - one screen each, all served from this route with
  * the step in `?q=`, so the browser's own back button walks the quiz backwards.
  *
  * `signedIn` is now determined client-side by QuizFlow reading from the

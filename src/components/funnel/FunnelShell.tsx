@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/landing/SiteHeader";
 /**
  * The shell the details and OTP screens share.
  *
- * Still the marketing site rather than the funnel proper — same reasoning as the
+ * Still the marketing site rather than the funnel proper - same reasoning as the
  * quiz intro, so this doesn't reach for `<Screen>` either: the site header stays,
  * the canvas stays full width, and only the column underneath is funnel-shaped.
  *
@@ -28,7 +28,7 @@ export function FunnelShell({
 
       <div className="mx-auto w-full max-w-[600px] px-5 pt-[65px]">
         <div className="pt-12 pb-24 sm:pt-24 lg:pt-[179px]">
-          {/* Same 24/36 Bold black as the quiz question — these screens ask
+          {/* Same 24/36 Bold black as the quiz question - these screens ask
               a question too, so they carry the question style rather than their
               own. Flat across breakpoints: the quiz doesn't step down on a phone
               either, and a heading that changes size between funnel steps reads
@@ -37,7 +37,7 @@ export function FunnelShell({
             {title}
           </h1>
 
-          {/* Same 14/21 black-at-45% as the quiz's "Select all that apply" — it
+          {/* Same 14/21 black-at-45% as the quiz's "Select all that apply" - it
               plays the same part here, qualifying the question above it. */}
           <p className="mt-5 text-[14px] leading-[21px] text-black/45">
             {subtitle}

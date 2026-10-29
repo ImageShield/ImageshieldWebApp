@@ -3,7 +3,7 @@ import { STEP_PATHS } from "@/lib/funnel";
 
 /**
  * What the three numbers are, and where they come from. They are set here rather
- * than in `lib/` because nothing else reads them — they are copy, not data.
+ * than in `lib/` because nothing else reads them - they are copy, not data.
  */
 const STATS = [
   {
@@ -35,17 +35,17 @@ const STATS = [
  *
  * Off the 1440 frame: a 1379×523 card with a 24px radius, inset 35px from either
  * edge with 26px of white above and below it, 75px of padding in from its own left
- * edge. Inside, two columns — the ask on the left, the three numbers that justify
+ * edge. Inside, two columns - the ask on the left, the three numbers that justify
  * it on the right, the second starting at x 970, which is what the `1fr / 270px`
  * split with a 99px gutter resolves to at the design width.
  *
  * The heading is ExtraBold tracked -1.5px, which at its 48px is the -0.03125em
- * set here — an em rather than the design's px so the 32px phone size is tracked
+ * set here - an em rather than the design's px so the 32px phone size is tracked
  * by the same proportion rather than three times as hard.
  *
  * The numbers column is 361px, not the 369 the export measures. The export draws
- * the card at x 35 width 1379 in a 1440 frame — 35px of white on its left and 26 on
- * its right — which is a slip, not a lean, so the card here is symmetric and ends
+ * the card at x 35 width 1379 in a 1440 frame - 35px of white on its left and 26 on
+ * its right - which is a slip, not a lean, so the card here is symmetric and ends
  * 9px earlier. Taking those 9px off the column instead puts every figure and every
  * line under it back on the x the design sets, which is the half that shows.
  *
@@ -57,7 +57,7 @@ const STATS = [
  * The two columns do not share a top edge: the left one starts 117px down and the
  * right one 96px, so they are separate blocks with their own padding rather than
  * rows of one grid. Stacked under `lg` that difference disappears, which is the
- * right answer there — a figure and the sentence it belongs to read as one block.
+ * right answer there - a figure and the sentence it belongs to read as one block.
  */
 export function ScoreBanner() {
   return (
@@ -69,7 +69,7 @@ export function ScoreBanner() {
             {/* Service mark: 16px of cap height against the headline's 36, its cap
                 line 2px under the headline's, which is `0.445em` raised `0.79em` of
                 its OWN size. Raised by `top` against an explicit `align-baseline`,
-                not by `vertical-align` — `sup` arrives carrying the UA sheet's
+                not by `vertical-align` - `sup` arrives carrying the UA sheet's
                 `vertical-align: super`, and a super that Chrome scales with the
                 font size is the thing that moves when you resize the mark.
 

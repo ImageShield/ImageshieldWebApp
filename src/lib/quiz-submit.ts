@@ -28,7 +28,7 @@ export type SubmitOutcome =
 /* ── Cached POST response ───────────────────────────────────────────────────
  *
  * `POST /v1/quiz/responses` returns the same `ScoreEnvelope` that
- * `GET /v1/me/score` does — including `score.risk_factors` and
+ * `GET /v1/me/score` does - including `score.risk_factors` and
  * `general_recommendations`. The GET may not carry those fields for every
  * account, so the POST response is the authoritative first copy. It is
  * stashed here and consumed once by `browser-score.ts` when the score page
@@ -75,7 +75,7 @@ export async function submitAnswers(): Promise<SubmitOutcome> {
     return { ok: false, reason: "signed-out", error: "Your session expired. Start again." };
   }
 
-  // Check if account already has a score — don't overwrite it.
+  // Check if account already has a score - don't overwrite it.
   let hasScore: boolean;
   try {
     hasScore = await hasScoreOnRecord();

@@ -13,11 +13,11 @@ import { Close, Menu } from "./icons";
  * Measured off the 1440-wide design: a full-bleed 96px row with a 1px `ink-soft`
  * rule under it, the logo 40px in from the left at its native 178×40, the five
  * links set 16px in `ink-onnight` with 35px between them, then the two pills the
- * bar ends with — a 212×50 outline and a 154×48 solid white — 24px apart, the
+ * bar ends with - a 212×50 outline and a 154×48 solid white - 24px apart, the
  * second ending 53px from the right edge.
  *
  * The bar has no fill of its own. It is a 10px backdrop blur and nothing else, so
- * what shows through it is the top of the photograph behind — which at that height
+ * what shows through it is the top of the photograph behind - which at that height
  * is near enough black that the rule, not a panel edge, is what separates the two.
  * That only works over a photograph: every funnel screen is a near-white canvas,
  * where white on clear glass is unreadable, so those keep the solid V1 bar.
@@ -54,8 +54,8 @@ export function HeroNav() {
         </Link>
 
         {/* Links and pills are one group, not two children of the row's
-            `justify-between`: the design hangs the whole run off the right edge —
-            the last pill 53px in, the links ending 34px before the first one — and
+            `justify-between`: the design hangs the whole run off the right edge -
+            the last pill 53px in, the links ending 34px before the first one - and
             an even distribution would instead park the links halfway between the
             logo and the pills, 40px left of where the design puts them. */}
         <div className="hidden items-center gap-[34px] xl:flex">

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ScoreLoader } from "@/components/score/ScoreLoader";
 
 export const metadata: Metadata = {
-  title: "ImageShield — Your Likeness Health Score",
+  title: "ImageShield - Your Likeness Health Score",
 };
 
 /**

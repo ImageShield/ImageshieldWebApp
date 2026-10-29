@@ -17,11 +17,11 @@ import { createHmac, timingSafeEqual } from "node:crypto";
  *   4. Browser passes the token to `/api/share/score-card?token=...`.
  *   5. The score-card route verifies the HMAC and renders the PNG.
  *
- * The server never signs a value the browser chose — it always reads the score
+ * The server never signs a value the browser chose - it always reads the score
  * itself. The token is time-limited so a leaked URL expires.
  */
 
-const TOKEN_TTL_S = 300; // 5 minutes — enough for the share sheet
+const TOKEN_TTL_S = 300; // 5 minutes - enough for the share sheet
 
 /** The known bands the API returns. */
 const KNOWN_BANDS = new Set([
@@ -35,7 +35,7 @@ function secret(): string {
   const raw = process.env.SCORE_SHARE_SECRET?.trim();
   if (!raw || raw.length < 32) {
     throw new Error(
-      "SCORE_SHARE_SECRET is not set or too short (min 32 chars) — " +
+      "SCORE_SHARE_SECRET is not set or too short (min 32 chars) - " +
         "generate one: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"",
     );
   }

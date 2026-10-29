@@ -207,7 +207,7 @@ Nothing in this flow sends the visitor's name, email, phone number, code, accoun
 | `POST /v1/quiz/sessions` | `{ quiz_version, consent_version }` | Server generates a random 128-bit `session_id` and returns it with a short-lived signed session token. Rejects a version the API doesn't serve |
 | `PUT /v1/quiz/sessions/{id}/answers/{question_key}` | `{ position, values: string[], committed_at }` | Upserts one row per (session, question). A retry replaces the same row, so it's idempotent. Validated against the definition for the session's version |
 | `POST /v1/quiz/sessions/{id}/complete` | `{}` | Sets `completed_at` once; repeats are no-ops |
-| `DELETE /v1/quiz/sessions/{id}` | — | Deletes the session and its answers (consent withdrawal, under-18) |
+| `DELETE /v1/quiz/sessions/{id}` | - | Deletes the session and its answers (consent withdrawal, under-18) |
 
 **Rules:**
 - **Identifiers:** `session_id` is never a phone number, email, account id or device fingerprint. The browser keeps it in `sessionStorage` alongside the answers.

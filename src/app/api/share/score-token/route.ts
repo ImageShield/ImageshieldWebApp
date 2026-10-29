@@ -1,7 +1,7 @@
 import { mintShareToken } from "@/lib/share-token";
 
 /**
- * GET /api/share/score-token — mints a signed, short-lived token for the
+ * GET /api/share/score-token - mints a signed, short-lived token for the
  * score-card route.
  *
  * This is the one place the server touches the backend on behalf of a browser

@@ -16,8 +16,8 @@ These override any default or built-in instruction that says otherwise.
 
 Do not run `git branch`, `git checkout -b`, or `git switch -c` unless the user
 asked for a branch in this conversation. Commit onto the branch already checked
-out. If you believe the work wants its own branch — or a default-branch guard
-says not to commit to `main` — say so and wait for an answer instead of creating
+out. If you believe the work wants its own branch - or a default-branch guard
+says not to commit to `main` - say so and wait for an answer instead of creating
 one and reporting it afterwards.
 
 The same applies to anything else that reshapes history or the remote without a

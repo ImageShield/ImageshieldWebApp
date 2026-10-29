@@ -10,8 +10,8 @@ import { Star } from "./icons";
  * right, and the download card floating over its bottom corner.
  *
  * The photograph is the one the old `ProtectsSection` ran under its headline, but
- * not the same FILE: that was `protects.jpg`, 65KB for 1792×1057 — a thirtieth of
- * a bit per pixel — which survived being a backdrop behind a headline and does not
+ * not the same FILE: that was `protects.jpg`, 65KB for 1792×1057 - a thirtieth of
+ * a bit per pixel - which survived being a backdrop behind a headline and does not
  * survive being the subject. This is the export's own lossless copy at its native
  * 1734×1024, which is all the resolution the design has: drawn at 1594px the hero
  * is fine at 1×, and still short of half the pixels it wants at 2×. Only a larger
@@ -20,7 +20,7 @@ import { Star } from "./icons";
  * Placement, off the 1440×848 frame: the image is drawn 1594×941 with its left
  * edge at x 178 and its BOTTOM on the hero's bottom, so 93px of it is cut off the
  * top and 332px off the right. Those are carried here as percentages of the hero
- * box — 110.69% wide, 110.97% tall, `right: -23.06%` — which at 1440×848 is the
+ * box - 110.69% wide, 110.97% tall, `right: -23.06%` - which at 1440×848 is the
  * frame exactly, and past 1440 the `max()` freezes that offset at the design's
  * 332px: the extra width belongs to the black canvas the copy sits on, not to the
  * picture, which left to scale would grow to fill a 1920 monitor while the type
@@ -29,18 +29,18 @@ import { Star } from "./icons";
  * All of that is `xl` and up, not `lg`, and for one reason: it is stated against
  * the hero's HEIGHT, and the height is only the design's 848 while the download
  * card floats. The card cannot float until 1280 (see below), so under `xl` the
- * hero is as tall as its own copy — and a 110.97% of THAT blows the picture up
+ * hero is as tall as its own copy - and a 110.97% of THAT blows the picture up
  * until the subject is off the right-hand edge entirely.
  *
  * So under `xl` the frame is ours: the same photograph fills the section under a
- * flat wash, centred. Centred is the whole of it — she stands at 50.0% of the
+ * flat wash, centred. Centred is the whole of it - she stands at 50.0% of the
  * plate's width, by the shield's glow and by the lit half of her sweater alike, so
  * any object-position but the middle walks her off to one side. The design draws no
- * narrower frame, and this one would not survive the narrowing anyway — at 390 the
+ * narrower frame, and this one would not survive the narrowing anyway - at 390 the
  * picture's left edge lands at x 48 and the headline would be set across her face.
  */
 export async function HeroSection() {
-  /* Drawn at build — the page is static — from the same source as the result
+  /* Drawn at build - the page is static - from the same source as the result
      screen's code. No margin: the plate below is the quiet zone. */
   const qr = await appQrSvg({ margin: 0 });
 
@@ -48,7 +48,7 @@ export async function HeroSection() {
     <section className="relative isolate overflow-hidden bg-night xl:min-h-[848px]">
       <div className="absolute inset-0 xl:top-auto xl:right-[max(-332px,-23.06%)] xl:bottom-0 xl:left-auto xl:h-[110.97%] xl:w-[min(110.69%,1594px)]">
         {/* The heaviest asset on the site by a factor of four, and the first
-            thing above the fold — so it is the one placeholder that matters
+            thing above the fold - so it is the one placeholder that matters
             most. `night`, because it fills a box on a black canvas: the light
             skeleton would be a viewport-wide white panel where the photograph
             goes, which is worse than the black it replaces. */}
@@ -58,7 +58,7 @@ export async function HeroSection() {
           alt="A woman looking at her phone, her face ringed by a glowing shield, with anonymous hooded figures fading into the dark behind her."
           fill
           priority
-          /* The box is 110.69% of the viewport, capped at the design's 1594px — tell
+          /* The box is 110.69% of the viewport, capped at the design's 1594px - tell
              the browser that, or it picks a candidate a tenth too small and the
              upscale lands on the one face on the page. */
           sizes="(min-width: 1440px) 1594px, 111vw"
@@ -80,7 +80,7 @@ export async function HeroSection() {
         />
       </div>
 
-      {/* The design needs no wash — the copy sits on the picture's own black
+      {/* The design needs no wash - the copy sits on the picture's own black
           left-hand side. Every narrower frame sets it across the picture proper, so
           those do. */}
       <div className="absolute inset-0 bg-night/65 xl:hidden" />
@@ -89,7 +89,7 @@ export async function HeroSection() {
 
       {/* The 88px inset is measured from the viewport, not from a centred 1440
           container, so the headline keeps sitting 48px right of the logo at any
-          width — `HeroNav` holds its own 40px the same way. */}
+          width - `HeroNav` holds its own 40px the same way. */}
       <div className="relative z-10 px-6 pt-14 pb-12 sm:px-10 xl:px-[88px] xl:pt-[305px] xl:pb-[92px]">
         <h1 className="max-w-[700px] text-[2rem] leading-[2.375rem] font-semibold text-white sm:text-[2.75rem] sm:leading-[3.25rem] xl:text-[60px] xl:leading-[66px]">
           ImageShield® Protects You From AI, Deepfakes and Scams
@@ -124,7 +124,7 @@ export async function HeroSection() {
          *
          * It only floats from `xl`. The paragraph beside it runs to x 748 and the
          * card's left edge is 380px in from the right, so the two clear each other
-         * only past 1128 — at 1024 the card would be set across the last two lines
+         * only past 1128 - at 1024 the card would be set across the last two lines
          * of the sentence it is meant to follow. Under that it is in flow, which is
          * also the answer on a phone: there is no bottom corner to float over, and
          * store badges below the fold would be the only way to install the thing
@@ -137,11 +137,11 @@ export async function HeroSection() {
 
           <div className="mt-[7px] flex items-center gap-[18px]">
             {/* 12px of quiet zone inside the plate, which is what makes the code
-                scannable off a dark page at all — a QR needs light around it. 97px,
+                scannable off a dark page at all - a QR needs light around it. 97px,
                 not 96: the design strokes a 96px square, and a stroke Figma centres
                 on the path is a border CSS puts inside the box. One pixel, but the
                 card is pinned by its BOTTOM edge, so losing it lifts everything
-                above the plate — the label included — a pixel off the design. */}
+                above the plate - the label included - a pixel off the design. */}
             <div className="flex size-[97px] shrink-0 items-center justify-center rounded-2xl border border-line bg-white">
               <Image
                 src={`data:image/svg+xml,${encodeURIComponent(qr)}`}

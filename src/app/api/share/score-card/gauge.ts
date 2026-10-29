@@ -1,8 +1,8 @@
 import { GAUGE_THEMES, type RiskLevel } from "@/lib/score";
 
 /**
- * The gauge on the shared poster: the app's `ScoreGauge`, `report` variant — the one
- * its own share card photographs — drawn as an SVG string.
+ * The gauge on the shared poster: the app's `ScoreGauge`, `report` variant - the one
+ * its own share card photographs - drawn as an SVG string.
  *
  * Not the result page's gauge. That one is drawn from the desktop export, at a
  * slightly different stroke and with its labels inside the drawing; this picture is
@@ -16,7 +16,7 @@ import { GAUGE_THEMES, type RiskLevel } from "@/lib/score";
 export const FRAME = { width: 164, height: 160 } as const;
 
 /**
- * Drawn room above the frame. The arc's outer edge peaks half a unit above y=0 —
+ * Drawn room above the frame. The arc's outer edge peaks half a unit above y=0 -
  * the app clips that half unit, and at 1080px it shows as a flat top on the track.
  * The SVG is drawn this much taller, upward, and placed this much higher.
  */
@@ -70,8 +70,8 @@ function angleOf(score: number): number {
 }
 
 /**
- * `level` picks the colour set, and is the served band's — the same one the page
- * colours its own gauge by — rather than the app's own thresholds.
+ * `level` picks the colour set, and is the served band's - the same one the page
+ * colours its own gauge by - rather than the app's own thresholds.
  */
 export function posterGaugeSvg(score: number, level: RiskLevel): string {
   const value = Math.min(Math.max(score, 0), 100);

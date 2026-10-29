@@ -7,7 +7,7 @@ import { Share } from "../funnel/icons";
 
 /**
  * The poster, fetched once per score per page and shared by every button that
- * offers it — the result screen draws one beside the phone's caption and one at
+ * offers it - the result screen draws one beside the phone's caption and one at
  * the corner of the desktop's gauge, and only one of them is ever visible.
  *
  * Fetched AHEAD of the tap, not inside it. Safari only opens the share sheet from
@@ -42,7 +42,7 @@ function poster(key: string): Promise<File | null> {
  *   2. Pass that token to `/api/share/score-card?token=…`, which verifies
  *      it and renders the PNG.
  *
- * The browser never supplies the score directly — the server reads it itself
+ * The browser never supplies the score directly - the server reads it itself
  * and signs the result, so the poster always reflects a real score.
  */
 async function fetchPoster(): Promise<File | null> {
@@ -91,7 +91,7 @@ async function copy(text: string): Promise<boolean> {
 
 /**
  * Shares the score card: a picture of it, captioned with the score and the quiz
- * link — the app's `shareScoreCard`, on the web.
+ * link - the app's `shareScoreCard`, on the web.
  *
  * Where the browser can share a file (phones, Safari, Chromium on a Mac) that's
  * the system share sheet with the picture and the caption, same as the app. Where
@@ -146,11 +146,11 @@ export function ShareScoreButton({
 
     const caption = shareCaption({ live: score, band });
     try {
-      /* In hand already, or still coming — see `poster` for why that matters. */
+      /* In hand already, or still coming - see `poster` for why that matters. */
       const waited = file.current === null;
       const picture = file.current ?? (await poster(key));
       if (!picture) {
-        setNote("Couldn't create the image — please try again");
+        setNote("Couldn't create the image - please try again");
         return;
       }
       file.current = picture;
@@ -158,7 +158,7 @@ export function ShareScoreButton({
       if (navigator.canShare?.({ files: [picture] })) {
         try {
           /* Picture and caption together, as the app shares them. They reach the
-             sheet as two items and each target keeps what it likes — Telegram's Mac
+             sheet as two items and each target keeps what it likes - Telegram's Mac
              share extension keeps only the text, story surfaces only the picture.
              Chosen knowingly over sharing the picture alone, which every target
              takes but which loses the tappable link; the poster carries the score
@@ -168,13 +168,13 @@ export function ShareScoreButton({
         } catch (error) {
           if (dismissed(error)) return;
           /* Safari refuses a sheet opened after a wait that outlived the tap. The
-             picture is in hand now, so the next tap opens it at once — better than
+             picture is in hand now, so the next tap opens it at once - better than
              dropping a download into a phone's Files app. */
           if (waited && error instanceof DOMException && error.name === "NotAllowedError") {
-            setNote("Image ready — tap share again");
+            setNote("Image ready - tap share again");
             return;
           }
-          /* Refused for some other reason — hand it over by hand instead. */
+          /* Refused for some other reason - hand it over by hand instead. */
         }
       }
 
@@ -188,7 +188,7 @@ export function ShareScoreButton({
 
   return (
     <span className={`relative inline-flex ${className}`}>
-      {/* 20px of glyph in a 44px target — the floor on touch screens. The glyph is
+      {/* 20px of glyph in a 44px target - the floor on touch screens. The glyph is
           small because the caption beside it is; the tappable area is not. */}
       <button
         type="button"

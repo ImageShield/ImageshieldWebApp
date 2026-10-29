@@ -7,7 +7,7 @@ import { ChevronLeft, Close } from "@/components/landing/icons";
  * Measured off the design as an 800px track with the back chevron 15px to its left
  * and the close cross 9px to its right, the row centred on the page. Both controls
  * get a full 44px tap target, which is wider than the glyph the design draws, so
- * they're pulled outward by the difference — that keeps the *ink* on the design's
+ * they're pulled outward by the difference - that keeps the *ink* on the design's
  * marks instead of the invisible button box.
  */
 export function QuizProgress({

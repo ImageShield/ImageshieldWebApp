@@ -3,8 +3,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { parseConsent, serializeConsent } from "@/lib/consent";
 import { ANALYTICS_DETAIL_WITH_ANSWERS, ConsentBanner } from "./ConsentBanner";
 
-/* What legal approving the answer-level wording turns on. With the switch off — as
-   shipped — ConsentManager.test.tsx and consent.test.ts pin today's v1 behaviour. */
+/* What legal approving the answer-level wording turns on. With the switch off - as
+   shipped - ConsentManager.test.tsx and consent.test.ts pin today's v1 behaviour. */
 vi.mock("@/lib/analytics-approval", () => ({ ANSWER_ANALYTICS_APPROVED: true }));
 
 afterEach(cleanup);

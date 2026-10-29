@@ -1,5 +1,5 @@
 /**
- * What the "General recommendations" card may say, and to whom — drawn from the same
+ * What the "General recommendations" card may say, and to whom - drawn from the same
  * v17 evidence report as ./evidence-v17.ts. TEMPORARY, with the rest of this folder.
  *
  * Every entry is advice a cited page actually gives or a finding it actually
@@ -28,7 +28,7 @@ export type LocalRecommendation = {
   title: string;
   /** One sentence, at most 200. */
   body: string;
-  /** The page the body rests on — always one the report cites. */
+  /** The page the body rests on - always one the report cites. */
   link: { url: string; label: string | null };
   /** That page's own words, as the report quotes them. */
   quote: string;
@@ -62,7 +62,7 @@ export const RECOMMENDATIONS_V17: readonly LocalRecommendation[] = [
       "You can report nude or sexual photos or videos of yourself or threats to share these images or videos to our apps or technologies to prevent them from being reshared.",
   },
   {
-    /* Says nothing about whether THIS visitor's accounts are public — the quiz never
+    /* Says nothing about whether THIS visitor's accounts are public - the quiz never
        asks. "Review who can see" holds either way. */
     id: "photo-visibility",
     when: {

@@ -3,7 +3,7 @@ import { DetailsForm } from "@/components/funnel/DetailsForm";
 import { FunnelShell } from "@/components/funnel/FunnelShell";
 
 export const metadata: Metadata = {
-  title: "ImageShield — Where should we send your score?",
+  title: "ImageShield - Where should we send your score?",
   description:
     "Tell us where to send your Likeness Health Score. We won't share your information with anyone.",
 };
@@ -16,9 +16,9 @@ export const metadata: Metadata = {
  * leaning on: there is a finished quiz behind this form, so it asks for a number in
  * order to send something the visitor has already earned.
  *
- * Whether they really finished it can only be checked in the browser — the answers
+ * Whether they really finished it can only be checked in the browser - the answers
  * live in this tab's sessionStorage and never reach the server until after the code
- * is verified — so the guard is inside `DetailsForm` rather than a redirect here.
+ * is verified - so the guard is inside `DetailsForm` rather than a redirect here.
  */
 export default function DetailsPage() {
   return (

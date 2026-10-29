@@ -23,7 +23,7 @@ const TRUST_MARKERS = [
 ];
 
 /**
- * Social links and trust markers — the foot of the page.
+ * Social links and trust markers - the foot of the page.
  *
  * Concept 1 draws nothing below How It Works, and it has already said everything
  * this section used to: the five stars, the line about families protected and both
@@ -32,7 +32,7 @@ const TRUST_MARKERS = [
  * the black it has always been on.
  *
  * `#download` still resolves here, which is where the nav's Download app button
- * points on a phone — the hero's own badges are above the fold on desktop, but a
+ * points on a phone - the hero's own badges are above the fold on desktop, but a
  * visitor who has scrolled to the bottom should not have to scroll back.
  */
 export function DownloadSection() {

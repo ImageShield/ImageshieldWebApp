@@ -16,12 +16,12 @@ import { ANSWER_ANALYTICS_APPROVED } from "./analytics-approval";
  */
 const COOKIE = "imageshield_consent";
 /**
- * Bump to ask everyone again — when a vendor is added or the categories change.
+ * Bump to ask everyone again - when a vendor is added or the categories change.
  * v2 is the analytics wording that names quiz answers; it goes live with the answer
  * collection it describes, never before (see analytics-approval.ts).
  */
 const VERSION = ANSWER_ANALYTICS_APPROVED ? "v2" : "v1";
-/** The version choices are recorded under now — for tests that must hold either way. */
+/** The version choices are recorded under now - for tests that must hold either way. */
 export const CONSENT_VERSION = VERSION;
 const MAX_AGE_SECONDS = 60 * 60 * 24 * 182;
 
@@ -62,7 +62,7 @@ const listeners = new Set<() => void>();
 
 /**
  * useSyncExternalStore compares snapshots by identity, so the parsed object is kept
- * until the cookie's own value changes — not the whole cookie string, which Google
+ * until the cookie's own value changes - not the whole cookie string, which Google
  * and HubSpot rewrite on their own schedule.
  */
 let last: { value: string | undefined; consent: Consent | null } = {
@@ -141,7 +141,7 @@ const MARKETING_COOKIES = /^(_gcl_|__hstc$|__hssc$|__hssrc$|hubspotutk$|messages
  * Deletes what Google and HubSpot stored, for this host, under a category the
  * visitor has just withdrawn.
  *
- * Only the quiz's own scope — host-only cookies and ones set for this exact host —
+ * Only the quiz's own scope - host-only cookies and ones set for this exact host -
  * never a parent domain. `document.cookie` can't say which domain a cookie belongs
  * to, and a `_ga` on `.imageshield.com` is imageshield.com's own: its GA4 property
  * writes one there, so expiring every parent domain reset that site's analytics

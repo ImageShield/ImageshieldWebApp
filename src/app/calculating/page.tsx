@@ -3,7 +3,7 @@ import { SiteHeader } from "@/components/landing/SiteHeader";
 import { Calculating } from "@/components/quiz/Calculating";
 
 export const metadata: Metadata = {
-  title: "ImageShield — Calculating your score",
+  title: "ImageShield - Calculating your score",
 };
 
 /**

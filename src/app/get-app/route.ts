@@ -1,7 +1,7 @@
 import { DOWNLOAD_URL, STORE_LINKS } from "@/lib/site-nav";
 
 /**
- * GET /get-app — where the result screen's QR code points.
+ * GET /get-app - where the result screen's QR code points.
  *
  * A QR can carry one address, and the person scanning it has one of two phones, so
  * this picks the store from the User-Agent and redirects there. When the app is

@@ -27,21 +27,21 @@ const STEPS = [
 /**
  * The three steps, each under a screen from the app it is describing.
  *
- * Off the 1440 frame: three 190×318 phone frames on 357px centres — a 1072-wide
- * column centred on the page — outlined 4px in `navbar` at 30%, with the step
+ * Off the 1440 frame: three 190×318 phone frames on 357px centres - a 1072-wide
+ * column centred on the page - outlined 4px in `navbar` at 30%, with the step
  * number set 48px in the same purple at 20% under each.
  *
  * The rule between two frames is drawn from inside the left-hand phone: it starts
  * 127px in from that frame's left edge, on its vertical centre, and fades out to
  * nothing 15px inside the next one. So it belongs to the phone it leaves, not to
- * the gap — which is also what makes the paint order right without any z-index:
+ * the gap - which is also what makes the paint order right without any z-index:
  * each rule sits over its own screenshot and under the next phone, because that is
  * the order the three list items are already in.
  *
  * The screenshots are 552×980 against a 184×312 opening, so they are set to cover
  * and left centred. Centred is the export's own answer, not a default fallen back
  * on: each pattern scales its shot to fill the width and then translates it up by
- * 7.3, 8.4 and 8.2px against overflows of 14.6, 16.7 and 16.5 — 50.0% in all three
+ * 7.3, 8.4 and 8.2px against overflows of 14.6, 16.7 and 16.5 - 50.0% in all three
  * cases. Pinning them to the top instead shows 8px more of each status bar and
  * eats 8px more of each tab bar.
  *
@@ -66,7 +66,7 @@ export function HowItWorks() {
           <li key={step.number} className="flex flex-col items-center">
             <div className="relative">
               {/* The frame is already the right size and outline, so the
-                  placeholder fills it rather than replacing it — three empty
+                  placeholder fills it rather than replacing it - three empty
                   phone outlines on a slow line still read as three phones.
                   `relative` on the outer box is what the frame inside it
                   measures against. */}

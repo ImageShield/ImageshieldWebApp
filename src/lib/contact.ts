@@ -9,7 +9,7 @@
 /**
  * E.164, the format the app's login sends (`+${callingCode}${digits}`) and the
  * format Twilio needs. The backend keys the user record on this string, so a
- * missing country code doesn't just fail to send an SMS — it forks a second
+ * missing country code doesn't just fail to send an SMS - it forks a second
  * record that the app will never find.
  */
 const E164 = /^\+[1-9]\d{7,14}$/;
@@ -25,17 +25,17 @@ export type Contact = {
   phone: string;
   /**
    * The visitor ticked "I confirm that I am 18 years old or older". Always `true` on a
-   * validated contact — there is no such thing as a contact without it.
+   * validated contact - there is no such thing as a contact without it.
    *
    * This replaced a date-of-birth field, and the funnel no longer asks for, accepts or
    * keeps a birth date in any form. `PATCH /v1/me/profile` still wants one, so a fixed
-   * placeholder is written there instead — see `SYNTHETIC_ADULT_DOB`.
+   * placeholder is written there instead - see `SYNTHETIC_ADULT_DOB`.
    */
   ageConfirmed: true;
 };
 
 /**
- * Strips separators and settles on a leading `+` — but never invents one. A bare
+ * Strips separators and settles on a leading `+` - but never invents one. A bare
  * "5551230000" is not a number we can key a user record on: prefixing `+` would
  * turn it into the perfectly valid Colombian-looking +5551230000 and quietly write
  * the score to a record nobody owns. The form supplies the country code (a picker,
@@ -93,7 +93,7 @@ export function validateContact(
      this message if something other than the form is posting.
 
      Last, so a visitor who got several fields wrong is told about the phone number
-     first — the phone is the one the whole funnel turns on. */
+     first - the phone is the one the whole funnel turns on. */
   if (ageConfirmed !== true) {
     return { ok: false, error: "Confirm that you are 18 or older to continue" };
   }

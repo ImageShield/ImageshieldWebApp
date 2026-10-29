@@ -14,12 +14,12 @@ import type { FunnelStep } from "./funnel";
  * next person someone else's answers or phone number.
  *
  * Exposed as an external store so screens read it during render instead of syncing
- * it into state from an effect — which would flash the empty step on every mount.
+ * it into state from an effect - which would flash the empty step on every mount.
  */
 const KEY = "imageshield.funnel.v1";
 
 export type FunnelState = {
-  /** A list for the multi-select questions, a bare string for the rest — the same
+  /** A list for the multi-select questions, a bare string for the rest - the same
    *  shape `validateAnswers` expects, so this object POSTs straight through. */
   answers: Record<string, string | string[]>;
   /**
@@ -85,7 +85,7 @@ export function writeFunnel(patch: Partial<FunnelState>): FunnelState {
   try {
     window.sessionStorage.setItem(KEY, JSON.stringify(next));
   } catch {
-    // Storage unavailable — the funnel still works, it just won't survive a reload.
+    // Storage unavailable - the funnel still works, it just won't survive a reload.
   }
   for (const listener of listeners) listener();
   return next;
@@ -95,7 +95,7 @@ export function writeFunnel(patch: Partial<FunnelState>): FunnelState {
  * Reconciles what this tab has stored with the quiz this release renders.
  *
  * A version change means the questions changed, so the stored answers are answers to
- * something else — keeping them would show a half-filled quiz whose ticks belong to
+ * something else - keeping them would show a half-filled quiz whose ticks belong to
  * questions that are no longer being asked. They are dropped and the quiz starts
  * clean, which is the only honest option and is much better met here than after the
  * visitor has entered their phone number and spent a code.
@@ -124,7 +124,7 @@ export function saveAnswer(
  * Adds or removes one option of a multi-select answer.
  *
  * Order follows the question's option list rather than the order they were tapped,
- * so re-picking the same set always produces the same array — otherwise a back-and-
+ * so re-picking the same set always produces the same array - otherwise a back-and-
  * forth would keep rewriting sessionStorage with a reshuffled list.
  */
 export function toggleAnswer(

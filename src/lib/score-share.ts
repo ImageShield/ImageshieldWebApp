@@ -4,7 +4,7 @@
  * Ported from the app's `utils/scoreShare.js` so a score shared from the web reads
  * the same as one shared from a phone. One deliberate difference: the risk word is
  * the band the API served (`bandLabel`), not a band worked out from the number. The
- * app derives its own; this site never does — see the note on `BAND_LEVELS` — and a
+ * app derives its own; this site never does - see the note on `BAND_LEVELS` - and a
  * caption calling a score "moderate" under a page that says "High" is the one
  * disagreement a screenshot would make permanent.
  *
@@ -17,11 +17,11 @@ import { bandLabel, riskLevelOf } from "./score";
  * Where the shared link sends people: the deployed funnel, which is the one page
  * that can give a recipient a score of their own. The app's `QUIZ_URL` should be
  * this same address, so a score shared from either one links to the same place.
- * It is also the origin of the QR's `/get-app` — see `GET_APP_URL`.
+ * It is also the origin of the QR's `/get-app` - see `GET_APP_URL`.
  *
  * Configured rather than read off the address bar. The page a visitor shares from
- * isn't necessarily one a recipient can open — in development it is localhost, and a
- * preview deployment is a throwaway URL — and the link outlives the visit. Set
+ * isn't necessarily one a recipient can open - in development it is localhost, and a
+ * preview deployment is a throwaway URL - and the link outlives the visit. Set
  * `NEXT_PUBLIC_SHARE_URL` if the funnel moves again: it was
  * `imageshield-web-app.vercel.app` until that deployment was taken down, and every
  * link and QR built on it went to Vercel's DEPLOYMENT_NOT_FOUND.
@@ -47,7 +47,7 @@ export function linkLabel(url: string): string {
 }
 
 /**
- * The pitch to whoever receives the share — printed on the poster under the score
+ * The pitch to whoever receives the share - printed on the poster under the score
  * and closing the caption, so the picture and the text ask the same question. One
  * copy of it, so the two can't drift.
  *
@@ -57,7 +57,7 @@ export function linkLabel(url: string): string {
  *
  * The name carries its ℠ here as everywhere it is printed. The caption sends the
  * character as is; the poster's font has no glyph for it, so the poster sets it
- * as a raised "SM" — see `Marked` in the score-card route.
+ * as a raised "SM" - see `Marked` in the score-card route.
  */
 export const SHARE_PITCH = [
   ["Are you a victim of image abuse?", "1 in 5 Americans are."],
@@ -68,7 +68,7 @@ export const SHARE_PITCH = [
  * The caption that rides along with the picture.
  *
  * The score sentence is the app's; the close is this site's own pitch rather than
- * the app's "What's your score?", with the link on a line of its own after it — the
+ * the app's "What's your score?", with the link on a line of its own after it - the
  * same order the poster prints them in.
  *
  * "Healthy" is reserved for a low-risk band: calling a moderate or high score

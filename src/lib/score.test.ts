@@ -46,7 +46,7 @@ describe("riskFactorsFrom", () => {
   });
   afterEach(() => warn.mockRestore());
 
-  it("keeps the served list as served — same order, same strings", () => {
+  it("keeps the served list as served - same order, same strings", () => {
     expect(riskFactorsFrom([AGE, THREAT])).toStrictEqual([AGE, THREAT]);
     expect(riskFactorsFrom([THREAT, AGE])).toStrictEqual([THREAT, AGE]);
     expect(warn).not.toHaveBeenCalled();

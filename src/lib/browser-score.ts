@@ -62,7 +62,7 @@ export async function loadScore(): Promise<ScoreLoad> {
   }
 
   try {
-    /* The POST response is the authoritative first copy of the envelope —
+    /* The POST response is the authoritative first copy of the envelope -
        `score.risk_factors` and `general_recommendations` may only be served
        there. If the submit just happened (same tab, same session), use its
        envelope rather than re-fetching from GET which may not carry those
@@ -96,7 +96,7 @@ export async function loadScore(): Promise<ScoreLoad> {
         const fresh = await callAsUser<ScoreEnvelope>("GET", "/v1/me/score");
         return resolve(firstNameOf(me), mergeEnvelopes(envelope, fresh));
       } catch {
-        /* GET failed — proceed with the cached envelope as-is. */
+        /* GET failed - proceed with the cached envelope as-is. */
       }
     }
 

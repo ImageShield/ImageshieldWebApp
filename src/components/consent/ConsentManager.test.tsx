@@ -152,7 +152,7 @@ describe("ConsentManager", () => {
 
     expect(document.cookie).toContain(`imageshield_consent=${V}.a0.m0`);
     expect(cookieNames().sort()).toEqual(["imageshield_consent", "other"]);
-    // An `arguments` object, as gtag() pushes — GTM ignores the same values as an array.
+    // An `arguments` object, as gtag() pushes - GTM ignores the same values as an array.
     const command = dataLayer.at(-1);
     expect(Object.prototype.toString.call(command)).toBe("[object Arguments]");
     expect(Array.from(command as ArrayLike<unknown>)).toEqual([
@@ -331,7 +331,7 @@ describe("ConsentManager for under-18 visitors", () => {
     expect(scripts()).toEqual([]);
   });
 
-  it("loads nothing on any page once the answers say under 18 — refresh, back, or home", () => {
+  it("loads nothing on any page once the answers say under 18 - refresh, back, or home", () => {
     document.cookie = `imageshield_consent=${V}.a1.m1; Path=/`;
     writeFunnel({ answers: { age: "Under 18" } });
     for (const path of ["/quiz/questions", "/details", "/quiz"]) {

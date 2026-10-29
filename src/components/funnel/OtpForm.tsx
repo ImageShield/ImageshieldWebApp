@@ -14,26 +14,26 @@ import { verifyOtp, resendOtp } from "@/lib/browser-auth";
  *
  * Same behaviour as the phone: one box per digit, focus walks forward as you type
  * and backward on backspace into an empty box, a paste fills the row, and a full
- * code verifies itself rather than waiting for a tap on a button — QC flagged that
+ * code verifies itself rather than waiting for a tap on a button - QC flagged that
  * last one on mobile as needless friction, and it is the same friction here.
  *
  * Two states now, where there were three. This screen used to submit the quiz answers
  * along with the code, which meant it had to handle the case where the code was
- * ACCEPTED and the write after it failed — a dead end with nothing to retype, because
+ * ACCEPTED and the write after it failed - a dead end with nothing to retype, because
  * the challenge was spent. The answers are still waiting in the tab at this point, but
  * they are no longer this screen's business: the code buys a session and nothing else,
  * and `/calculating` does the write with that session, retrying as often as it likes.
  *
- *   code     typing, resending, verifying — the screen as drawn.
+ *   code     typing, resending, verifying - the screen as drawn.
  *   expired  the pending challenge cookie is gone (15 minutes), so neither verifying
- *            nor resending can work — both answer 401. The only way on is a new
+ *            nor resending can work - both answer 401. The only way on is a new
  *            number, so that is the only thing offered.
  *   blocked  the API refused the NUMBER, not the code: its last account was deleted
  *            and is still inside its waiting period (409, `blocked`). The code may
  *            well have been right, so nothing here is drawn as a mistake to correct.
  */const LENGTH = 6;
 
-/** Only used until the API has told us its own cooldown — `startOtp` returns
+/** Only used until the API has told us its own cooldown - `startOtp` returns
  *  `resendAfter`, and that is the number the API will actually enforce. */
 const FALLBACK_COOLDOWN_S = 60;
 
@@ -62,7 +62,7 @@ export function OtpForm() {
 
   useEffect(() => {
     /* The details form already turns away an under-18 answer, but the quiz can be
-       re-answered after the code is sent — back, change the age, forward to here.
+       re-answered after the code is sent - back, change the age, forward to here.
        Verifying is what writes the adult placeholder birth date, so this screen
        checks too. */
     if (declaresMinor(readFunnel().answers)) {
@@ -160,7 +160,7 @@ export function OtpForm() {
 
     let next: string[];
     if (cleaned.length > 1) {
-      // A paste (or an SMS autofill) — lay it out from the first box, not this one.
+      // A paste (or an SMS autofill) - lay it out from the first box, not this one.
       next = [...EMPTY];
       cleaned
         .slice(0, LENGTH)
@@ -239,7 +239,7 @@ export function OtpForm() {
   /* Shared by both dead ends. A code that never arrives is usually a mistyped
      number, and the backend answers 200 to a send whether or not the SMS actually
      went out (server.js swallows the Twilio error), so the funnel cannot tell the
-     user it failed — the way it stays honest is by always leaving this door open. */
+     user it failed - the way it stays honest is by always leaving this door open. */
   const changeNumber = (
     <Link
       href={STEP_PATHS.details}
@@ -256,7 +256,7 @@ export function OtpForm() {
           {error ?? "This number can't open a new account yet."}
         </p>
         <p className="mt-3 text-[14px] leading-[21px] text-black/45">
-          The wait belongs to the number, not to the code you entered — resending
+          The wait belongs to the number, not to the code you entered - resending
           won&apos;t shorten it. Another number can start straight away.
         </p>
         <Link
@@ -292,7 +292,7 @@ export function OtpForm() {
   return (
     <div className="mt-7">
       {/* The number the code went to. `startOtp` hands back the normalised copy for
-          exactly this — a digit typed wrong was invisible, and the silence that follows
+          exactly this - a digit typed wrong was invisible, and the silence that follows
           looks identical to a carrier delay. */}
       {phone ? (
         <p className="text-[14px] leading-[21px] text-black/45">
@@ -362,7 +362,7 @@ export function OtpForm() {
          * look different: fewer than six digits typed is "not yet", which is
          * the dim, and a code being checked is "working", which is the sweep.
          * Sharing one dim between them meant a verify on a slow connection was
-         * indistinguishable from a button that had never been armed — and this
+         * indistinguishable from a button that had never been armed - and this
          * is the step where the visitor is most likely to think they mistyped
          * and start over. The dim is dropped while `busy` so the sweep runs on
          * the full purple rather than on a washed-out ghost of it.

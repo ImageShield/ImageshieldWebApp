@@ -19,7 +19,7 @@ import { startOtp } from "@/lib/browser-auth";
 import { ContactCard, Envelope } from "./icons";
 
 /**
- * First and last name, email, phone and an 18+ confirmation — the gate in front of
+ * First and last name, email, phone and an 18+ confirmation - the gate in front of
  * the score.
  *
  * Submitting sends the OTP. Nothing is written to the shared user record here: the
@@ -28,14 +28,14 @@ import { ContactCard, Envelope } from "./icons";
  *
  * The details are deliberately NOT kept in `funnel-state`. sessionStorage survives a
  * reload, and a shared phone would hand the next person a stranger's name and email
- * back on a plate — the server already holds them for the one hop to the OTP screen.
+ * back on a plate - the server already holds them for the one hop to the OTP screen.
  * Only the phone is stored, and only so the OTP screen can say where it texted.
  *
  * The form guards itself against being reached with no quiz behind it, which the page
  * cannot do: the answers are in this tab's sessionStorage and the server has never
  * seen them. Without the guard, someone who opened /details directly would hand over
  * a phone number, spend a code, and land on a loader that immediately bounced them
- * back to question one — having verified for nothing.
+ * back to question one - having verified for nothing.
  */
 
 const FIELD =
@@ -78,7 +78,7 @@ export function DetailsForm() {
   const [sending, setSending] = useState(false);
 
   /* Adults only: someone who answered the age question with the under-18 band is
-     sent away before this form can text them a code — no challenge cookie, and no
+     sent away before this form can text them a code - no challenge cookie, and no
      adult placeholder birth date written to a profile on the strength of an 18+ box
      they would have to tick against their own answer. Doesn't wait for the
      definition like the guard below, because it needs nothing from it: the answer
@@ -98,8 +98,8 @@ export function DetailsForm() {
 
      Waits for the definition, and that guard is load-bearing now that the questions
      are fetched: `quizIncomplete` reports true for a null definition, so running this
-     before it arrives would bounce EVERY visitor — including one who has answered
-     everything — straight back to question one. A definition that fails to load
+     before it arrives would bounce EVERY visitor - including one who has answered
+     everything - straight back to question one. A definition that fails to load
      leaves `quiz` null and this lets the visitor through: the write on `/calculating`
      re-reads it server-side and is the honest place to refuse. */
   const { quiz } = useQuizDefinition();
@@ -177,7 +177,7 @@ export function DetailsForm() {
             stores `first_name` and `last_name` as separate columns and /v1 keeps no
             combined string beside them. Splitting one field on the first space got
             anyone with a two-word given name wrong and left them nothing to correct
-            it from — asking for the two parts the record actually has costs one
+            it from - asking for the two parts the record actually has costs one
             input and removes the guess. Side by side where there is room; a phone
             stacks them like everything else. */}
         <div className="flex flex-col gap-5 sm:flex-row">
@@ -239,14 +239,14 @@ export function DetailsForm() {
          * The design draws the picker inside the field's LEFT edge, with a rule
          * between it and the digits, so the two read as one control rather than a
          * box with a badge parked in it. That is also the order the number is
-         * spoken and dialled in — country first, then the digits — so the eye
+         * spoken and dialled in - country first, then the digits - so the eye
          * crosses the field once instead of jumping back for the code.
          *
          * It takes the slot the other fields give their icon, so this field carries
          * none: the flag says "phone number" more plainly than a chat bubble would.
          *
-         * The three insets are measured off the design — the picker starts 28px in,
-         * the rule lands at 108px, the digits at 120px — and the picker is boxed at
+         * The three insets are measured off the design - the picker starts 28px in,
+         * the rule lands at 108px, the digits at 120px - and the picker is boxed at
          * 80px so the longest code on the list (+971) still clears the rule.
          */}
         <div className="relative">
@@ -268,8 +268,8 @@ export function DetailsForm() {
           {/*
            * What HubSpot's collected-forms script reads as the phone: the full
            * number with its country code, composed exactly as it is sent for the
-           * OTP. The field above only ever holds the local digits — the code lives
-           * in the <select> — so HubSpot used to store a number with no country.
+           * OTP. The field above only ever holds the local digits - the code lives
+           * in the <select> - so HubSpot used to store a number with no country.
            *
            * Off-screen rather than `type="hidden"`, because HubSpot ignores hidden
            * fields. Out of the tab order and the accessibility tree, so nobody
@@ -293,7 +293,7 @@ export function DetailsForm() {
            * Still a native <select>, because the OS picker is the kindest thing on a
            * phone: it scrolls, it takes type-ahead, and it needs no outside-tap or
            * arrow-key handling of ours. The one thing it cannot do is show a different
-           * string open and closed, and the two pull opposite ways — the open list is
+           * string open and closed, and the two pull opposite ways - the open list is
            * only readable with country names on it, while the closed control has to
            * fit inside the phone field next to the digits, where a name will not go.
            * Dial codes alone was the wrong half to keep: a bare column of "+353, +27,
@@ -302,11 +302,11 @@ export function DetailsForm() {
            * So the <select> carries the names and is laid transparent over a display
            * of our own, which shows the flag and the code and takes no taps of its
            * own. `peer` passes the real control's focus and hover through to it, so
-           * the thing that looks like the control still reacts like one — in ink
+           * the thing that looks like the control still reacts like one - in ink
            * rather than a border, which the design does not draw around the picker.
            *
            * Keyed by country, not by calling code: the US and Canada both send +1,
-           * and two <option>s sharing a value both come up selected — the browser
+           * and two <option>s sharing a value both come up selected - the browser
            * then shows whichever is last, so picking the US displayed Canada.
            */}
           <div className="absolute top-1/2 left-7 h-8 w-20 -translate-y-1/2">
@@ -348,8 +348,8 @@ export function DetailsForm() {
 
         {/* In place of the date-of-birth field, which is gone: the funnel no longer
             asks for a birth date at all. The box is the quiz's own "select all
-            that apply" checkbox — 20px on a 4px radius, a 1.61px inset outline at
-            rest, brand fill and tick when on — so it reads as the same control
+            that apply" checkbox - 20px on a 4px radius, a 1.61px inset outline at
+            rest, brand fill and tick when on - so it reads as the same control
             the visitor has just been using. See QuizFlow for why the outline is a
             shadow rather than a border.
 
@@ -410,7 +410,7 @@ export function DetailsForm() {
         {/*
          * Waiting and unavailable are two different things, and the button has
          * to be able to say which. `disabled` alone can only dim, so a slow
-         * network looked exactly like a form that wasn't ready — on the one
+         * network looked exactly like a form that wasn't ready - on the one
          * screen where the request goes out over SMS and can genuinely take a
          * few seconds. So the dim is kept for "can't press this yet" and the
          * sweep carries "pressed, working": full brand purple, with a band of

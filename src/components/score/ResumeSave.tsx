@@ -16,7 +16,7 @@ import { submitAnswers, type SubmitOutcome } from "@/lib/quiz-submit";
  *
  * That combination means one thing: the code was accepted and the write after it
  * wasn't. The answers are still in this tab's sessionStorage and the session is still
- * verified, so the missing step is one POST — this screen makes it, rather than
+ * verified, so the missing step is one POST - this screen makes it, rather than
  * sending the user back to `/quiz/questions` to retype seven answers and collect a
  * fresh code for a number that is already proved.
  *
@@ -26,19 +26,19 @@ import { submitAnswers, type SubmitOutcome } from "@/lib/quiz-submit";
  * A rarer screen than it used to be. The score write once rode along with the OTP
  * verify, so a blip on it stranded someone whose code was already spent and this was
  * the way out. The submit now happens on its own screen, after sign-in, with its own
- * retry — so reaching here means the write failed and the visitor navigated on anyway.
+ * retry - so reaching here means the write failed and the visitor navigated on anyway.
  * Still worth having: the alternative is a score screen with no score and no way
  * forward.
  */
 export function ResumeSave() {
   const router = useRouter();
   const [failed, setFailed] = useState<string | null>(null);
-  /* Not for questions — this screen renders none. It judges whether the stored
+  /* Not for questions - this screen renders none. It judges whether the stored
      answers are still complete, and names the version they go up with. */
   const { quiz, error: definitionError, reload } = useQuizDefinition();
   /* React runs effects twice in development, and this one POSTs. */
   const started = useRef(false);
-  /* The in-flight POST, held across those two passes — same reason as the effect in
+  /* The in-flight POST, held across those two passes - same reason as the effect in
      `Calculating`, which carries the full explanation. */
   const pending = useRef<Promise<SubmitOutcome> | null>(null);
 
@@ -47,12 +47,12 @@ export function ResumeSave() {
       /* Re-render the server component that sent us here; it reads the score back
          off the record, so this is the whole handoff. */
       if (outcome.ok) return router.refresh();
-      // The session went while this tab sat here — back to the number.
+      // The session went while this tab sat here - back to the number.
       if (outcome.reason === "signed-out") {
         return router.replace(STEP_PATHS.details);
       }
       /* The quiz moved. These answers belong to questions that are no longer
-         asked, so retrying the same POST can only fail again — the quiz is the only
+         asked, so retrying the same POST can only fail again - the quiz is the only
          way on, and the session makes it free. */
       if (outcome.reason === "retake") {
         return router.replace(STEP_PATHS["quiz-questions"]);
@@ -121,7 +121,7 @@ export function ResumeSave() {
             type="button"
             onClick={() => {
               setFailed(null);
-              /* No definition means there is nothing to write yet — re-fetch it and
+              /* No definition means there is nothing to write yet - re-fetch it and
                  let the effect start the POST, which it will: `started` is still
                  false in that case. */
               if (quiz === null) return reload();

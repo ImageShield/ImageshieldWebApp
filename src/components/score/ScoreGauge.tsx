@@ -14,7 +14,7 @@ import {
  * A fill, not a band highlight: it runs from 0 up to the score, cut at the 50 and 80
  * boundaries so each stretch can take its own gradient. The whole gauge picks one
  * colour set from the score's band. Both the geometry and the gradients are the
- * app's `ScoreGauge` — its `report` variant, whose angles (211.11° / 136.83° /
+ * app's `ScoreGauge` - its `report` variant, whose angles (211.11° / 136.83° /
  * 45.83° / −28.70°, measured anticlockwise) are the same arc this screen's export
  * was drawn from.
  *
@@ -27,12 +27,12 @@ import {
  * Scale labels, positioned as measured off the design rather than derived.
  *
  * The two middle ticks are pushed radially out of their gaps, but 0 and 100 are not
- * — they sit directly *under* the arc's tips, inside the outer radius. One formula
+ * - they sit directly *under* the arc's tips, inside the outer radius. One formula
  * can't produce both, so these are points.
  *
  * Read off `result_gauge.svg`, which draws the gauge at 189.8px across a 331px
  * frame: each box's centre and baseline, less the arc's own centre, over that
- * scale. Worth knowing before "tidying" them — the four are NOT symmetric, and
+ * scale. Worth knowing before "tidying" them - the four are NOT symmetric, and
  * deliberately so. 0 and 100 mirror each other on their OUTER edges (±113 units),
  * not their centres, so the three-digit 100 sits 10 units nearer the middle than
  * the single-digit 0 does. Centring them as a pair is what pushed 100 out far
@@ -70,10 +70,10 @@ function arcPath(from: number, to: number): string {
  * A rounded end of the fill, as a mask shape.
  *
  * Only the fill's two ends are round; where it crosses a band boundary it must stay
- * square, which `stroke-linecap` cannot express — it rounds both ends of a path. So
+ * square, which `stroke-linecap` cannot express - it rounds both ends of a path. So
  * the tip is a disc dropped on the arc's centre line instead.
  *
- * White, because it is only ever drawn inside a mask — see the note there.
+ * White, because it is only ever drawn inside a mask - see the note there.
  */
 function Tip({ degrees }: { degrees: number }) {
   const at = gaugePoint(degrees);
@@ -99,7 +99,7 @@ export function ScoreGauge({
   level: RiskLevel;
   /** The band string the API served, for the accessible name. Passed rather than
    *  derived from `level` so a screen reader hears the same words a sighted visitor
-   *  reads — the API has four bands and this scale draws three, so `level` alone
+   *  reads - the API has four bands and this scale draws three, so `level` alone
    *  would announce "high risk" for a score the response called "severe risk". */
   band: string;
 }) {
@@ -114,7 +114,7 @@ export function ScoreGauge({
       /* x spans the full outer diameter; y stops just under the lower captions. */
       viewBox="-150 -150 300 240"
       role="img"
-      aria-label={`Likeness Health Score ${value} out of 100 — ${band}`}
+      aria-label={`Likeness Health Score ${value} out of 100 - ${band}`}
       className="w-full"
     >
       <defs>
@@ -148,7 +148,7 @@ export function ScoreGauge({
        * Each band is masked rather than stroked directly, because several of the
        * app's gradient stops are semi-transparent. A rounded tip is a separate disc
        * sitting on the end of the arc (linecap can't round one end only), and two
-       * translucent shapes stacked composite twice — which showed up as a darker,
+       * translucent shapes stacked composite twice - which showed up as a darker,
        * more saturated blob exactly where the tip overlapped the stroke. Painting
        * the gradient once through the union of arc + tips keeps every pixel to a
        * single pass.
@@ -177,7 +177,7 @@ export function ScoreGauge({
         );
       })}
 
-      {/* Slots at the 50 and 80 boundaries, cut through track and fill alike — the
+      {/* Slots at the 50 and 80 boundaries, cut through track and fill alike - the
           app draws the bands as one continuous arc and divides it the same way. */}
       {GAUGE.breaks.map((degrees) => {
         const inner = gaugePoint(degrees, GAUGE.radius - GAUGE.stroke / 2 - 1);
@@ -196,7 +196,7 @@ export function ScoreGauge({
       })}
 
       {/* The numeral sits a little above the arc's centre, where the design puts it. */}
-      {/* 110 units in a 300-unit box, drawn 191px wide — so ~70px on the page, which
+      {/* 110 units in a 300-unit box, drawn 191px wide - so ~70px on the page, which
           is the cap height the export measures. It was 80 units when this gauge was
           drawn at its full 300px; the arc has since been laid out beside the headline
           at two thirds that size, and a numeral that scaled with it would have come
@@ -210,7 +210,7 @@ export function ScoreGauge({
         {value}
       </text>
 
-      {/* 18.85 units, which is 12px at the drawn width — the same arithmetic as the
+      {/* 18.85 units, which is 12px at the drawn width - the same arithmetic as the
           numeral above, and the reason the gauge is pinned to one width: both sizes
           are specified in px, and a viewBox unit only means a fixed number of px
           while the svg is a fixed number of px wide. */}

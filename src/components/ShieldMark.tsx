@@ -6,7 +6,7 @@
  * `ink-muted`, which is how the quiz intro draws it; `monotone` flattens all three
  * to one colour, which is how the loader draws it in brand purple.
  *
- * Native size is 37×36, so scale it by setting a width — the box is not square and
+ * Native size is 37×36, so scale it by setting a width - the box is not square and
  * squashing it shows.
  */
 export function ShieldMark({

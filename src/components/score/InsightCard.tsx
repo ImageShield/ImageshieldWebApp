@@ -2,8 +2,8 @@
  * The lavender card the export uses twice: "Your risk factors" and "Immediate
  * Recommendations".
  *
- * Both are the same object — a heading over a list of rows, each row an outlined
- * glyph in a white disc beside a title and a paragraph — so they are one component
+ * Both are the same object - a heading over a list of rows, each row an outlined
+ * glyph in a white disc beside a title and a paragraph - so they are one component
  * taking different rows rather than two that have to be kept in step.
  *
  * The two differ in exactly one way, and it is deliberate: a risk factor's title is
@@ -14,12 +14,12 @@
  *
  * On a phone that distinction is dropped, because the export drops it: at 403px the
  * column is too narrow for a 20px noun to sit on one line beside an 84px disc, so
- * both cards set their titles at 15px bold and the whole card shrinks with them —
+ * both cards set their titles at 15px bold and the whole card shrinks with them -
  * 59px discs, a 16px radius and a flat ground.
  *
  * That flat ground is the other phone-only change. The card's ground fades out over
- * its last 5% — the export's own gradient, which stops the block ending on a hard
- * edge against the white page — but a 24px fade eats the bottom corners of a 16px
+ * its last 5% - the export's own gradient, which stops the block ending on a hard
+ * edge against the white page - but a 24px fade eats the bottom corners of a 16px
  * radius, so below `sm` the fill is flat and the corners survive.
  */
 export type InsightRow = {
@@ -39,9 +39,9 @@ export function InsightCard({
   heading: string;
   rows: readonly InsightRow[];
   /**
-   * Which of the two cards this is. It used to switch the row titles as well — a
+   * Which of the two cards this is. It used to switch the row titles as well - a
    * factor's title is a noun ("Age") and a recommendation's is a whole instruction,
-   * so the latter was set smaller — but the desktop export gives both the same 20px
+   * so the latter was set smaller - but the desktop export gives both the same 20px
    * SemiBold, so the rows are now one treatment and this selects only the heading's
    * tracking and shade. See the note on the heading.
    */
@@ -50,7 +50,7 @@ export function InsightCard({
   return (
     <section className="rounded-2xl bg-[#F4F2FA] px-5 pt-8 pb-8 sm:rounded-3xl sm:bg-gradient-to-b sm:from-[#F4F2FA] sm:via-[#F4F2FA] sm:via-95% sm:to-transparent sm:px-[92px] sm:pt-11 sm:pb-12">
       {/* The two cards' headings are the same size, weight and leading, and differ
-          in the desktop export by a hair of tracking and an imperceptible shade —
+          in the desktop export by a hair of tracking and an imperceptible shade -
           -1.2px and #212121 on "General recommendations" against 0 and #1A1C1D on
           the risk factors. Both are reproduced rather than averaged, but see the
           note on `emphasis`: this is the likelier of the two to be drift. */}
@@ -66,7 +66,7 @@ export function InsightCard({
         {rows.map(({ id, icon: Icon, title, body, link }) => (
           <li key={id} className="flex items-start gap-3 sm:gap-6">
             {/* The disc is a fixed size and the glyphs inside it are several
-                different sizes, drawn at their own — centring rather than sizing
+                different sizes, drawn at their own - centring rather than sizing
                 them is what keeps a column of discs identical. */}
             <span className="flex size-[59px] shrink-0 items-center justify-center rounded-full bg-canvas text-ink sm:size-[84px]">
               <Icon />
@@ -75,7 +75,7 @@ export function InsightCard({
               {/* One treatment for both cards. The desktop export sets "Keep your
                   social media private" at the same 20px/28px SemiBold #1A1C1D as the
                   risk factors' own titles, and only "Sign up for YouTube's free
-                  likeness detection service" — the longest title on the screen — at
+                  likeness detection service" - the longest title on the screen - at
                   15px on that same 28px leading. A 1.87 line-height ratio against
                   1.4 everywhere else is what a title shrunk to fit looks like, not a
                   second style, so 20px is taken as the rule. */}

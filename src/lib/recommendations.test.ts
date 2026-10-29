@@ -20,7 +20,7 @@ beforeEach(() => {
 afterEach(() => warn.mockRestore());
 
 describe("recommendationsFrom", () => {
-  it("keeps the served list as served — same order, same strings", () => {
+  it("keeps the served list as served - same order, same strings", () => {
     expect(recommendationsFrom([LINKED, UNLINKED])).toStrictEqual([LINKED, UNLINKED]);
     expect(recommendationsFrom([UNLINKED, LINKED])).toStrictEqual([UNLINKED, LINKED]);
     expect(warn).not.toHaveBeenCalled();

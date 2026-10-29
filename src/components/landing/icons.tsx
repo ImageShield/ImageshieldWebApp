@@ -1,6 +1,6 @@
 /**
  * Icons for the landing page, traced from the V1 design export rather than pulled
- * from an icon package — the star in particular is a custom shape that fills its
+ * from an icon package - the star in particular is a custom shape that fills its
  * 20px box edge to edge, which no stock star does.
  *
  * All of them inherit `currentColor` / sizing from the caller.
@@ -17,7 +17,7 @@ export function Star({ className }: IconProps) {
   );
 }
 
-/** Outline shield — the trust markers under the store badges. */
+/** Outline shield - the trust markers under the store badges. */
 export function Shield({ className }: IconProps) {
   return (
     <svg
@@ -35,7 +35,7 @@ export function Shield({ className }: IconProps) {
   );
 }
 
-/** Shared frame for the social row — 24px outline icons, 2px stroke. */
+/** Shared frame for the social row - 24px outline icons, 2px stroke. */
 function SocialIcon({ className, children }: IconProps & { children: React.ReactNode }) {
   return (
     <svg
@@ -98,7 +98,7 @@ export function YouTube({ className }: IconProps) {
   );
 }
 
-/** Hamburger / close for the mobile nav — no equivalent in the desktop design. */
+/** Hamburger / close for the mobile nav - no equivalent in the desktop design. */
 export function Menu({ className }: IconProps) {
   return (
     <SocialIcon className={className}>
@@ -134,7 +134,7 @@ export function ChevronDown({ className }: IconProps) {
 }
 
 /**
- * Tick for the multi-select checkbox — the export's own geometry, so the box is
+ * Tick for the multi-select checkbox - the export's own geometry, so the box is
  * drawn at its native 20px rather than scaled from a 24 grid. The 1.75 stroke is
  * heavier than `SocialIcon`'s 2px reads at this size, where 2px is a hairline.
  */

@@ -1,7 +1,7 @@
 /**
  * Country calling codes for the details form's phone field.
  *
- * `validateContact` will not invent a country code — a bare "5551230000" is thrown
+ * `validateContact` will not invent a country code - a bare "5551230000" is thrown
  * out rather than guessed at, because guessing forks a second user record the app
  * will never find. So the form has to supply one, exactly as the app's LoginScreen
  * does with its country picker.
@@ -289,8 +289,8 @@ export const CALLING_CODES: readonly CallingCode[] = COUNTRIES.map(
 /**
  * What the picker starts on, matching the app's `useState('US')` / `useState('1')`.
  *
- * The picker is keyed by country rather than by code because codes are not unique —
- * the US and Canada both send +1 — and two <option>s with the same value both come
+ * The picker is keyed by country rather than by code because codes are not unique -
+ * the US and Canada both send +1 - and two <option>s with the same value both come
  * up selected.
  */
 export const DEFAULT_COUNTRY = "United States";
@@ -299,15 +299,15 @@ export const DEFAULT_CALLING_CODE = "1";
 /**
  * Joins the picker and the typed digits into the E.164 string the server expects.
  *
- * A value the user typed with its own `+` wins — someone pasting a full
+ * A value the user typed with its own `+` wins - someone pasting a full
  * international number from their contacts shouldn't have it prefixed a second
- * time — and so does a `00` prefix, which is how most of the world writes one
+ * time - and so does a `00` prefix, which is how most of the world writes one
  * by hand. `normalizePhone` on the server settles both into a leading `+`.
  *
  * Anything else is treated as a local number and prefixed as-is. Deliberately no
  * "strip the calling code if the digits happen to start with it": plenty of real
- * local numbers open with their own country's digits — +91 9198…, +1 1… is barred
- * but +44 44… is not — and stripping those silently texts a different person.
+ * local numbers open with their own country's digits - +91 9198…, +1 1… is barred
+ * but +44 44… is not - and stripping those silently texts a different person.
  */
 export function composePhone(callingCode: string, typed: string): string {
   const trimmed = typed.trim();

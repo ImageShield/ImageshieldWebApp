@@ -21,15 +21,15 @@ import { TrackingScripts } from "./TrackingScripts";
  * Rendered once, from the root layout, so the choice and the scripts it allowed
  * carry across every client-side navigation through the quiz.
  *
- * It wraps the page so the banner can come first in the document — the first thing
- * a keyboard or screen-reader visitor meets, though it is drawn at the bottom — and
+ * It wraps the page so the banner can come first in the document - the first thing
+ * a keyboard or screen-reader visitor meets, though it is drawn at the bottom - and
  * the "Cookie settings" link last, where a footer link belongs. Every slot below
  * holds its place whether or not it renders, and `children` is the same element on
  * every render, so the screen itself is never remounted or re-rendered by a change
  * of consent: a half-filled form keeps what was typed.
  *
- * Granting something takes effect at once. Withdrawing it can't — a running script
- * can't be unloaded — so it tells Google first (so nothing more is stored), deletes
+ * Granting something takes effect at once. Withdrawing it can't - a running script
+ * can't be unloaded - so it tells Google first (so nothing more is stored), deletes
  * the cookies, and reloads into a page that never loads them.
  */
 export function ConsentManager({ children }: { children: ReactNode }) {
@@ -39,7 +39,7 @@ export function ConsentManager({ children }: { children: ReactNode }) {
   const showBanner = consent !== PENDING && (consent === null || managing);
 
   const trigger = useRef<HTMLButtonElement>(null);
-  /* Set by whatever closes the banner, and acted on once it has actually gone —
+  /* Set by whatever closes the banner, and acted on once it has actually gone -
      the button that closed it is removed in that render, taking focus with it. */
   const returnFocus = useRef<FocusOptions | null>(null);
 
@@ -62,7 +62,7 @@ export function ConsentManager({ children }: { children: ReactNode }) {
 
   function save(next: Consent, byPointer: boolean) {
     /* A choice from an older consent version reads as no choice at all, so the banner
-       asks again — but whatever its "yes" stored is still on the device. A "no" now
+       asks again - but whatever its "yes" stored is still on the device. A "no" now
        clears that too. Nothing of it is loaded on this page, so no reload. */
     const stale = decided === null && hasStaleConsent();
     const withdrawn = {

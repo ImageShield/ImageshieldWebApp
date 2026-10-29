@@ -45,7 +45,7 @@ export function SessionRefresh() {
             We couldn&apos;t reach the server
           </h1>
           <p className="mt-4 max-w-[420px] text-base text-ink-muted">
-            Your score is saved — this is just this request. Try again in a moment.
+            Your score is saved - this is just this request. Try again in a moment.
           </p>
           <button
             type="button"

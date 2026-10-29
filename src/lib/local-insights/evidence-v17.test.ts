@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { QUESTIONS, REPORT } from "./evidence-v17";
 import { RECOMMENDATIONS_V17 } from "./recommendations-v17";
 
-/* `GET /v1/quiz` on the dev API, 2026-10-13 — the definition the report was published
+/* `GET /v1/quiz` on the dev API, 2026-10-13 - the definition the report was published
    against. A second transcription to check the first: the evidence mapping was copied
    out of the PDF, this was copied out of the API. */
 const V17_OPTIONS: Record<string, readonly string[]> = {

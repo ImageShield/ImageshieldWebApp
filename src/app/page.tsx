@@ -20,7 +20,7 @@ export default function LandingPage() {
 // import { ScoreBanner } from "@/components/landing/ScoreBanner";
 //
 // export const metadata: Metadata = {
-//   title: "ImageShield — What is your Likeness Health Score℠?",
+//   title: "ImageShield - What is your Likeness Health Score℠?",
 //   description:
 //     "Answer a few quick questions and find out how at risk you are of deepfakes, impersonation, and photo misuse.",
 // };
@@ -34,7 +34,7 @@ export default function LandingPage() {
 //  * Concept 1, top to bottom: the pitch over the photograph, the quiz ask on coral,
 //  * the three steps, and what is left of the old footer strip.
 //  *
-//  * `font-sans`: the design is drawn in Plus Jakarta Sans — the app's own face,
+//  * `font-sans`: the design is drawn in Plus Jakarta Sans - the app's own face,
 //  * matched here against the export glyph by glyph.
 //  */
 // export default function LandingPage() {

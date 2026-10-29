@@ -180,7 +180,7 @@ export async function verifyOtp(
   try {
     me = await callAsUser<Me>("GET", "/v1/me");
   } catch {
-    // Non-fatal — lead save below will skip what it can't check.
+    // Non-fatal - lead save below will skip what it can't check.
   }
 
   // Save lead data (name, email, DOB placeholder)

@@ -1,11 +1,11 @@
 import { appQrSvg } from "@/lib/app-qr";
 
 /**
- * GET /api/handoff/qr — the QR on the result screen, as SVG.
+ * GET /api/handoff/qr - the QR on the result screen, as SVG.
  *
  * It encodes `/get-app`, which sends the phone that scans it to its own store. The
- * code is the same for every visitor — it used to carry the visitor's number, read
- * from `GET /v1/me` per request, until that number turned out to have no reader —
+ * code is the same for every visitor - it used to carry the visitor's number, read
+ * from `GET /v1/me` per request, until that number turned out to have no reader -
  * so it is drawn once at build time rather than on every page view.
  *
  * SVG, not PNG: it stays sharp at whatever size the layout ends up using, and it's

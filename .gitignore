@@ -38,7 +38,7 @@ yarn-error.log*
 !.env.example
 # .env.production carries the public API base URL that Next.js inlines at build
 # time. Without it the client bundle has no backend URL and every page breaks.
-# It holds no secrets — server-only vars are injected from the Amplify console.
+# It holds no secrets - server-only vars are injected from the Amplify console.
 !.env.production
 
 # vercel

@@ -2,8 +2,8 @@
  * The quiz versions whose answers have been reviewed for analytics, question by question.
  *
  * Copied from `GET /v1/quiz` on prod (v11) and dev (v17) on 2026-10-22, word for word.
- * An answer is only reported when the live definition still matches its entry here —
- * same position, wording, options and single/multi — so a version edited in place, or
+ * An answer is only reported when the live definition still matches its entry here -
+ * same position, wording, options and single/multi - so a version edited in place, or
  * a new one, reports progress but no answers until it is reviewed and added.
  *
  * `id` is what the dataLayer's `question` carries. It is the backend key except where
@@ -14,7 +14,7 @@
  * of the reports.)
  *
  * `forwardAnswer` is the proposal: whether that question's answer may go to GTM once
- * ANSWER_ANALYTICS_APPROVED is on. Age, gender and prior misuse are false — an age band,
+ * ANSWER_ANALYTICS_APPROVED is on. Age, gender and prior misuse are false - an age band,
  * a gender identity and a history of image abuse need their own legal decision, and the
  * backend already holds them for scoring if aggregate figures are wanted.
  */

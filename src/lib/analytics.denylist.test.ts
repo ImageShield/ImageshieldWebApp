@@ -5,7 +5,7 @@ import { writeFunnel } from "./funnel-state";
 import type { QuizDefinition } from "./quiz";
 
 /* A map edited wrongly: every question marked for forwarding, switch on. The
-   never-forwarded rule must still hold — it is code, not a value in the table. */
+   never-forwarded rule must still hold - it is code, not a value in the table. */
 vi.mock("./analytics-approval", () => ({ ANSWER_ANALYTICS_APPROVED: true }));
 vi.mock("./analytics-quiz-map", () => ({
   QUIZ_ANALYTICS_MAP: {

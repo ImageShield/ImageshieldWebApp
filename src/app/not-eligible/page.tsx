@@ -4,7 +4,7 @@ import { FunnelShell } from "@/components/funnel/FunnelShell";
 import { STEP_PATHS } from "@/lib/funnel";
 
 export const metadata: Metadata = {
-  title: "ImageShield — You need to be 18 or older",
+  title: "ImageShield - You need to be 18 or older",
   description: "The Likeness Health Score is only available to people aged 18 and over.",
 };
 
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
  *
  * The funnel is adults-only, but the band is still on offer because the backend owns
  * the questions. The details and OTP screens send anyone who picked it here instead
- * of letting them ask for a code — see `declaresMinor` — so no code is texted, no
+ * of letting them ask for a code - see `declaresMinor` - so no code is texted, no
  * challenge cookie is set and nothing is written to a profile.
  *
  * Its own page rather than a message inside the details form, because the details

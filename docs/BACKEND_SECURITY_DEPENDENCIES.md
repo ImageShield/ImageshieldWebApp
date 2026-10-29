@@ -1,8 +1,8 @@
 # Backend Security Dependencies
 
 After the API proxy removal, the browser calls the `/v1` backend directly with
-bearer tokens. Security controls that the proxy never owned — and that the
-frontend cannot enforce — now depend entirely on the backend. This checklist
+bearer tokens. Security controls that the proxy never owned - and that the
+frontend cannot enforce - now depend entirely on the backend. This checklist
 names each one so they can be verified against the live API before the next
 production deploy.
 

@@ -90,7 +90,7 @@ function finishWithAge(age: string, signedIn: boolean) {
   }
 }
 
-/* Router pushes, then full-page navigations — which only ever go to /not-eligible. */
+/* Router pushes, then full-page navigations - which only ever go to /not-eligible. */
 const destinations = () => [
   ...nav.push.mock.calls.map(([path]) => path),
   ...leave.mock.calls.map(([mode]) => `/not-eligible (full page, ${mode})`),
@@ -128,7 +128,7 @@ describe("QuizFlow finishing the quiz", () => {
     });
 
     /* `pick` writes the answer and calls `finish()` in the same handler, before a
-       re-render — so the check has to read the store, not the render-time answers. */
+       re-render - so the check has to read the store, not the render-time answers. */
     it("sees the answer just picked when age is the last question", () => {
       quiz.current = { quiz_version: "test-v1", questions: [AGE] };
       nav.search = "q=1";
@@ -154,7 +154,7 @@ describe("QuizFlow finishing the quiz", () => {
 });
 
 describe("QuizFlow Tag Manager events", () => {
-  /* Cleared (undefined) fields left out, as JSON would — see analytics.test.ts. */
+  /* Cleared (undefined) fields left out, as JSON would - see analytics.test.ts. */
   const pushed = () => {
     const raw = (window as Window & { dataLayer?: object[] }).dataLayer;
     return raw && (JSON.parse(JSON.stringify(raw.filter((e) => "event" in e))) as unknown[]);

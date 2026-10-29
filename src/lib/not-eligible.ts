@@ -9,7 +9,7 @@ import { declaresMinor } from "./quiz";
  * Sends someone who answered "Under 18" to /not-eligible, with a full page load.
  *
  * Not `router.push`: a client-side navigation keeps the current document, and with it
- * any tags GTM has already started — Google's own engagement and scroll events would
+ * any tags GTM has already started - Google's own engagement and scroll events would
  * then report the /not-eligible address and its "You need to be 18 or older" title,
  * which says the visitor is a minor. A fresh document is one TrackingScripts can
  * refuse to load anything into (see `trackingBlocked`), whatever the container holds.
@@ -37,7 +37,7 @@ const UNDER_18_KEY = "imageshield.under18";
  * away: the quiz still asks the remaining questions first, and the tags already running
  * would otherwise keep reporting page changes and engagement for them until then. Tells
  * those tags consent is denied (the visitor's stored choice is untouched) and records
- * the fact for this tab, so it outlives the answers — a new quiz version clears those.
+ * the fact for this tab, so it outlives the answers - a new quiz version clears those.
  */
 export function markUnder18(): void {
   /* Once per tab: every later page in it loads no tags, so there's nothing new to tell. */
@@ -59,7 +59,7 @@ function flaggedUnder18(): boolean {
 }
 
 /**
- * Whether this tab belongs to someone who said they are under 18 — by their current
+ * Whether this tab belongs to someone who said they are under 18 - by their current
  * answers, or at any point before. Correcting the age afterwards lets them on through
  * the quiz, as before, but this tab stays untracked: a misclick costs one visit's
  * analytics, a real minor never gets tracked.
@@ -70,7 +70,7 @@ export function saidUnder18(): boolean {
 
 /**
  * Whether this document must load no tracking at all: the /not-eligible page itself,
- * and any page in a tab that has said the visitor is under 18 (`saidUnder18`) — a
+ * and any page in a tab that has said the visitor is under 18 (`saidUnder18`) - a
  * refresh, the back button, or "Back to home" from /not-eligible would otherwise load
  * GTM and HubSpot for them again.
  *

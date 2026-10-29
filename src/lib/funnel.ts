@@ -2,7 +2,7 @@
  * The funnel as data.
  *
  * Designers reorder these screens constantly. Keep the order in this one array and
- * derive next/prev from it — never hardcode "after the quiz comes the details form"
+ * derive next/prev from it - never hardcode "after the quiz comes the details form"
  * in a screen.
  */
 const FUNNEL_STEPS = [
@@ -24,7 +24,7 @@ export const STEP_PATHS: Record<FunnelStep, string> = {
   quiz: "/quiz",
   /* The questions themselves, asked before anything is asked OF the visitor. They
      are read from `GET /v1/quiz` without a session, which that endpoint now allows,
-     because that endpoint is answered only to a session and there is none yet — see
+     because that endpoint is answered only to a session and there is none yet - see
      the note in that file for what the local copy costs and how drift is caught. */
   "quiz-questions": "/quiz/questions",
   /* Full name, email, phone and an 18+ checkbox. Submitting it sends the code. Asked
@@ -70,7 +70,7 @@ export function nextPath(step: FunnelStep): string | null {
   return next ? STEP_PATHS[next] : null;
 }
 
-/** Where a "Back" control on `step` should go — the nearest step the user can act on. */
+/** Where a "Back" control on `step` should go - the nearest step the user can act on. */
 export function backPath(step: FunnelStep): string | null {
   let prev = prevStep(step);
   while (prev && AUTO_ADVANCING.has(prev)) prev = prevStep(prev);

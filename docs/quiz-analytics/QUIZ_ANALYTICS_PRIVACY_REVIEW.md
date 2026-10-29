@@ -44,7 +44,7 @@ Live production quiz `likeness-health-v11` (22 October 2026):
 | `question` | Which question | No (every visitor gets every question) | Browser | GA4 | Google | Funnel analytics | as above | as above | A |
 | `question_number`, `question_count` | Position; number of questions | No | Browser | GA4 | Google | Funnel analytics | as above | as above | A |
 | `answer` for platforms, photo sharing, monitoring | Chosen option(s) | Personal (linked to a GA client ID), low sensitivity | Browser | GA4 | Google | Understand the audience | as above | as above | **B** |
-| `answer` for age, gender, prior misuse | — | — | **Never sent** | — | — | — | — | — | C (not proposed) |
+| `answer` for age, gender, prior misuse | - | - | **Never sent** | - | - | - | - | - | C (not proposed) |
 | GA automatic data: `_ga` client ID cookie, page address and title, referrer, device and browser, approximate location from IP | Standard GA4 collection | Personal (online identifier) | Browser | GA4 (GA4 doesn't store IP addresses) | Google | Analytics | as above | as above | A; covered by the privacy notice's Google Analytics paragraph |
 | GTM diagnostics request (`googletagmanager.com/td`) | Google's own tag diagnostics, seen once in testing | Contents not inspected | Browser | Google | Google | Google's service | Google | Google's terms | Note for review |
 
@@ -73,7 +73,7 @@ Live production quiz `likeness-health-v11` (22 October 2026):
 | `session_id` (random; not a phone, email or device ID) | Pseudonymous | Group one visitor's answers | Backend service only | With the session |
 | `quiz_version`, `consent_version`, `started_at`, `completed_at` | No | Funnel | Analysts, aggregated | 90 days (configurable) |
 | Each committed answer: question key, position, chosen option(s), time | **Yes for age, gender and prior misuse** | Funnel and answer analysis, including visitors who left | Aggregates only for marketing; rows for named analysts | 90 days, then deleted automatically |
-| `account_id` | Personal | Only if decision E is approved | — | — |
+| `account_id` | Personal | Only if decision E is approved | - | - |
 
 **Not stored:** IP address (used only in memory for rate limiting), user agent, name, email, phone.
 
@@ -87,7 +87,7 @@ This covers decision A. It does **not** name quiz answers, so it does not cover 
 
 **Drafted wording for B** (already in the code, shown only after approval):
 
-> Google Tag Manager, and Google Analytics through it: which quiz questions people reach, where they stop, and the options chosen for some questions — which platforms you use, how often photos of you are shared, and how you monitor your likeness. Never your age, gender, experience of misuse, name, email or phone number.
+> Google Tag Manager, and Google Analytics through it: which quiz questions people reach, where they stop, and the options chosen for some questions - which platforms you use, how often photos of you are shared, and how you monitor your likeness. Never your age, gender, experience of misuse, name, email or phone number.
 
 Summary line becomes: "we use Google Tag Manager to see how the quiz is used, including some of your answers, …".
 
