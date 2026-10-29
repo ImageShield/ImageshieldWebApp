@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { ConsentManager } from "@/components/consent/ConsentManager";
+import { FaviconTheme } from "@/components/FaviconTheme";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {/* Here, not per screen: the root layout is never remounted by a client-side
             navigation, so the choice and the scripts it allowed load once. */}
         <ConsentManager>{children}</ConsentManager>
+        <FaviconTheme />
       </body>
     </html>
   );
