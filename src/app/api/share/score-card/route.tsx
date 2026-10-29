@@ -3,8 +3,8 @@ import { join } from "node:path";
 import { renderAsync } from "@resvg/resvg-js";
 import satori from "satori";
 import { bandLabel, riskLevelOf } from "@/lib/score";
-import { loadScore } from "@/lib/score-record";
 import { linkLabel, POSTER_SIZE, SHARE_PITCH, SHARE_URL } from "@/lib/score-share";
+import { verifyShareToken } from "@/lib/share-token";
 import { CENTER, FRAME, HEADROOM, posterGaugeSvg, TICKS } from "./gauge";
 
 /**
@@ -16,9 +16,9 @@ import { CENTER, FRAME, HEADROOM, posterGaugeSvg, TICKS } from "./gauge";
  * Snapchat stories drop the caption and keep only the image, so the mark, the claim
  * and the link all have to be readable INSIDE the picture.
  *
- * Drawn on the server, off the session cookie, so the number in it is the stored
- * score — never one a query string could edit — and so it needs no canvas or
- * screenshot library in the browser.
+ * Authenticity: the score is carried in an HMAC-signed, expiring token issued by
+ * `/api/share/score-token`, which independently reads the score from the backend.
+ * The token is verified here — arbitrary query params are not accepted.
  *
  * Laid out by satori and rasterised by resvg, rather than `next/og`'s
  * `ImageResponse`, which runs the same two steps but hands its SVG to sharp
@@ -94,25 +94,26 @@ function Marked({ text, size, lineHeight }: { text: string; size: number; lineHe
   );
 }
 
-const UNAVAILABLE: Record<string, number> = {
-  "signed-out": 401,
-  stale: 401,
-  missing: 404,
-  outdated: 409,
-  pending: 409,
-  unavailable: 502,
-};
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const token = url.searchParams.get("token");
 
-export async function GET() {
-  const loaded = await loadScore();
-  if (!loaded.ok) {
+  if (!token) {
     return Response.json(
-      { error: "No score to share", reason: loaded.reason },
-      { status: UNAVAILABLE[loaded.reason] ?? 502 },
+      { error: "token query parameter is required" },
+      { status: 400 },
     );
   }
 
-  const { score } = loaded.record;
+  const payload = verifyShareToken(token);
+  if (!payload) {
+    return Response.json(
+      { error: "invalid or expired token" },
+      { status: 403 },
+    );
+  }
+
+  const score = { live: payload.score, band: payload.band };
   const level = riskLevelOf(score);
   const gauge = `data:image/svg+xml;base64,${Buffer.from(
     posterGaugeSvg(score.live, level),
@@ -338,6 +339,8 @@ export async function GET() {
       "Content-Type": "image/png",
       /* The visitor's own score — never let a proxy hold onto it. */
       "Cache-Control": "no-store, private",
+      /* The token is in the URL; keep it out of Referer headers. */
+      "Referrer-Policy": "no-referrer",
     },
   });
 }

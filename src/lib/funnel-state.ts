@@ -35,9 +35,21 @@ export type FunnelState = {
    */
   quizVersion?: string;
   phone?: string;
-  /** Seconds the API says to wait before a resend is allowed, from `/api/otp/start`.
+  /** Seconds the API says to wait before a resend is allowed.
    *  The OTP screen counts this down rather than a fixed local constant. */
   resendAfter?: number;
+  /** The OTP challenge ID from `POST /v1/auth/otp`. Verification is against this,
+   *  not against the phone number. Held client-side since the browser now calls the
+   *  backend directly. */
+  challengeId?: string;
+  /** Contact details collected on the details form, carried through to the verify
+   *  step so the lead can be saved after OTP verification. */
+  contact?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    ageConfirmed: boolean;
+  };
   lastStep?: FunnelStep;
 };
 

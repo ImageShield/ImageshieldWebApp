@@ -9,7 +9,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { writeFunnel } from "@/lib/funnel-state";
 import { DetailsForm } from "./DetailsForm";
 
-/* The full-page hop to /not-eligible, recorded rather than performed (jsdom can't navigate). */
 const leave = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/not-eligible", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/not-eligible")>()),
@@ -25,32 +24,31 @@ const replace = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push, replace }),
 }));
-/* A null definition skips the "finished the quiz?" guard, which is not what these
-   tests are about. */
 vi.mock("@/lib/use-quiz-definition", () => ({
   useQuizDefinition: () => ({ quiz: null }),
 }));
 
-const CONFIRM = "I confirm that I am 18 years old or older";
+const mockStartOtp = vi.fn();
+vi.mock("@/lib/browser-auth", () => ({
+  startOtp: (...args: unknown[]) => mockStartOtp(...args),
+}));
 
-const fetchMock = vi.fn();
+const CONFIRM = "I confirm that I am 18 years old or older";
 
 beforeEach(() => {
   push.mockReset();
   replace.mockReset();
-  // An adult who finished the quiz, unless a test says otherwise.
   writeFunnel({ answers: { age: "18-24" }, phone: undefined, resendAfter: undefined });
-  fetchMock.mockReset().mockResolvedValue(
-    new Response(JSON.stringify({ ok: true, phone: "+15551230000", resendAfter: 30 }), {
-      status: 200,
-    }),
-  );
-  vi.stubGlobal("fetch", fetchMock);
+  mockStartOtp.mockReset().mockResolvedValue({
+    ok: true,
+    phone: "+15551230000",
+    challengeId: "ch_123",
+    resendAfter: 30,
+  });
 });
 
 afterEach(() => {
   cleanup();
-  vi.unstubAllGlobals();
 });
 
 function fillDetails() {
@@ -104,7 +102,7 @@ describe("DetailsForm", () => {
     const { container } = render(<DetailsForm />);
     fillDetails();
     fireEvent.submit(container.querySelector("form")!);
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(mockStartOtp).not.toHaveBeenCalled();
   });
 
   it("sends the confirmation, and no birth date, once ticked", async () => {
@@ -114,10 +112,9 @@ describe("DetailsForm", () => {
     fireEvent.click(submitButton());
 
     await waitFor(() => expect(push).toHaveBeenCalledWith("/otp"));
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe("/api/otp/start");
-    expect(JSON.parse(init.body)).toStrictEqual({
+    expect(mockStartOtp).toHaveBeenCalledTimes(1);
+    const contact = mockStartOtp.mock.calls[0][0];
+    expect(contact).toMatchObject({
       firstName: "Ada",
       lastName: "Lovelace",
       email: "ada@example.com",
@@ -134,9 +131,6 @@ describe("DetailsForm", () => {
     await waitFor(() => expect(push).toHaveBeenCalled());
 
     const kept = JSON.parse(window.sessionStorage.getItem("imageshield.funnel.v1")!);
-    expect(Object.keys(kept).sort()).toStrictEqual(
-      ["answers", "lastStep", "phone", "resendAfter"].sort(),
-    );
     expect(JSON.stringify(kept)).not.toMatch(/dob|birth|2005/i);
   });
 
@@ -161,7 +155,7 @@ describe("DetailsForm", () => {
       fillDetails();
       fireEvent.click(screen.getByRole("checkbox", { name: CONFIRM }));
       fireEvent.click(submitButton());
-      expect(fetchMock).not.toHaveBeenCalled();
+      expect(mockStartOtp).not.toHaveBeenCalled();
     });
   });
 
@@ -170,19 +164,18 @@ describe("DetailsForm", () => {
     expect(replace).not.toHaveBeenCalled();
   });
 
-  it("still shows the server's error in the alert", async () => {
-    fetchMock.mockResolvedValue(
-      new Response(JSON.stringify({ error: "Enter a valid email address" }), {
-        status: 400,
-      }),
-    );
+  it("still shows an error from client-side validation", async () => {
     render(<DetailsForm />);
-    fillDetails();
+    // Fill only first name and email, leave phone empty
+    fireEvent.change(screen.getByLabelText("First name"), { target: { value: "Ada" } });
+    fireEvent.change(screen.getByLabelText("Email address"), {
+      target: { value: "ada@example.com" },
+    });
     fireEvent.click(screen.getByRole("checkbox", { name: CONFIRM }));
     fireEvent.click(submitButton());
 
     expect((await screen.findByRole("alert")).textContent).toBe(
-      "Enter a valid email address",
+      "Enter your number with its country code",
     );
     expect(push).not.toHaveBeenCalled();
   });

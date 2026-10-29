@@ -20,20 +20,22 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push, replace }),
 }));
 
-const fetchMock = vi.fn();
+const mockVerifyOtp = vi.fn();
+const mockResendOtp = vi.fn();
+vi.mock("@/lib/browser-auth", () => ({
+  verifyOtp: (...args: unknown[]) => mockVerifyOtp(...args),
+  resendOtp: (...args: unknown[]) => mockResendOtp(...args),
+}));
 
 beforeEach(() => {
   push.mockReset();
   replace.mockReset();
-  fetchMock
-    .mockReset()
-    .mockResolvedValue(new Response(JSON.stringify({ ok: true }), { status: 200 }));
-  vi.stubGlobal("fetch", fetchMock);
+  mockVerifyOtp.mockReset().mockResolvedValue({ ok: true, quizAlreadyTaken: false });
+  mockResendOtp.mockReset().mockResolvedValue({ ok: true, challengeId: "ch_new", resendAfter: 30 });
 });
 
 afterEach(() => {
   cleanup();
-  vi.unstubAllGlobals();
 });
 
 /* A paste into the first box spreads across the row and verifies by itself. */
@@ -52,39 +54,40 @@ describe("OtpForm", () => {
     expect(leave).toHaveBeenCalledWith("replace");
     expect(replace).not.toHaveBeenCalled();
     enterCode();
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(mockVerifyOtp).not.toHaveBeenCalled();
   });
 
   /* The age changed to under 18 after this screen loaded (another tab, or back and
      forward): the check at verify time catches it, before any code is sent. */
   it("turns away an answer that became under-18 after the screen loaded", () => {
-    writeFunnel({ phone: "+15551230000", answers: { age: "18-24" } });
+    writeFunnel({ phone: "+15551230000", answers: { age: "18-24" }, challengeId: "ch_123" });
     render(<OtpForm />);
     expect(leave).not.toHaveBeenCalled();
     writeFunnel({ answers: { age: "Under 18" } });
     enterCode();
     expect(leave).toHaveBeenCalledWith("replace");
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(mockVerifyOtp).not.toHaveBeenCalled();
   });
 
   it("verifies as before for an adult answer", () => {
-    writeFunnel({ phone: "+15551230000", answers: { age: "18-24" } });
+    writeFunnel({ phone: "+15551230000", answers: { age: "18-24" }, challengeId: "ch_123" });
     render(<OtpForm />);
 
     expect(replace).not.toHaveBeenCalled();
     enterCode();
-    expect(fetchMock).toHaveBeenCalledWith("/api/otp/verify", expect.anything());
+    expect(mockVerifyOtp).toHaveBeenCalledWith(
+      "ch_123",
+      "123456",
+      expect.objectContaining({ ageConfirmed: true }),
+    );
   });
 
   /* /calculating is where the answers in this tab are written. An account that
      already has a score is not sent there: its score is read, not recomputed. */
   describe("after a verified code", () => {
-    const verifiedWith = (body: unknown) =>
-      fetchMock.mockResolvedValue(new Response(JSON.stringify(body), { status: 200 }));
-
     it("takes an account that has taken the quiz straight to its score", async () => {
-      writeFunnel({ phone: "+15551230000", answers: { age: "18-24" } });
-      verifiedWith({ ok: true, quizAlreadyTaken: true });
+      writeFunnel({ phone: "+15551230000", answers: { age: "18-24" }, challengeId: "ch_123" });
+      mockVerifyOtp.mockResolvedValue({ ok: true, quizAlreadyTaken: true });
       render(<OtpForm />);
 
       enterCode();
@@ -94,8 +97,8 @@ describe("OtpForm", () => {
     });
 
     it("sends a new account on to be scored", async () => {
-      writeFunnel({ phone: "+15551230000", answers: { age: "18-24" } });
-      verifiedWith({ ok: true, quizAlreadyTaken: false });
+      writeFunnel({ phone: "+15551230000", answers: { age: "18-24" }, challengeId: "ch_123" });
+      mockVerifyOtp.mockResolvedValue({ ok: true, quizAlreadyTaken: false });
       render(<OtpForm />);
 
       enterCode();

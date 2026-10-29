@@ -14,6 +14,8 @@ import { leaveForNotEligible } from "@/lib/not-eligible";
 import { readFunnel, writeFunnel } from "@/lib/funnel-state";
 import { declaresMinor, quizIncomplete } from "@/lib/quiz";
 import { useQuizDefinition } from "@/lib/use-quiz-definition";
+import { validateContact } from "@/lib/contact";
+import { startOtp } from "@/lib/browser-auth";
 import { ContactCard, Envelope } from "./icons";
 
 /**
@@ -128,38 +130,36 @@ export function DetailsForm() {
     setSending(true);
     setError(null);
     try {
-      const res = await fetch("/api/otp/start", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          firstName,
-          lastName,
-          email,
-          ageConfirmed,
-          phone: composePhone(callingCode, phone),
-        }),
+      const composedPhone = composePhone(callingCode, phone);
+      const parsed = validateContact({
+        firstName,
+        lastName,
+        email,
+        ageConfirmed,
+        phone: composedPhone,
       });
-      const body = (await res.json()) as {
-        phone?: string;
-        resendAfter?: number | null;
-        error?: string;
-      };
+      if (!parsed.ok) {
+        setError(parsed.error);
+        return;
+      }
+      const { contact } = parsed;
 
-      if (!res.ok) {
-        setError(body.error ?? "Something went wrong. Please try again.");
+      const result = await startOtp(contact);
+      if (!result.ok) {
+        setError(result.error);
         return;
       }
 
-      /* The server's normalised copy, not ours — it's the string the code was
-         actually texted to, and the one the OTP screen should show. `resendAfter`
-         is the API's own cooldown, carried through so the OTP screen counts the
-         real wait rather than a number this side invented; the API enforces it
-         either way, and a shorter local guess just produces a 429. Null when the
-         API's timestamp wouldn't parse; it collapses to undefined so the OTP
-         screen falls back to its own figure rather than storing a dead value. */
       writeFunnel({
-        phone: body.phone,
-        resendAfter: body.resendAfter ?? undefined,
+        phone: contact.phone,
+        challengeId: result.challengeId,
+        contact: {
+          firstName: contact.firstName,
+          lastName: contact.lastName,
+          email: contact.email,
+          ageConfirmed: contact.ageConfirmed,
+        },
+        resendAfter: result.resendAfter ?? undefined,
         lastStep: "details",
       });
       router.push(nextPath("details") ?? STEP_PATHS.landing);

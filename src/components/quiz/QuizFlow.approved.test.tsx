@@ -44,7 +44,7 @@ afterEach(() => {
 
 it("sends the final multi-select, in the quiz's order, on Continue", () => {
   nav.search = "q=3";
-  render(<QuizFlow signedIn={false} />);
+  render(<QuizFlow />);
   for (const name of ["TikTok", "Snapchat", "Facebook", "Facebook"]) {
     fireEvent.click(screen.getByRole("button", { name }));
   }
@@ -57,11 +57,11 @@ it("sends the final multi-select, in the quiz's order, on Continue", () => {
 
 it("sends a single answer on tap, and none for the gender question", () => {
   nav.search = "q=4";
-  render(<QuizFlow signedIn={false} />);
+  render(<QuizFlow />);
   fireEvent.click(screen.getByRole("button", { name: "Weekly" }));
   cleanup();
   nav.search = "q=2";
-  render(<QuizFlow signedIn={false} />);
+  render(<QuizFlow />);
   fireEvent.click(screen.getByRole("button", { name: "Non-Binary" }));
   expect(answers()).toStrictEqual([
     { event: "quiz_answer", quiz_version: V, question: "posting_volume", question_number: 4, answer: "Weekly" },

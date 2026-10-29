@@ -25,5 +25,9 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
+    env: {
+      NEXT_PUBLIC_IMAGESHIELD_API_URL: "https://test.imageshield.com",
+      SCORE_SHARE_SECRET: "test-secret-must-be-at-least-32-characters-long-for-validation",
+    },
   },
 });

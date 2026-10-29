@@ -1,7 +1,11 @@
 # Quiz analytics: test plan
 
 **For:** whoever releases or re-checks the quiz analytics.
-**Covers:** the automated tests, the browser checks run on 22 October 2026, the checks still to do after release, and what to do when one fails.
+**Covers:**
+- the automated tests;
+- the browser checks run **locally** (sections 1–2);
+- the production release of 23 October 2026 and the checks run **in production** (section 3);
+- what to do when a check fails.
 
 ## 1. Automated tests
 
@@ -56,7 +60,9 @@ No failures existed before this work, and none were introduced.
 
 **Not covered, because the code doesn't exist:** partial-session ingestion, the backend's retention and deletion, rate limiting of ingestion, and linking anonymous and verified sessions. See section 4.
 
-## 2. Browser checks run on 22 October 2026
+## 2. Browser checks run locally (22–23 October 2026)
+
+Everything in this section ran on this machine against the offline API fixture (test data, test code `123456`), never against production. Production results are in section 3.
 
 **Setup:** a copy of the app run locally against the offline API fixture (`node tools/dev-offline.mjs`, quiz `likeness-health-v17`, test code `123456`), driven by headless Chrome. The **real** `GTM-NM7B8G3X` container was loaded. It has no tags, so nothing was sent to GA4. Test data only.
 
@@ -96,23 +102,45 @@ Each check confirms which document actually loaded (the browser's navigation rec
 
 Both are in the production checks below.
 
-## 3. After release: production checks
+## 3. Production
 
-Run these once the quiz update is live, before relying on any report.
+### 3.1 Release record
 
-1. Live `/quiz` with no consent cookie: no GTM request.
-2. The UK team's Preview checklist (`GTM_GA4_HANDOFF.md`, section 8), steps 1–9.
-3. GA4 DebugView shows `quiz_start`, `quiz_answer`, `quiz_complete` with the right parameters.
-4. Next day: GA4 Realtime or standard reports show the events, with `quiz_version` = `likeness-health-v11`.
-5. If answer collection has been approved and switched on: the banner asks everyone again (consent `v2`), and `answer` appears only on the three approved questions.
-6. **Under-18, in Chrome and in Safari:** handoff section 8, step 8. Expect:
-   - the page reloads at `/not-eligible` with GTM absent (`window.google_tag_manager` undefined in the console);
-   - nothing loads after Back, refresh or "Back to home";
-   - no `collect` request carrying `not-eligible`.
+| | |
+|---|---|
+| Released | 23 October 2026, Amplify job 10 for `main`; build ran 14:03:33–14:06:32 IST, status **SUCCEED** |
+| Commit live | `5b28615`, which deployed `87b590d` (analytics), `2988d50` (under-18 full page load), `3aafdeb` (gender-log cleanup) and `5b28615` (stop tracking at the under-18 answer) on top of `1bb2f76` |
+| Checks before the push | 393 tests, typecheck and lint clean; production build made the Amplify way (Node 22, `npm install`, `npm run build`); the local browser checks in section 2 re-run on that build |
+| Switch | `ANSWER_ANALYTICS_APPROVED = false`; consent version `v1`, so existing visitors were not asked again |
+| Live code check | The served JavaScript contains the under-18 flag and the analytics code; all quiz pages respond; no server errors in the Amplify logs since the deploy |
 
-   In Safari, press Back from `/not-eligible` and check in the console that `window.google_tag_manager` is undefined on the restored quiz page.
+### 3.2 Smoke checks run in production, 23 October 2026
 
-**Until step 3 passes, GA4 delivery is unproven.** A successful push to the `dataLayer` doesn't show that GA4 received anything.
+**Setup:** `https://quiz.imageshield.com` with test answers only, using headless Chromium, and WebKit for the under-18 case.
+- **GTM:** the real container was loaded. It still has no tags, so nothing reached GA4.
+- **HubSpot:** network requests were blocked so test visits didn't reach the HubSpot portal; whether its script was injected was still checked.
+- **imageshield.com:** its analytics requests were blocked during the check.
+
+| # | Check | Result |
+|---|---|---|
+| 1 | Adult quiz, everything accepted | **PASS.** Exactly one each, in order: `quiz_start`, six `quiz_answer` (age, gender, platforms, posting_volume, prior_misuse, monitoring_method), `quiz_complete`. Confirmed against the page's own `dataLayer`. No answer values. Reached the details form |
+| 1a | Details → code → scoring → results, in production | **NOT VERIFIED.** It would send a real text code to a real phone. Passed locally on the production build (section 2) |
+| 2 | No GTM or HubSpot before a choice; after "Reject all"; after withdrawing | **PASS.** No scripts and no requests. After withdrawal the page reloaded with nothing loaded, no further events, and consent stored as `v1.a0.m0` |
+| 2a | Accepting on question 3 | **PASS.** `quiz_start` 3, then answers from 3; nothing from before |
+| 3 | "Under 18" answer, then finishing | **PASS** (Chrome and WebKit). One consent update to denied at the answer, no quiz events after it. `/not-eligible` loaded as a new page with no GTM or HubSpot and no Google or HubSpot requests |
+| 4 | Refresh, Back, "Back to home", direct visit with everything accepted | **PASS** (Chrome and WebKit). Nothing loaded on any of them |
+| 5 | Real Safari back/forward-cache restore | **NOT VERIFIED.** Chrome and WebKit both reloaded the page on Back instead of restoring it, so the reload guard never had to act. It is unit-tested |
+| 6 | imageshield.com unaffected | **PASS.** 200, no page errors; its own GTM and GA4 configuration still load; no quiz events |
+| 7 | GA4 receives the events | **NOT VERIFIED.** The container has no tags; this waits for the UK team's DebugView check |
+
+### 3.3 Still to do in production
+
+1. **The UK team's Preview checklist** (`GTM_GA4_HANDOFF.md`, section 8, steps 1–9), using a new private window for each step.
+2. **GA4 DebugView** shows `quiz_start`, `quiz_answer`, `quiz_complete` with the right parameters. **Until this passes, GA4 delivery is unproven.** A successful push to the `dataLayer` doesn't show that GA4 received anything.
+3. **Next day:** GA4 Realtime or standard reports show the events, with `quiz_version` = `likeness-health-v11`.
+4. **Real Safari** (check 5): go through as under-18, press Back from `/not-eligible`, and check in the console that `window.google_tag_manager` is `undefined` on the quiz page.
+5. **Once GA4 tags exist:** in the browser's Network panel, filter `collect` during an under-18 run. Expect no request carrying `not-eligible`.
+6. **If answer collection is ever approved and switched on:** the banner asks everyone again (consent `v2`), and `answer` appears only on the three approved questions.
 
 ## 4. Partial sessions: tests needed when built
 

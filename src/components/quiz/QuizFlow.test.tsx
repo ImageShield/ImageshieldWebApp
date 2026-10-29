@@ -56,12 +56,18 @@ const MULTI_LAST: QuizDefinition = {
   ],
 };
 
+const mockHasSession = vi.fn(() => false);
+vi.mock("@/lib/browser-session", () => ({
+  hasSession: () => mockHasSession(),
+}));
+
 const fetchMock = vi.fn();
 
 beforeEach(() => {
   nav.push.mockReset();
   nav.search = "q=2";
   quiz.current = SINGLE_LAST;
+  mockHasSession.mockReset().mockReturnValue(false);
   fetchMock.mockReset();
   vi.stubGlobal("fetch", fetchMock);
 });
@@ -73,8 +79,9 @@ afterEach(() => {
 
 /** Answers the age question earlier in the run, then the last question. */
 function finishWithAge(age: string, signedIn: boolean) {
+  mockHasSession.mockReturnValue(signedIn);
   writeFunnel({ quizVersion: quiz.current!.quiz_version, answers: { age } });
-  render(<QuizFlow signedIn={signedIn} />);
+  render(<QuizFlow />);
   if (quiz.current === MULTI_LAST) {
     fireEvent.click(screen.getByRole("button", { name: "TikTok" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
@@ -126,7 +133,8 @@ describe("QuizFlow finishing the quiz", () => {
       quiz.current = { quiz_version: "test-v1", questions: [AGE] };
       nav.search = "q=1";
       writeFunnel({ quizVersion: "test-v1", answers: {} });
-      render(<QuizFlow signedIn />);
+      mockHasSession.mockReturnValue(true);
+      render(<QuizFlow />);
       fireEvent.click(screen.getByRole("button", { name: "Under 18" }));
       expect(destinations()).toStrictEqual(["/not-eligible (full page, push)"]);
     });
@@ -179,11 +187,11 @@ describe("QuizFlow Tag Manager events", () => {
   it("starts once, on the first question, however many questions follow", () => {
     nav.search = "q=1";
     writeFunnel({ quizVersion: v, answers: {} });
-    const { rerender } = render(<QuizFlow signedIn={false} />);
+    const { rerender } = render(<QuizFlow />);
     fireEvent.click(screen.getByRole("button", { name: "25-34" }));
     nav.search = "q=2";
-    rerender(<QuizFlow signedIn={false} />);
-    rerender(<QuizFlow signedIn={false} />);
+    rerender(<QuizFlow />);
+    rerender(<QuizFlow />);
     fireEvent.click(screen.getByRole("button", { name: "Female" }));
     expect(pushed()).toStrictEqual([start(1), answer("age", 1), answer("gender", 2), complete]);
   });
@@ -191,7 +199,7 @@ describe("QuizFlow Tag Manager events", () => {
   it("pushes a multi-select once, on Continue, not on each tick", () => {
     quiz.current = MULTI_LAST;
     writeFunnel({ quizVersion: v, answers: { age: "18-24" } });
-    render(<QuizFlow signedIn={false} />);
+    render(<QuizFlow />);
     fireEvent.click(screen.getByRole("button", { name: "TikTok" }));
     fireEvent.click(screen.getByRole("button", { name: "Instagram" }));
     fireEvent.click(screen.getByRole("button", { name: "TikTok" }));
@@ -205,7 +213,7 @@ describe("QuizFlow Tag Manager events", () => {
   it("never carries an answer value", () => {
     nav.search = "q=1";
     writeFunnel({ quizVersion: v, answers: {} });
-    const { unmount } = render(<QuizFlow signedIn={false} />);
+    const { unmount } = render(<QuizFlow />);
     fireEvent.click(screen.getByRole("button", { name: "25-34" }));
     unmount();
     nav.search = "q=2";
@@ -228,7 +236,7 @@ describe("QuizFlow Tag Manager events", () => {
   it("denies consent the moment Under 18 is picked, and carries on to question 2", () => {
     nav.search = "q=1";
     writeFunnel({ quizVersion: v, answers: {} });
-    render(<QuizFlow signedIn={false} />);
+    render(<QuizFlow />);
     fireEvent.click(screen.getByRole("button", { name: "Under 18" }));
     expect(destinations()).toStrictEqual(["/quiz/questions?q=2"]);
     const raw = (window as Window & { dataLayer?: unknown[] }).dataLayer ?? [];
@@ -256,7 +264,7 @@ describe("QuizFlow Tag Manager events", () => {
   it("runs the quiz the same once analytics is withdrawn mid-quiz", () => {
     nav.search = "q=1";
     writeFunnel({ quizVersion: v, answers: {} });
-    const { unmount } = render(<QuizFlow signedIn={false} />);
+    const { unmount } = render(<QuizFlow />);
     fireEvent.click(screen.getByRole("button", { name: "25-34" }));
     unmount();
     writeConsent({ analytics: false, marketing: false });

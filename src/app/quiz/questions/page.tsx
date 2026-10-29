@@ -2,37 +2,24 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { SiteHeader } from "@/components/landing/SiteHeader";
 import { QuizFlow } from "@/components/quiz/QuizFlow";
-import { readSession } from "@/lib/session";
 
 export const metadata: Metadata = {
   title: "ImageShield — Likeness Health Quiz",
 };
 
 /**
- * The questions themselves — one screen each, all served from this route with the
- * step in `?q=`, so the browser's own back button walks the quiz backwards.
+ * The questions themselves — one screen each, all served from this route with
+ * the step in `?q=`, so the browser's own back button walks the quiz backwards.
  *
- * `QuizFlow` reads that query string, which opts it out of prerendering; the
- * Suspense boundary keeps the header and the canvas in the static HTML so the
- * screen doesn't arrive blank.
- *
- * Open to anyone. Nothing is asked of the visitor before this point and nothing is
- * sent anywhere from it — the answers go into sessionStorage and are submitted after
- * the phone number is verified. The questions come from `GET /v1/quiz`, fetched
- * through this app's own `/api/quiz-definition` because the API host is server-only
- * config and the browser has no CORS grant to call it directly.
- *
- * The one thing this page reads a cookie for is `signedIn`, and it is not a gate:
- * see the note where `QuizFlow` uses it.
+ * `signedIn` is now determined client-side by QuizFlow reading from the
+ * browser session store, since tokens are no longer in httpOnly cookies.
  */
-export default async function QuizQuestionsPage() {
-  const signedIn = (await readSession()) !== null;
-
+export default function QuizQuestionsPage() {
   return (
     <main className="relative min-h-[100dvh] bg-canvas-tint pt-[65px]">
       <SiteHeader />
       <Suspense>
-        <QuizFlow signedIn={signedIn} />
+        <QuizFlow />
       </Suspense>
     </main>
   );

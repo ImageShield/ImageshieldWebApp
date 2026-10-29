@@ -2,7 +2,7 @@
 
 **For:** the UK analytics team setting up Google Tag Manager and Google Analytics 4 for the ImageShield quiz at `https://quiz.imageshield.com`.
 **Container:** `GTM-NM7B8G3X`
-**Prepared:** 23 October 2026 (updated the same day for the under-18 safeguard)
+**Prepared:** 23 October 2026. Updated the same day after the quiz update went live in production (commit `5b28615`).
 
 This document should be enough on its own: you shouldn't have to guess an event name, a variable key or a setting. Where a step depends on another team, it says so.
 
@@ -12,14 +12,14 @@ A note on the separator character. Multi-select answers are joined with a vertic
 
 | Item | Status | Owner |
 |---|---|---|
-| The quiz pushes `quiz_start`, `quiz_answer`, `quiz_complete` | **Built, not yet released.** The live site doesn't push them yet | ImageShield dev team |
+| The quiz pushes `quiz_start`, `quiz_answer`, `quiz_complete` | **Live since 23 October 2026.** Checked on the live site that day: one event each, in order, only after analytics consent, with no answer values | Done |
 | Answer values (`answer`) | **Switched off** until legal approves. Until then `answer` is always empty | Legal, then the dev team |
-| GTM loads only after a visitor accepts analytics cookies | **Live.** Checked on the live site on 22 October | Done |
-| Container `GTM-NM7B8G3X` | **Published version has no tags, triggers or GA4 ID** (read from the public container file on 22 October). Nothing reaches GA4 today | You |
+| GTM loads only after a visitor accepts analytics cookies | **Live.** Re-checked on the live site on 23 October, including after "Reject all" and after withdrawing | Done |
+| Container `GTM-NM7B8G3X` | **Published version has no tags, triggers or GA4 ID** (read from the public container file on 22 and 23 October). Nothing reaches GA4 today. **GA4 delivery is unverified** until you confirm the events in DebugView (section 8, step 4) | You |
 | GA4 property for the quiz | **Not created** (see 5.4) | You |
-| Under-18 safeguard in the quiz | **Built and tested locally, not yet released.** Once released, under-18 visitors reach `/not-eligible` with a full page load, and GTM and HubSpot never load on that page or anywhere else in their browser tab | ImageShield dev team: release |
+| Under-18 safeguard in the quiz | **Live since 23 October 2026, checked on the live site.** Tracking stops at the "Under 18" answer, and `/not-eligible` loads as a new page with no GTM or HubSpot, including after refresh, Back or "Back to home". Not yet checked in real Safari (section 8, step 8) | Done |
 
-You can build everything now. The quiz events will only appear in GTM Preview once the dev team confirms the release. **Do not publish the container** until section 8 passes.
+The quiz events are live, so you can build and test everything in GTM Preview now. **Do not publish the container** until section 8 passes.
 
 ## 2. The three events
 
@@ -274,7 +274,9 @@ Create a **new GA4 property** for the quiz:
 
 ## 8. Testing checklist
 
-Use GTM Preview, after the dev team confirms the release. Use test answers only: an adult age (except in step 8) and no real personal details.
+Use GTM Preview; the quiz update has been live since 23 October. Use test answers only: an adult age (except in step 8) and no real personal details.
+
+**Use a new private window for each step.** After an "Under 18" answer, that browser tab stays untracked for the rest of the visit, even if the age is changed back. That is deliberate. So an adult run in the same window afterwards will show no quiz events.
 
 1. **Connect.** GTM → Preview → `https://quiz.imageshield.com/quiz`. Tag Assistant shows "not connected" until you click **Accept all** on the cookie banner in the new tab; then it connects. If it times out, start Preview again. Under **Consent**, expect `analytics_storage` = granted.
 2. **Full run.** Click "Let's begin", answer all six questions with an adult age, tick two platforms.
@@ -303,12 +305,12 @@ Then **Submit → Publish**. Realtime shows events within minutes; standard repo
 
 | Symptom | Likely cause |
 |---|---|
-| Tag Assistant won't connect | Cookies not accepted in the preview tab; an ad blocker; or the quiz release isn't live |
-| No quiz events in Preview | Quiz release not live, or analytics declined |
+| Tag Assistant won't connect | Cookies not accepted in the preview tab, or an ad blocker |
+| No quiz events in Preview | Analytics declined, or "Under 18" was answered earlier in that tab. Start again in a new private window |
 | Trigger never fires | The regex was pasted with backslashes; retype it as in 5.5 |
 | `answer` filled on `age`, `gender` or `prior_misuse` | Must never happen. Pause the GA4 Event tag and report it to the dev team immediately |
 | Page views doubled on imageshield.com | A hostname condition is missing |
-| `not-eligible` in any stored event, or Tag Assistant connected on `/not-eligible` | Must not happen once the quiz update is live. Pause the GA4 tags and report it to the dev team |
+| `not-eligible` in any stored event, or Tag Assistant connected on `/not-eligible` | Must not happen; the quiz update is live. Pause the GA4 tags and report it to the dev team |
 
 **When reporting a problem, send:**
 - the exact error text or a screenshot;

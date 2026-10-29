@@ -29,11 +29,60 @@ vi.mock("@/lib/use-quiz-definition", () => ({
   useQuizDefinition: () => ({ quiz: QUIZ, error: null, reload: vi.fn() }),
 }));
 
-/* The real `submitAnswers` runs; only the network is stubbed, answering the way
-   `/api/quiz` does. */
+vi.mock("@/lib/browser-session", () => ({
+  hasSession: vi.fn(() => true),
+  isAccessExpired: vi.fn(() => false),
+  accessToken: vi.fn(() => "test-token"),
+  refreshToken: vi.fn(() => "test-refresh"),
+  adoptTokens: vi.fn(),
+  clearSession: vi.fn(),
+}));
+
+/**
+ * Mock fetch that routes by URL path.
+ *
+ * `submitAnswers` now calls the backend directly through multiple endpoints:
+ *   1. GET /v1/me/score — to check if a score already exists
+ *   2. GET /v1/quiz — to read the live definition for answer validation
+ *   3. POST /v1/quiz/responses — to submit the answers
+ */
 const fetchMock = vi.fn();
-const reply = (status: number, body: unknown) =>
-  fetchMock.mockResolvedValue(new Response(JSON.stringify(body), { status }));
+
+function setupApiMocks(opts: { scoreStatus?: number; quizDef?: unknown; submitStatus?: number; submitBody?: unknown }) {
+  fetchMock.mockImplementation(async (url: string | URL | Request, init?: RequestInit) => {
+    const urlStr = typeof url === "string" ? url : url instanceof URL ? url.toString() : url.url;
+    const method = init?.method ?? "GET";
+
+    if (method === "GET" && urlStr.includes("/v1/me/score")) {
+      if (opts.scoreStatus === 200) {
+        return new Response(JSON.stringify({ score: { live: 42 } }), { status: 200 });
+      }
+      // Default: no score yet (404 NO_QUIZ_RESPONSE)
+      return new Response(
+        JSON.stringify({ error: "NO_QUIZ_RESPONSE", message: "no quiz response yet" }),
+        { status: 404 },
+      );
+    }
+
+    if (method === "GET" && urlStr.includes("/v1/me") && !urlStr.includes("/v1/me/")) {
+      // Fallback for /v1/me (used in hasScoreOnRecord when 404)
+      return new Response(JSON.stringify({ score: null }), { status: 200 });
+    }
+
+    if (method === "GET" && urlStr.includes("/v1/quiz")) {
+      return new Response(JSON.stringify(opts.quizDef ?? QUIZ), { status: 200 });
+    }
+
+    if (method === "POST" && urlStr.includes("/v1/quiz/responses")) {
+      return new Response(
+        JSON.stringify(opts.submitBody ?? { ok: true }),
+        { status: opts.submitStatus ?? 200 },
+      );
+    }
+
+    return new Response(JSON.stringify({ error: "NOT_FOUND", message: "unexpected" }), { status: 404 });
+  });
+}
 
 beforeEach(() => {
   nav.push.mockReset();
@@ -51,25 +100,24 @@ afterEach(() => {
 const settled = { timeout: 3000 };
 
 describe("Calculating", () => {
-  /* /calculating opened by hand, signed in, with an under-18 answer in the tab: the
-     screen sends the answers and the API is what refuses them. */
+  /* /calculating opened by hand, signed in, with an under-18 answer in the tab:
+     `submitAnswers` catches it client-side via `declaresMinor()` and returns
+     not-eligible, which the Calculating screen redirects to /not-eligible. */
   it("follows an under-18 refusal to /not-eligible", async () => {
     writeFunnel({ quizVersion: "test-v1", answers: { age: "Under 18", gender: "Female" } });
-    reply(403, { error: "Only 18 and over.", notEligible: true });
+    setupApiMocks({});
 
     render(<Calculating />);
 
     await waitFor(() => expect(leave).toHaveBeenCalledWith("replace"), settled);
     expect(nav.replace).not.toHaveBeenCalled();
-    expect(JSON.parse(fetchMock.mock.calls[0][1].body).answers.age).toBe("Under 18");
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(nav.push).not.toHaveBeenCalled(); // never on to the score
-    expect(screen.queryByText(/couldn.t finish scoring/i)).toBeNull(); // no retry panel
+    expect(nav.push).not.toHaveBeenCalled();
+    expect(screen.queryByText(/couldn.t finish scoring/i)).toBeNull();
   });
 
   it("still goes on to the score for an adult answer", async () => {
     writeFunnel({ quizVersion: "test-v1", answers: { age: "18-24", gender: "Female" } });
-    reply(200, { ok: true });
+    setupApiMocks({});
 
     render(<Calculating />);
 

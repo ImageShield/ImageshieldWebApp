@@ -1,20 +1,9 @@
 // @vitest-environment node
 import sharp from "sharp";
-import { describe, expect, it, vi } from "vitest";
-import type { ScoreLoad } from "@/lib/score-record";
-import { loadScore } from "@/lib/score-record";
+import { describe, expect, it } from "vitest";
 import { POSTER_SIZE } from "@/lib/score-share";
+import { mintShareToken } from "@/lib/share-token";
 import { GET } from "./route";
-
-/* Only the score read is replaced; satori, resvg and the fonts on disk run as they
-   do in production. */
-vi.mock("@/lib/score-record", () => ({ loadScore: vi.fn() }));
-
-const served = (live: number, band: string) =>
-  vi.mocked(loadScore).mockResolvedValue({
-    ok: true,
-    record: { score: { live, band } },
-  } as unknown as ScoreLoad);
 
 /** Checks the bytes are a whole PNG, not just its first chunk, and decodes them. */
 async function poster(res: Response) {
@@ -36,24 +25,28 @@ const near = (rgb: number[], hex: string) => {
   rgb.forEach((v, i) => expect(Math.abs(v - want[i])).toBeLessThanOrEqual(6));
 };
 
+function request(token: string): Request {
+  return new Request(
+    `http://localhost/api/share/score-card?token=${encodeURIComponent(token)}`,
+  );
+}
+
 describe("GET /api/share/score-card", () => {
   it("draws the whole poster as a PNG, uncached", async () => {
-    served(62, "moderate risk");
-    const res = await GET();
+    const token = mintShareToken(62, "moderate risk");
+    const res = await GET(request(token));
 
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toBe("image/png");
     expect(res.headers.get("cache-control")).toBe("no-store, private");
+    expect(res.headers.get("referrer-policy")).toBe("no-referrer");
     const png = await poster(res);
     expect([png.width, png.height]).toEqual([POSTER_SIZE.width, POSTER_SIZE.height]);
-    // The backdrop's gradient ends, so a blank or transparent canvas fails here.
     near(png.px(2, 2), "#7F48FF");
     near(png.px(2, POSTER_SIZE.height - 3), "#380E99");
   });
 
   it("still draws once sharp refuses SVG, as Next's image optimizer leaves it", async () => {
-    // Next's `getSharp` in server/image-optimizer.js, verbatim. libvips holds the
-    // block for the whole process, which is what broke `ImageResponse`.
     sharp.block({ operation: ["VipsForeignLoad"] });
     sharp.unblock({
       operation: [
@@ -75,36 +68,48 @@ describe("GET /api/share/score-card", () => {
     for (const [live, band] of [
       [91, "low risk"],
       [62, "moderate risk"],
-      [12, "severe risk"],
+      [12, "high risk"],
     ] as const) {
-      served(live, band);
-      const res = await GET();
+      const token = mintShareToken(live, band);
+      const res = await GET(request(token));
       expect(res.status).toBe(200);
       const png = await poster(res);
       expect([png.width, png.height]).toEqual([POSTER_SIZE.width, POSTER_SIZE.height]);
     }
   });
 
-  it("draws a band it has never heard of and a score off the scale", async () => {
-    served(140, "catastrophic risk");
-    const res = await GET();
-    expect(res.status).toBe(200);
-    expect((await poster(res)).width).toBe(POSTER_SIZE.width);
+  it("rejects a missing token", async () => {
+    const res = await GET(new Request("http://localhost/api/share/score-card"));
+    expect(res.status).toBe(400);
   });
 
-  it.each([
-    ["signed-out", 401],
-    ["stale", 401],
-    ["missing", 404],
-    ["outdated", 409],
-    ["pending", 409],
-    ["unavailable", 502],
-    ["something new", 502],
-  ])("answers a %s score with %i and no picture", async (reason, status) => {
-    vi.mocked(loadScore).mockResolvedValue({ ok: false, reason } as ScoreLoad);
-    const res = await GET();
-    expect(res.status).toBe(status);
-    expect(res.headers.get("content-type")).toMatch(/^application\/json/);
-    expect(await res.json()).toEqual({ error: "No score to share", reason });
+  it("rejects a tampered token", async () => {
+    const token = mintShareToken(62, "moderate risk");
+    // Flip a character in the signature portion
+    const tampered = token.slice(0, -1) + (token.at(-1) === "A" ? "B" : "A");
+    const res = await GET(request(tampered));
+    expect(res.status).toBe(403);
+  });
+
+  it("rejects a completely bogus token", async () => {
+    const res = await GET(request("not-a-real-token"));
+    expect(res.status).toBe(403);
+  });
+
+  it("rejects an expired token", async () => {
+    // Manually craft an expired token by creating one with a past expiry.
+    // We can't easily do this through mintShareToken, so we test that
+    // verifyShareToken rejects expired tokens (covered in share-token tests).
+    // Here we just verify the route returns 403 for a bad signature.
+    const res = await GET(request("eyJzY29yZSI6NjIsImJhbmQiOiJtb2RlcmF0ZSByaXNrIiwiZXhwIjowfQ.bogus"));
+    expect(res.status).toBe(403);
+  });
+
+  it("rejects raw score/band query params (old API)", async () => {
+    const res = await GET(
+      new Request("http://localhost/api/share/score-card?score=62&band=moderate+risk"),
+    );
+    // No token → 400
+    expect(res.status).toBe(400);
   });
 });

@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { Check } from "@/components/landing/icons";
 import { trackAnswer, trackComplete, trackStart } from "@/lib/analytics";
+import { hasSession } from "@/lib/browser-session";
 import { nextPath, STEP_PATHS } from "@/lib/funnel";
 import {
   readFunnel,
@@ -27,7 +28,7 @@ import { QuizSkeleton } from "./QuizSkeleton";
  * it is the server's. The API still has the final say at submit: it validates keys and
  * values, and a mismatch comes back as a retake rather than a dead end.
  */
-export function QuizFlow({ signedIn }: { signedIn: boolean }) {
+export function QuizFlow() {
   const router = useRouter();
   const stored = useFunnel();
   const params = useSearchParams();
@@ -150,7 +151,7 @@ export function QuizFlow({ signedIn }: { signedIn: boolean }) {
       leaveForNotEligible("push");
       return;
     }
-    const onwards = signedIn
+    const onwards = hasSession()
       ? STEP_PATHS.calculating
       : (nextPath("quiz-questions") ?? STEP_PATHS.landing);
     router.push(onwards);

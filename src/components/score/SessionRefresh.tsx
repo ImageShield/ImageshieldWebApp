@@ -4,25 +4,16 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ShieldMark } from "@/components/ShieldMark";
 import { STEP_PATHS } from "@/lib/funnel";
+import { refreshSession } from "@/lib/api-client";
 
 /**
  * Rotates a spent access token and re-renders the page behind it.
  *
- * The result screen renders on the server, and a server component cannot set a
- * cookie — HTTP has no way to send one once a response has started streaming. /v1
- * refresh tokens ROTATE, so a render that refreshed would spend the refresh token
- * and have nowhere to put its replacement, turning a live session into a dead one.
- *
- * So the render stops at "this needs refreshing" and this component finishes the job
- * from the browser, where the call lands in a route handler that can write the new
- * pair. It is a beat on screen, not a screen: a visitor only ever sees it when they
- * come back after their access token ran out.
+ * Calls the backend directly via the browser-side API client.
  */
 export function SessionRefresh() {
   const router = useRouter();
   const [failed, setFailed] = useState(false);
-  /* React runs effects twice in development, and this one spends a refresh token —
-     the second call would present a token the first had already rotated away. */
   const started = useRef(false);
 
   useEffect(() => {
@@ -30,13 +21,11 @@ export function SessionRefresh() {
     started.current = true;
 
     let live = true;
-    fetch("/api/session/refresh", { method: "POST" })
-      .then((res) => {
+    refreshSession()
+      .then((ok) => {
         if (!live) return;
-        if (res.ok) return router.refresh();
-        // 401 is the session genuinely gone; anything else is worth offering a retry.
-        if (res.status === 401) return router.replace(STEP_PATHS.details);
-        setFailed(true);
+        if (ok) return router.refresh();
+        return router.replace(STEP_PATHS.details);
       })
       .catch(() => {
         if (live) setFailed(true);

@@ -1,18 +1,23 @@
 # Quiz analytics: implementation
 
 **Scope:** quiz funnel analytics for `quiz.imageshield.com`. Covers what the app emits, how each rule is enforced, and the specification for collecting partial answers from visitors who abandon before verifying.
-**Status, 22 October 2026:** the web app changes are built and tested locally, and nothing is committed or deployed. Answer-level collection is switched off until legal approves it. The partial-answer backend is specified but not built: it needs the backend repository, which isn't available in this workspace.
+**Status, 23 October 2026:**
+- **Deployed to production on 23 October 2026,** as commit `5b28615` (Amplify job 10). The release contains `87b590d`, `2988d50`, `3aafdeb` and `5b28615`; production results are in the test plan, section 3.
+- **Answer-level collection is switched off** (`ANSWER_ANALYTICS_APPROVED = false`) until legal approves it.
+- **GA4 delivery is unverified.** The GTM container has no tags yet, and nothing has been confirmed in DebugView.
+- **The partial-answer backend is specified but not built.** It needs the backend repository, which isn't available in this workspace.
 
 ## 1. What runs today, and what changes
 
-| Area | Live in production (build `1bb2f76`, 16 Oct 2026) | After this change |
+| Area | Before this release (build `1bb2f76`, 16 Oct 2026) | Live since 23 Oct 2026 (`5b28615`) |
 |---|---|---|
 | GTM loading | Only after analytics consent (checked on the live site, 22 Oct) | Unchanged |
-| GTM container `GTM-NM7B8G3X` | Published version has no tags, triggers or GA4 ID (read from the public `gtm.js`, 22 Oct) | Unchanged; the UK team configures it |
+| GTM container `GTM-NM7B8G3X` | Published version has no tags, triggers or GA4 ID (read from the public `gtm.js`, 22 Oct) | Unchanged, re-checked 23 Oct. The UK team configures it |
 | Quiz events | None | `quiz_start`, `quiz_answer`, `quiz_complete` |
 | Answer values in events | None | None while `ANSWER_ANALYTICS_APPROVED` is `false`. After approval: three questions |
 | Consent version | `v1` | `v1` while the switch is off; `v2` (everyone asked again) when it's on |
-| Partial answers stored server-side | No. Answers stay in the tab until the code is verified | Not built; specified in section 7 |
+| Under-18 visitors | In-app hop to `/not-eligible`; any running GTM stayed loaded | Tracking stops at the answer; `/not-eligible` loads as a new page with no GTM or HubSpot (section 5) |
+| Partial answers stored server-side | No. Answers stay in the tab until the code is verified | Still no; specified in section 7, not built |
 
 ## 2. Quiz versions in use
 
@@ -155,7 +160,7 @@ With the switch off, this only affects a damaged consent cookie. Tests cover rej
 
 ### The under-18 page: kept free of trackers
 
-Status: **committed and tested on a production build; not yet deployed.**
+Status: **implemented and deployed on 23 October 2026 (`2988d50` and `5b28615`), and verified in production** (test plan, section 3). Real Safari restoring a page from its back/forward cache is not verified.
 
 **The problem it solves.** A GTM container already running can't be unloaded. Google's own automatic events (`user_engagement`, `scroll`) record the current page address and title. After an in-app hop to `/not-eligible`, both would say the visitor is under 18.
 

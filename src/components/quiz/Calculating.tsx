@@ -78,9 +78,9 @@ export function Calculating() {
      in well under a second, and a loader that appears and vanishes inside 200ms reads
      as a glitch rather than as progress. */
   const run = useCallback(
-    (quizVersion: string) =>
+    () =>
       Promise.all([
-        submitAnswers(quizVersion),
+        submitAnswers(),
         new Promise((done) => setTimeout(done, MIN_HOLD_MS)),
       ]).then(([outcome]) => outcome),
     [],
@@ -120,7 +120,7 @@ export function Calculating() {
         return;
       }
 
-      pending.current = run(quiz.quiz_version);
+      pending.current = run();
     }
 
     pending.current?.then((outcome) => {
@@ -161,7 +161,7 @@ export function Calculating() {
                retry re-fetches it and the effect picks up from there; `started` is
                still false in that case, so it will. */
             if (quiz === null) return reload();
-            pending.current = run(quiz.quiz_version);
+            pending.current = run();
             pending.current.then(apply);
           }}
           className="mt-8 flex h-14 w-full max-w-[317px] items-center justify-center rounded-full bg-brand text-lg font-semibold text-ink-inverse transition-colors hover:bg-cta"

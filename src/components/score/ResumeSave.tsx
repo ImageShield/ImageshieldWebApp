@@ -89,7 +89,7 @@ export function ResumeSave() {
         return;
       }
 
-      pending.current = submitAnswers(quiz.quiz_version);
+      pending.current = submitAnswers();
     }
 
     pending.current?.then((outcome) => {
@@ -125,7 +125,7 @@ export function ResumeSave() {
                  let the effect start the POST, which it will: `started` is still
                  false in that case. */
               if (quiz === null) return reload();
-              pending.current = submitAnswers(quiz.quiz_version);
+              pending.current = submitAnswers();
               pending.current.then(apply);
             }}
             className="mt-8 flex h-14 w-full max-w-[317px] items-center justify-center rounded-full bg-brand text-lg font-semibold text-ink-inverse transition-colors hover:bg-cta"

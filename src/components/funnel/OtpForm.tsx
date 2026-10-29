@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { backPath, nextPath, STEP_PATHS } from "@/lib/funnel";
 import { leaveForNotEligible } from "@/lib/not-eligible";
-import { readFunnel, useFunnel } from "@/lib/funnel-state";
+import { readFunnel, useFunnel, writeFunnel } from "@/lib/funnel-state";
 import { declaresMinor } from "@/lib/quiz";
+import { verifyOtp, resendOtp } from "@/lib/browser-auth";
 
 /**
  * The six-digit code, ported from the app's OTPScreen.
@@ -32,8 +33,8 @@ import { declaresMinor } from "@/lib/quiz";
  *            well have been right, so nothing here is drawn as a mistake to correct.
  */const LENGTH = 6;
 
-/** Only used until the API has told us its own cooldown — `/api/otp/start` relays
- *  `resend_after`, and that is the number the API will actually enforce. */
+/** Only used until the API has told us its own cooldown — `startOtp` returns
+ *  `resendAfter`, and that is the number the API will actually enforce. */
 const FALLBACK_COOLDOWN_S = 60;
 
 const EMPTY = Array<string>(LENGTH).fill("");
@@ -91,54 +92,48 @@ export function OtpForm() {
       }
       submitted.current = entered;
 
+      const funnel = readFunnel();
+      const challengeId = funnel.challengeId;
+      if (!challengeId) {
+        setStage("expired");
+        setError("Your code expired. Request a new one.");
+        return;
+      }
+
+      const contact = funnel.contact ?? {
+        firstName: "",
+        lastName: "",
+        email: "",
+        ageConfirmed: true,
+      };
+
       setBusy(true);
       setError(null);
       try {
-        const res = await fetch("/api/otp/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code: entered }),
-        });
-        const body = (await res.json()) as {
-          error?: string;
-          blocked?: boolean;
-          quizAlreadyTaken?: boolean;
-        };
+        const result = await verifyOtp(challengeId, entered, contact);
 
-        if (!res.ok) {
-          /* The number is serving a deletion cooldown. This arrives AFTER the code
-             was accepted, so the digits stay on screen and the row is not cleared —
-             there is nothing wrong with them to fix. */
-          if (body.blocked) {
+        if (!result.ok) {
+          if (result.blocked) {
             setStage("blocked");
-            setError(body.error ?? "This number can't open a new account yet.");
+            setError(result.error);
             return;
           }
 
-          /* The session went before the code came back. Retyping and resending both
-             answer 401 from here, so the screen stops offering either. */
-          if (res.status === 401) {
+          if (result.status === 401) {
             setStage("expired");
-            setError(body.error ?? "Your code expired. Start again.");
+            setError(result.error);
             return;
           }
 
-          setError(body.error ?? "That code isn't right");
+          setError(result.error);
           setDigits(EMPTY);
           boxes.current[0]?.focus();
-          // Let the same digits be tried again after a clear — the user may have
-          // simply mistyped, and the server is the one keeping count.
           submitted.current = undefined;
           return;
         }
 
-        /* An account that already took the quiz — in the app, or here before — has
-           a score, and the answers in this tab are not going to replace it. So it
-           skips the loader and reads its score. Only a shortcut: `/api/quiz` refuses
-           the overwrite on its own, which is what covers a verify that couldn't read
-           the account and so reported false. */
         router.push(
-          body.quizAlreadyTaken === true
+          result.quizAlreadyTaken === true
             ? STEP_PATHS.score
             : (nextPath("otp") ?? STEP_PATHS.landing),
         );
@@ -206,33 +201,34 @@ export function OtpForm() {
     setResending(true);
     setError(null);
     try {
-      /* `/api/otp/start` needs the full contact again, but this screen deliberately
-         never held the name and email. The number is enough to re-send: the pending
-         session cookie still carries the rest. */
-      const res = await fetch("/api/otp/resend", { method: "POST" });
-      const body = (await res.json()) as {
-        error?: string;
-        blocked?: boolean;
-        resendAfter?: number | null;
-      };
-      if (!res.ok) {
-        if (body.blocked) {
-          setStage("blocked");
-          setError(body.error ?? "This number can't open a new account yet.");
-          return;
-        }
-        if (res.status === 401) {
-          setStage("expired");
-          setError(body.error ?? "Your session expired. Start again.");
-          return;
-        }
-        setError(body.error ?? "Couldn't resend your code.");
+      const funnel = readFunnel();
+      if (!funnel.phone) {
+        setStage("expired");
+        setError("Your session expired. Start again.");
         return;
       }
+
+      const result = await resendOtp(funnel.phone);
+      if (!result.ok) {
+        if (result.blocked) {
+          setStage("blocked");
+          setError(result.error);
+          return;
+        }
+        if (result.status === 401) {
+          setStage("expired");
+          setError(result.error);
+          return;
+        }
+        setError(result.error);
+        return;
+      }
+      // Update the challenge ID for the new OTP
+      writeFunnel({ challengeId: result.challengeId });
       setDigits(EMPTY);
       submitted.current = undefined;
       boxes.current[0]?.focus();
-      setCooldown(body.resendAfter ?? FALLBACK_COOLDOWN_S);
+      setCooldown(result.resendAfter ?? FALLBACK_COOLDOWN_S);
     } catch {
       setError("We couldn't reach the server. Check your connection.");
     } finally {
@@ -295,10 +291,9 @@ export function OtpForm() {
 
   return (
     <div className="mt-7">
-      {/* The number the code went to. `/api/otp/start` hands back its own normalised
-          copy for exactly this, and until now the screen never showed it — a digit
-          typed wrong was invisible, and the silence that follows looks identical to
-          a carrier delay. */}
+      {/* The number the code went to. `startOtp` hands back the normalised copy for
+          exactly this — a digit typed wrong was invisible, and the silence that follows
+          looks identical to a carrier delay. */}
       {phone ? (
         <p className="text-[14px] leading-[21px] text-black/45">
           Sent to <span className="font-semibold text-ink">{phone}</span>.{" "}

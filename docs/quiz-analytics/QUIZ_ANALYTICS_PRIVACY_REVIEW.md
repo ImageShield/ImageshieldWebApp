@@ -3,6 +3,9 @@
 **For:** ImageShield's legal and privacy owner.
 **Purpose:** set out exactly what the quiz analytics collect, where the data goes and who sees it, and list the decisions needed before each part can go live.
 **Prepared:** 22 October 2026, from the web app's code, the live quiz definitions, the live consent banner and the published privacy notice.
+**Updated:** 23 October 2026, after the release of commit `5b28615` to production.
+- Quiz progress events (decision A) and the under-18 safeguard (decision F) are live.
+- Answer values (B), sensitive answers (C), partial answers (D) and session linking (E) are still awaiting decisions. Answer values remain switched off.
 
 Nothing described here as "proposed" is collected today. Items marked **unknown** could not be checked from the web app and need confirming by their owner.
 
@@ -10,12 +13,12 @@ Nothing described here as "proposed" is collected today. Items marked **unknown*
 
 | # | Decision | Recommended |
 |---|---|---|
-| A | Send quiz **progress** (start, which question was answered, completion, quiz version) to GA4 | Ready to go: covered by the current consent wording ("which screens people reach and where they stop") |
+| A | Send quiz **progress** (start, which question was answered, completion, quiz version) to GA4 | Covered by the current consent wording ("which screens people reach and where they stop"). **Live since 23 October 2026** in the page's data layer. Nothing reaches GA4 until the UK team adds tags |
 | B | Send the **chosen options** for three questions to GA4: platforms used, how often photos are shared, how likeness is monitored | Approve the banner wording in section 4, add the quiz section to the privacy notice, then switch on |
 | C | Send age, gender or past-misuse answers to GA4 | **Not recommended.** Built so they can't be sent; would need a separate decision |
 | D | Store **partial answers** (including sensitive ones) from visitors who leave before verifying, in ImageShield's backend | Needs a decision on purpose, consent, retention and access (section 6). Specified, not built |
 | E | Link a partial session to an account once the visitor verifies | Not recommended: duplicates data already held |
-| F | Send under-18 visitors to `/not-eligible` with a full page load and no GTM on that page | **Built and tested locally, not yet deployed** (section 7a) |
+| F | Send under-18 visitors to `/not-eligible` with a full page load and no GTM on that page | **Implemented and deployed** 23 October 2026 (`2988d50`, `5b28615`), verified in production (section 7a) |
 
 ## 2. The quiz questions and their sensitivity
 
@@ -130,16 +133,20 @@ The published notice at imageshield.com/privacy-policy (effective 23 September 2
 
 The quiz itself sends nothing after an "Under 18" answer. However, a GA4 Google tag that has already loaded keeps sending its own automatic events, such as `user_engagement` and `scroll`. These carry the current page address and title. After the in-app navigation to `/not-eligible`, both reveal the visitor's age band: the title is "You need to be 18 or older".
 
-- **No exposure today.** The container has no GA4 tags.
-- **The safeguard (decision F), built and tested locally, not yet deployed:**
+- **No exposure today.** The container has no GA4 tags (re-checked 23 October).
+- **The safeguard (decision F), live since 23 October 2026 (`5b28615`) and verified in production that day:**
   - All five screens that turn an under-18 visitor away now load `/not-eligible` as a new page instead of an in-app hop (seven call sites).
   - At the moment of the "Under 18" answer (the quiz still asks the remaining questions), tags already running are told consent is denied, and the browser tab is flagged as under 18. The visitor's stored choice is unchanged. The flag outlives the answers, so the tab stays untracked even if a new quiz version clears them.
   - GTM and HubSpot never load on `/not-eligible`, nor on any page in a browser tab whose stored answers say under 18. That covers refresh, the back button, "Back to home" and opening the page directly, whatever the visitor accepted.
   - A page restored from the browser's back/forward cache with a tracker still running reloads itself.
 - **Optional extra protection, for the UK team:** exclude `/not-eligible` from the Google tag's trigger, turn off history-based page views, and add a GA4 "Modify event" rule that masks the address and title. With the safeguard live, none of these should ever have anything to act on.
-- **Two residual points, both needing a production check:**
-  - **A final ping on the way out.** As the quiz page unloads, a Google tag may send one last ping. It would carry the quiz page's own address, never `/not-eligible`, with consent already denied; under consent mode's "advanced" behaviour it would be cookieless. Requiring `analytics_storage` consent on the GA4 tags (handoff, section 6 item 6a) stops it entirely.
-  - **Back/forward cache restores.** Covered by the reload guard, but headless Chrome never restored a page, so this needs checking in Safari, which caches more pages.
+- **Verified on the live site on 23 October,** in Chrome and in WebKit (Safari's engine):
+  - consent was denied once, at the "Under 18" answer, and no quiz events followed;
+  - `/not-eligible` loaded as a new page with no GTM or HubSpot and no Google or HubSpot requests;
+  - the same held after refresh, Back, "Back to home" and opening the page directly.
+- **Two residual points, still open:**
+  - **A final ping on the way out.** As the quiz page unloads, a Google tag may send one last ping. It would carry the quiz page's own address, never `/not-eligible`, with consent already denied; under consent mode's "advanced" behaviour it would be cookieless. Requiring `analytics_storage` consent on the GA4 tags (handoff, section 6 item 6a) stops it entirely. It can't be checked until the UK team adds tags.
+  - **Back/forward cache restores: not verified.** The reload guard is unit-tested. In production testing, Chrome and WebKit both reloaded the page on Back instead of restoring it, so the guard never had to act. Real Safari still needs a manual check.
 
   Exact steps: handoff section 8, step 8.
 
@@ -151,7 +158,7 @@ The quiz itself sends nothing after an "Under 18" answer. However, a GA4 Google 
 - Under-18 answers stop all tracking and are turned away from the quiz, as before.
 - No answer for age, gender or prior misuse can reach the dataLayer. This holds even if code calls the tracking function directly, or if the question map is edited by mistake: it's a fixed rule in code, and it's tested.
 - If the backend changes the age question so an under-18 answer can't be recognised, analytics sends nothing at all rather than risk tracking a minor.
-- Once the code is deployed, GTM and HubSpot never load on `/not-eligible` or for a tab that has answered under 18 (section 7a).
+- Since 23 October 2026, GTM and HubSpot never load on `/not-eligible` or in a tab that has answered under 18 (section 7a).
 - After each event the quiz clears its fields in GTM, so no answer lingers for other tags to read.
 - When consent is asked again after a wording change, a new "no" also deletes cookies left by the earlier "yes".
 - Nothing in the analytics code logs to the console. A temporary development log that printed saved gender values on the score page has been removed.

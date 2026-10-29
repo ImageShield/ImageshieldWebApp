@@ -29,11 +29,58 @@ vi.mock("@/lib/use-quiz-definition", () => ({
   useQuizDefinition: () => ({ quiz: QUIZ, error: null, reload: vi.fn() }),
 }));
 
-/* The real `submitAnswers` runs; only the network is stubbed, answering the way
-   `/api/quiz` does. */
+vi.mock("@/lib/browser-session", () => ({
+  hasSession: vi.fn(() => true),
+  isAccessExpired: vi.fn(() => false),
+  accessToken: vi.fn(() => "test-token"),
+  refreshToken: vi.fn(() => "test-refresh"),
+  adoptTokens: vi.fn(),
+  clearSession: vi.fn(),
+}));
+
+/**
+ * Mock fetch that routes by URL path.
+ *
+ * `submitAnswers` now calls the backend directly through multiple endpoints:
+ *   1. GET /v1/me/score — to check if a score already exists
+ *   2. GET /v1/quiz — to read the live definition for answer validation
+ *   3. POST /v1/quiz/responses — to submit the answers
+ */
 const fetchMock = vi.fn();
-const reply = (status: number, body: unknown) =>
-  fetchMock.mockResolvedValue(new Response(JSON.stringify(body), { status }));
+
+function setupApiMocks(opts: { scoreStatus?: number; quizDef?: unknown; submitStatus?: number; submitBody?: unknown }) {
+  fetchMock.mockImplementation(async (url: string | URL | Request, init?: RequestInit) => {
+    const urlStr = typeof url === "string" ? url : url instanceof URL ? url.toString() : url.url;
+    const method = init?.method ?? "GET";
+
+    if (method === "GET" && urlStr.includes("/v1/me/score")) {
+      if (opts.scoreStatus === 200) {
+        return new Response(JSON.stringify({ score: { live: 42 } }), { status: 200 });
+      }
+      return new Response(
+        JSON.stringify({ error: "NO_QUIZ_RESPONSE", message: "no quiz response yet" }),
+        { status: 404 },
+      );
+    }
+
+    if (method === "GET" && urlStr.includes("/v1/me") && !urlStr.includes("/v1/me/")) {
+      return new Response(JSON.stringify({ score: null }), { status: 200 });
+    }
+
+    if (method === "GET" && urlStr.includes("/v1/quiz")) {
+      return new Response(JSON.stringify(opts.quizDef ?? QUIZ), { status: 200 });
+    }
+
+    if (method === "POST" && urlStr.includes("/v1/quiz/responses")) {
+      return new Response(
+        JSON.stringify(opts.submitBody ?? { ok: true }),
+        { status: opts.submitStatus ?? 200 },
+      );
+    }
+
+    return new Response(JSON.stringify({ error: "NOT_FOUND", message: "unexpected" }), { status: 404 });
+  });
+}
 
 beforeEach(() => {
   nav.push.mockReset();
@@ -51,20 +98,19 @@ afterEach(() => {
 describe("ResumeSave", () => {
   it("follows an under-18 refusal to /not-eligible, off the save screen", async () => {
     writeFunnel({ quizVersion: "test-v1", answers: { age: "Under 18", gender: "Female" } });
-    reply(403, { error: "Only 18 and over.", notEligible: true });
+    setupApiMocks({});
 
     render(<ResumeSave />);
 
     await waitFor(() => expect(leave).toHaveBeenCalledWith("replace"));
     expect(nav.replace).not.toHaveBeenCalled();
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(nav.refresh).not.toHaveBeenCalled(); // no score read back
-    expect(screen.queryByText(/couldn.t finish scoring/i)).toBeNull(); // not stuck on "Try again"
+    expect(nav.refresh).not.toHaveBeenCalled();
+    expect(screen.queryByText(/couldn.t finish scoring/i)).toBeNull();
   });
 
   it("still re-reads the score after an adult save", async () => {
     writeFunnel({ quizVersion: "test-v1", answers: { age: "18-24", gender: "Female" } });
-    reply(200, { ok: true });
+    setupApiMocks({});
 
     render(<ResumeSave />);
 

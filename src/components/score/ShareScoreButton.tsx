@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { accessToken } from "@/lib/browser-session";
 import { POSTER_FILENAME, shareCaption } from "@/lib/score-share";
 import { Share } from "../funnel/icons";
 
@@ -34,22 +35,30 @@ function poster(key: string): Promise<File | null> {
 }
 
 /**
- * One poster, refreshing the session once if it has to.
+ * One poster, fetched via the two-step share-token flow:
+ *   1. POST the visitor's access token to `/api/share/score-token`, which
+ *      independently reads the score from the backend and returns an
+ *      HMAC-signed, expiring token.
+ *   2. Pass that token to `/api/share/score-card?token=…`, which verifies
+ *      it and renders the PNG.
  *
- * A 401 here is nearly always a spent access token on a tab left open: the page
- * refreshes its token when it RENDERS, and a result screen can sit open for longer
- * than a token lives. Without this, that visitor's tap shared nothing but text.
- * One refresh and one retry — a session that is really gone stays a 401. The
- * fetches are shared per score (see `poster`), so two buttons never race to rotate
- * the same refresh token.
+ * The browser never supplies the score directly — the server reads it itself
+ * and signs the result, so the poster always reflects a real score.
  */
 async function fetchPoster(): Promise<File | null> {
-  const get = () => fetch("/api/share/score-card", { cache: "no-store" });
-  let res = await get();
-  if (res.status === 401) {
-    const refreshed = await fetch("/api/session/refresh", { method: "POST" });
-    if (refreshed.ok) res = await get();
-  }
+  const bearer = accessToken();
+  if (!bearer) return null;
+
+  const tokenRes = await fetch("/api/share/score-token", {
+    headers: { Authorization: `Bearer ${bearer}` },
+    cache: "no-store",
+  });
+  if (!tokenRes.ok) return null;
+
+  const { token } = (await tokenRes.json()) as { token: string };
+  const res = await fetch(`/api/share/score-card?token=${encodeURIComponent(token)}`, {
+    cache: "no-store",
+  });
   if (!res.ok) return null;
   return new File([await res.blob()], POSTER_FILENAME, { type: "image/png" });
 }
@@ -119,7 +128,7 @@ export function ShareScoreButton({
     return () => {
       live = false;
     };
-  }, [key]);
+  }, [key, score, band]);
 
   /* The note is a status, not a dialog: it clears itself. */
   useEffect(() => {
