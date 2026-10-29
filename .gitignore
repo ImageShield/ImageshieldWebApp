@@ -36,6 +36,10 @@ yarn-error.log*
 # has no .env.example, and the "copy .env.example to .env.local" error message that
 # BACKEND_URL and FUNNEL_SECRET both print names a file that isn't there.
 !.env.example
+# .env.production carries the public API base URL that Next.js inlines at build
+# time. Without it the client bundle has no backend URL and every page breaks.
+# It holds no secrets — server-only vars are injected from the Amplify console.
+!.env.production
 
 # vercel
 .vercel
