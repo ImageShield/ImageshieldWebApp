@@ -1,7 +1,6 @@
 import "server-only";
 
 import { handoffFor, type Handoff } from "./handoff";
-import { describeRecord, localInsights, shapeOf } from "./local-insights/engine";
 import { recommendationsFrom } from "./recommendations";
 import { riskFactorsFrom, type ScoreEnvelope, type ScoreRecord } from "./score";
 import { SessionUnavailable } from "./session";
@@ -81,11 +80,6 @@ export async function loadScore(): Promise<ScoreLoad> {
   }
 }
 
-/** TEMPORARY — see `resolve`. A field the backend hasn't filled with research yet. */
-function awaitsResearch(field: unknown): boolean {
-  return field === undefined || field === null || (Array.isArray(field) && field.length === 0);
-}
-
 function resolve(firstName: string, envelope: ScoreEnvelope): ScoreLoad {
   /* 200 with `score: null` means the answers are in and the number is still being
      computed. The legacy backend had no such state — it scored synchronously — so
@@ -95,46 +89,8 @@ function resolve(firstName: string, envelope: ScoreEnvelope): ScoreLoad {
 
   const { score } = envelope;
 
-  /* Where each card comes from — the one place that decides, and the migration
-     boundary.
-
-     TEMPORARY FALLBACK, until the backend publishes researched insight data. Prod's
-     API already sends both fields, but as empty lists while its research hasn't run
-     there; taken at its word, that hid both cards from every visitor. So each field
-     is decided on its own:
-
-       a non-empty list    the API's. Checked against the contract on the way in, as
-                           it always was, and never added to, reordered or replaced.
-       absent, null or []  this record's local insights (./local-insights), which may
-                           themselves be empty — and then the card stays hidden.
-       anything else       a contract breach, not an absence: still the API's, so its
-                           validator logs it and the card hides.
-
-     The two sources are never mixed within one field. Once the backend's lists carry
-     research this becomes "the API's, always", and ./local-insights goes. Agreed
-     2026-10-13; don't change this precedence without an explicit decision. */
-  const localRisk = awaitsResearch(score.risk_factors);
-  const localRecommendations = awaitsResearch(envelope.general_recommendations);
-  const local = localRisk || localRecommendations ? localInsights(score) : null;
-
-  const riskFactors = localRisk
-    ? (local?.riskFactors ?? [])
-    : riskFactorsFrom(score.risk_factors);
-  const recommendations = localRecommendations
-    ? (local?.recommendations ?? [])
-    : recommendationsFrom(envelope.general_recommendations);
-
-  /* Development only, and structure only: which source each card took and how many
-     rows it got, what the API sent for each field, and the shape of the saved
-     answers. A card that comes back empty otherwise leaves nothing to say why. Goes
-     with the local engine. */
-  if (process.env.NODE_ENV === "development") {
-    console.info(
-      `score cards: risk_factors ${shapeOf(score.risk_factors)} -> ${localRisk ? "local" : "api"} ${riskFactors.length} rows; ` +
-        `general_recommendations ${shapeOf(envelope.general_recommendations)} -> ${localRecommendations ? "local" : "api"} ${recommendations.length} rows; ` +
-        describeRecord(score),
-    );
-  }
+  const riskFactors = riskFactorsFrom(score.risk_factors);
+  const recommendations = recommendationsFrom(envelope.general_recommendations);
 
   return {
     ok: true,

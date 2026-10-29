@@ -12,9 +12,8 @@ import type { GeneralRecommendation } from "./recommendations";
 /** One entry of `breakdown.quiz` — a question, what it was answered, what it cost. */
 export type QuizFactor = {
   key: string;
-  /** The option given. A multi-select answer's shape here is unconfirmed — a list,
-   *  or the selections joined with ", " as the dev fixture once sent — so it is read
-   *  through `answersFrom` in ./local-insights/engine.ts, which takes both. */
+  /** The option given. A multi-select answer may be a list or the selections joined
+   *  with ", ". */
   value: string | string[];
   /** POSITIVE, and subtracted. The legacy backend sent this as a negative number,
    *  which is why `topFactors` now sorts the other way round. */
@@ -69,12 +68,9 @@ export type Score = {
     dynamic: DynamicFactor[];
     escrow: { next_milestone_days: number | null };
   };
-  /** At most three, ranked by the API, biggest first. Empty until there is research
-   *  to explain them with — and then the card is hidden.
+  /** At most three, ranked by the API, biggest first. Empty or absent hides the card.
    *
-   *  Optional because the API may not send it. Until the backend publishes research,
-   *  a missing, null or empty list is filled from the answers instead — see `resolve`
-   *  in ./score-record.ts. */
+   *  Optional because the API may not send it until research is published. */
   risk_factors?: RiskFactor[];
 };
 
@@ -95,8 +91,8 @@ export type ScoreEnvelope = {
   /** At most three, in reading order, the same for every visitor. Beside the score
    *  rather than inside it, so it arrives even when `score` is null.
    *
-   *  Optional, and filled from the answers when missing, null or empty, as
-   *  `risk_factors` is. */
+   *  Optional because the API may not send it until research is published.
+   *  Empty or absent hides the card. */
   general_recommendations?: GeneralRecommendation[];
 };
 
@@ -116,8 +112,7 @@ export type ScoreRecord = {
   scopeNote: string;
   /** From `GET /v1/me`, not from a cookie — the person record is the one source. */
   firstName: string;
-  /** `score.risk_factors` in the API's order when it has entries, else built from the
-   *  answers (temporarily — see `resolve`). Empty hides the card. */
+  /** `score.risk_factors` in the API's order. Empty hides the card. */
   riskFactors: RiskFactor[];
   /** `general_recommendations` likewise. Empty hides the card. */
   recommendations: GeneralRecommendation[];

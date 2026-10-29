@@ -56,10 +56,9 @@ const config = {
   failQuizOnce: process.env.DEV_API_FAIL_QUIZ_ONCE === "1",
   /**
    * `risk_factors` and `general_recommendations`, which the real API doesn't send yet:
-   *   unset     leave both out, as prod does today. The score screen builds its cards
-   *             from the answers instead (src/lib/local-insights).
+   *   unset     leave both out, as prod does today. Both cards hide.
    *   empty     send both as [] — the API saying it has no research; both cards hide.
-   *   fixture   send the placeholder rows below, to see the API's own path.
+   *   fixture   send the placeholder rows below, to see both cards with test data.
    */
   insights: process.env.DEV_API_INSIGHTS ?? "absent",
 };

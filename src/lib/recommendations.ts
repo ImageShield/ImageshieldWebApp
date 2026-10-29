@@ -4,14 +4,8 @@
  * `general_recommendations` sits at the top level of the score envelope, beside
  * `scope_note`: at most three, already in the order they are meant to be read, and the
  * same for every visitor. Every word was drafted from cited sources and approved by an
- * operator, so nothing here rewrites, supplements or reorders them. A list with
- * entries is shown as served; until the backend publishes research, an empty one is
- * filled from the visitor's answers by ./local-insights instead (see `resolve` in
- * ./score-record.ts) — never by copy written into the bundle.
- *
- * This file used to BE the list — two recommendations written into the bundle and
- * shown to everyone. Their copy was unsourced, so it went when the API took over
- * rather than surviving as a fallback that would quietly reappear on an empty answer.
+ * operator, so nothing here rewrites, supplements or reorders them. An empty or absent
+ * list hides the card.
  *
  * Client-safe: the screen renders straight from it.
  */
