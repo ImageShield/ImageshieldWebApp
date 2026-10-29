@@ -22,6 +22,10 @@ frontend:
         # Server-side env vars: add new ones to this list.
         - env | grep -E '^(IMAGESHIELD_API_URL|NEXT_PUBLIC_IMAGESHIELD_API_URL|SCORE_SHARE_SECRET)=' >> .env.production
         - npm run build
+        # .env.production must travel with .next/ — the artifact root — so the
+        # SSR compute can read server-only vars (SCORE_SHARE_SECRET, etc.) at
+        # runtime. Next.js looks for it one directory up from .next/.
+        - cp .env.production .next/.env.production
   artifacts:
     baseDirectory: .next
     files:
