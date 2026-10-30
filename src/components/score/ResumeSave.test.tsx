@@ -41,10 +41,12 @@ vi.mock("@/lib/browser-session", () => ({
 /**
  * Mock fetch that routes by URL path.
  *
- * `submitAnswers` now calls the backend directly through multiple endpoints:
- *   1. GET /v1/me/score - to check if a score already exists
- *   2. GET /v1/quiz - to read the live definition for answer validation
- *   3. POST /v1/quiz/responses - to submit the answers
+ * `submitAnswers` now calls the backend directly through two endpoints:
+ *   1. GET /v1/quiz - to read the live definition for answer validation
+ *   2. POST /v1/quiz/responses - to submit the answers
+ *
+ * The `/v1/me/score` and `/v1/me` routes stay mocked for the score an account may
+ * already have, which `submitAnswers` no longer reads before writing.
  */
 const fetchMock = vi.fn();
 

@@ -41,10 +41,12 @@ vi.mock("@/lib/browser-session", () => ({
 /**
  * Mock fetch that routes by URL path.
  *
- * `submitAnswers` now calls the backend directly through multiple endpoints:
- *   1. GET /v1/me/score - to check if a score already exists
- *   2. GET /v1/quiz - to read the live definition for answer validation
- *   3. POST /v1/quiz/responses - to submit the answers
+ * `submitAnswers` now calls the backend directly through two endpoints:
+ *   1. GET /v1/quiz - to read the live definition for answer validation
+ *   2. POST /v1/quiz/responses - to submit the answers
+ *
+ * The `/v1/me/score` and `/v1/me` routes stay mocked for the score an account may
+ * already have, which `submitAnswers` no longer reads before writing.
  */
 const fetchMock = vi.fn();
 
@@ -65,7 +67,7 @@ function setupApiMocks(opts: { scoreStatus?: number; quizDef?: unknown; submitSt
     }
 
     if (method === "GET" && urlStr.includes("/v1/me") && !urlStr.includes("/v1/me/")) {
-      // Fallback for /v1/me (used in hasScoreOnRecord when 404)
+      // An account with no stored score.
       return new Response(JSON.stringify({ score: null }), { status: 200 });
     }
 
@@ -123,5 +125,25 @@ describe("Calculating", () => {
 
     await waitFor(() => expect(nav.push).toHaveBeenCalledWith("/score"), settled);
     expect(nav.replace).not.toHaveBeenCalled();
+  });
+
+  /* The account already has a score - the one its own first submit created - and
+     the visitor went back and changed gender. The corrected answers must still be
+     posted, or the score screen keeps showing the score of the original answers. */
+  it("posts the corrected answers when the account already has a score", async () => {
+    writeFunnel({ quizVersion: "test-v1", answers: { age: "18-24", gender: "Male" } });
+    setupApiMocks({ scoreStatus: 200 });
+
+    render(<Calculating />);
+
+    await waitFor(() => expect(nav.push).toHaveBeenCalledWith("/score"), settled);
+    const posts = fetchMock.mock.calls.filter(
+      ([url, init]) => String(url).includes("/v1/quiz/responses") && init?.method === "POST",
+    );
+    expect(posts).toHaveLength(1);
+    expect(JSON.parse(String(posts[0][1].body))).toStrictEqual({
+      quiz_version: "test-v1",
+      answers: { age: "18-24", gender: "Male" },
+    });
   });
 });

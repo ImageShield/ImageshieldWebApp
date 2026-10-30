@@ -50,46 +50,15 @@ async function readLiveDefinition(): Promise<{ quiz_version: string; questions: 
   return callAsUser<{ quiz_version: string; questions: readonly { key: string; prompt: string; options: readonly string[]; multi?: boolean; scored?: boolean; required?: boolean; requires?: { key: string; value?: string; values?: readonly string[] } }[] }>("GET", "/v1/quiz");
 }
 
-/**
- * Checks whether the account already has a score on record.
- */
-async function hasScoreOnRecord(): Promise<boolean> {
-  try {
-    await callAsUser<ScoreEnvelope>("GET", "/v1/me/score");
-    return true;
-  } catch (error) {
-    if (!(error instanceof ApiFailure)) throw error;
-    if (error.code === "NO_QUIZ_RESPONSE" || error.code === "QUIZ_OUTDATED") {
-      // Check if the account carries a stored score via /v1/me
-      const me = await callAsUser<{ score: { live?: number; total_score?: number } | null }>("GET", "/v1/me");
-      const stored = me.score;
-      const live = stored?.live ?? stored?.total_score;
-      return stored !== null && typeof live === "number" && Number.isFinite(live);
-    }
-    throw error;
-  }
-}
-
 export async function submitAnswers(): Promise<SubmitOutcome> {
   if (!hasSession()) {
     return { ok: false, reason: "signed-out", error: "Your session expired. Start again." };
   }
 
-  // Check if account already has a score - don't overwrite it.
-  let hasScore: boolean;
-  try {
-    hasScore = await hasScoreOnRecord();
-  } catch (error) {
-    if (error instanceof ApiFailure && error.status === 401) {
-      return { ok: false, reason: "signed-out", error: "Your session expired. Start again." };
-    }
-    return {
-      ok: false,
-      reason: "failed",
-      error: "We couldn't check your score just now. Please try again.",
-    };
-  }
-  if (hasScore) return { ok: true };
+  /* No "does this account already have a score" check here: it also blocked a
+     visitor from re-scoring after going back to correct an answer, because the
+     score it found was the one their own first submit had just created. Whether a
+     write may replace the response on record is the backend's call. */
 
   // Re-read the live definition to validate answers against.
   let live: { quiz_version: string; questions: readonly { key: string; prompt: string; options: readonly string[]; multi?: boolean; scored?: boolean; required?: boolean; requires?: { key: string; value?: string; values?: readonly string[] } }[] };
