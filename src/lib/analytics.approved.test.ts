@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { type AnalyticsEvent, track, trackAnswer } from "./analytics";
-import { definitionOf } from "./analytics.fixtures";
+import { definitionOf, withoutAttribution } from "./analytics.fixtures";
 import { writeConsent } from "./consent";
 import { writeFunnel } from "./funnel-state";
 import type { QuizDefinition } from "./quiz";
@@ -14,7 +14,7 @@ const dataLayer = () => {
   const pushed = (window as Window & { dataLayer?: { event: string }[] }).dataLayer;
   return (
     pushed &&
-    (JSON.parse(JSON.stringify(pushed.filter((e) => e.event === "quiz_answer"))) as unknown[])
+    withoutAttribution(JSON.parse(JSON.stringify(pushed.filter((e) => e.event === "quiz_answer"))) as unknown[])
   );
 };
 

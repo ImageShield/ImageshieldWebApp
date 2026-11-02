@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
+import { AttributionCapture } from "@/components/AttributionCapture";
 import { ConsentManager } from "@/components/consent/ConsentManager";
 import { FaviconTheme } from "@/components/FaviconTheme";
 import "./globals.css";
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="relative min-h-full">
         {/* Here, not per screen: the root layout is never remounted by a client-side
             navigation, so the choice and the scripts it allowed load once. */}
+        <AttributionCapture />
         <ConsentManager>{children}</ConsentManager>
         <FaviconTheme />
       </body>

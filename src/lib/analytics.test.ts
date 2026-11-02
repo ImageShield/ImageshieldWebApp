@@ -7,7 +7,7 @@ import {
   trackComplete,
   trackStart,
 } from "./analytics";
-import { definitionOf } from "./analytics.fixtures";
+import { definitionOf, withoutAttribution } from "./analytics.fixtures";
 import { QUIZ_ANALYTICS_MAP } from "./analytics-quiz-map";
 import { writeConsent } from "./consent";
 import { writeFunnel } from "./funnel-state";
@@ -25,7 +25,7 @@ const raw = () =>
 /* The pushes with their cleared (undefined) fields left out, as JSON would. */
 const dataLayer = () => {
   const pushed = raw();
-  return pushed && (JSON.parse(JSON.stringify(pushed)) as unknown[]);
+  return pushed && withoutAttribution(JSON.parse(JSON.stringify(pushed)) as unknown[]);
 };
 
 const grant = () => writeConsent({ analytics: true, marketing: false });

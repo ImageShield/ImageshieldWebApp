@@ -1,5 +1,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { withoutAttribution } from "@/lib/analytics.fixtures";
+import { captureAttribution, getAttribution, resetAttributionLoad } from "@/lib/attribution";
 import { writeConsent } from "@/lib/consent";
 import { writeFunnel } from "@/lib/funnel-state";
 import type { QuizDefinition } from "@/lib/quiz";
@@ -157,7 +159,7 @@ describe("QuizFlow Tag Manager events", () => {
   /* Cleared (undefined) fields left out, as JSON would - see analytics.test.ts. */
   const pushed = () => {
     const raw = (window as Window & { dataLayer?: object[] }).dataLayer;
-    return raw && (JSON.parse(JSON.stringify(raw.filter((e) => "event" in e))) as unknown[]);
+    return raw && withoutAttribution(JSON.parse(JSON.stringify(raw.filter((e) => "event" in e))) as unknown[]);
   };
   const v = "test-v1";
   const start = (question_number: number) => ({ event: "quiz_start", quiz_version: v, question_number });
@@ -272,5 +274,39 @@ describe("QuizFlow Tag Manager events", () => {
     finishWithAge("25-34", false);
     expect(pushed()).toStrictEqual([start(1), answer("age", 1)]);
     expect(destinations()).toStrictEqual(["/quiz/questions?q=2", "/details"]);
+  });
+});
+
+describe("QuizFlow freezes attribution when the quiz starts", () => {
+  beforeEach(() => {
+    window.sessionStorage.clear();
+    window.history.replaceState(null, "", "/");
+    resetAttributionLoad();
+    writeFunnel({ quizVersion: "test-v1", answers: {} });
+    nav.search = "q=1";
+  });
+
+  it("holds the landing attribution once the first question is on screen, with analytics denied", () => {
+    writeConsent({ analytics: false, marketing: false });
+    captureAttribution("page_variant=v3&utm_source=google");
+    render(<QuizFlow />);
+    /* No answer has been given, and no event can have been sent - the freeze is not one. */
+    captureAttribution("page_variant=v5&utm_source=meta");
+    expect(getAttribution()).toMatchObject({ page_variant: "v3", utm_source: "google" });
+  });
+
+  it("freezes a visitor who deep-links straight to a question on that link's attribution", () => {
+    writeConsent({ analytics: true, marketing: false });
+    vi.stubGlobal("dataLayer", []);
+    window.history.replaceState(null, "", "/quiz/questions?q=1&page_variant=v4&utm_source=bing");
+    render(<QuizFlow />);
+    captureAttribution("page_variant=v2");
+    expect(getAttribution()).toMatchObject({ page_variant: "v4", utm_source: "bing" });
+    vi.unstubAllGlobals();
+  });
+
+  it("does not freeze before the first question: the intro page does not start the quiz", () => {
+    captureAttribution("page_variant=v3");
+    expect(captureAttribution("page_variant=v5").page_variant).toBe("v5");
   });
 });

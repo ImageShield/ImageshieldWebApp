@@ -11,3 +11,23 @@ export const definitionOf = (version: string): QuizDefinition => ({
     ...(q.multi ? { multi: true, required: false } : {}),
   })),
 });
+
+const ATTRIBUTION_KEYS = [
+  "page_variant",
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_content",
+  "utm_term",
+  "gclid",
+  "fbclid",
+  "msclkid",
+];
+
+/**
+ * Events with the attribution fields taken off, for the tests that pin the quiz fields an
+ * event carries. Attribution rides on every event now; analytics.attribution.test.ts is
+ * where it is asserted, so those tests don't each repeat it.
+ */
+export const withoutAttribution = (events: unknown[]): unknown[] =>
+  events.map((e) => Object.fromEntries(Object.entries(e as object).filter(([k]) => !ATTRIBUTION_KEYS.includes(k))));

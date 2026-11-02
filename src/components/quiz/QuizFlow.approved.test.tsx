@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { definitionOf } from "@/lib/analytics.fixtures";
+import { definitionOf, withoutAttribution } from "@/lib/analytics.fixtures";
 import { writeConsent } from "@/lib/consent";
 import { writeFunnel } from "@/lib/funnel-state";
 import { QuizFlow } from "./QuizFlow";
@@ -24,9 +24,11 @@ vi.mock("@/lib/use-quiz-definition", () => ({
 
 const V = "likeness-health-v11";
 const answers = () =>
-  ((window as Window & { dataLayer?: { event?: string }[] }).dataLayer ?? [])
-    .filter((e) => e.event === "quiz_answer")
-    .map((e) => JSON.parse(JSON.stringify(e)));
+  withoutAttribution(
+    ((window as Window & { dataLayer?: { event?: string }[] }).dataLayer ?? [])
+      .filter((e) => e.event === "quiz_answer")
+      .map((e) => JSON.parse(JSON.stringify(e)) as unknown),
+  );
 
 beforeEach(() => {
   nav.push.mockReset();

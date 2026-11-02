@@ -9,8 +9,23 @@ import { STEP_PATHS } from "@/lib/funnel";
  * indefinitely, so once the landing page returns, anyone who had visited `/` would
  * keep being sent to /quiz without ever asking the server again.
  */
-export default function LandingPage() {
-  redirect(STEP_PATHS.quiz);
+export default async function LandingPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  /* The whole query string goes with the visitor. The landing pages link straight to
+     /quiz, but a campaign link or a shared one can still arrive as `/?page_variant=v3&
+     utm_source=...`, and a bare redirect would drop every parameter before any code that
+     reads them had run. */
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(await searchParams)) {
+    for (const one of Array.isArray(value) ? value : value === undefined ? [] : [value]) {
+      query.append(key, one);
+    }
+  }
+  const search = query.toString();
+  redirect(search === "" ? STEP_PATHS.quiz : `${STEP_PATHS.quiz}?${search}`);
 }
 
 // import type { Metadata, Viewport } from "next";

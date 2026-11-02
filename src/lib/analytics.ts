@@ -2,6 +2,7 @@
 
 import { ANSWER_ANALYTICS_APPROVED } from "./analytics-approval";
 import { type MappedQuestion, QUIZ_ANALYTICS_MAP } from "./analytics-quiz-map";
+import { freezeAttribution, getAttribution } from "./attribution";
 import { readConsent } from "./consent";
 import { readFunnel } from "./funnel-state";
 import { saidUnder18 } from "./not-eligible";
@@ -28,6 +29,12 @@ import {
  * Abandonment is read from these, not sent: someone who answered question N and never
  * N+1 stopped at N+1. A page-close event would miss most phones and fire on every
  * normal exit.
+ *
+ * Every event also carries where the visitor came from - `page_variant`, always, and
+ * whichever of `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term`,
+ * `gclid`, `fbclid` and `msclkid` the visit had and `attribution.ts` finds fit to send -
+ * read at the moment of the push. They are the same snapshot for the whole funnel:
+ * `trackStart` freezes it.
  *
  * `answer` is sent only when ANSWER_ANALYTICS_APPROVED is on and the question is
  * approved in QUIZ_ANALYTICS_MAP for this exact quiz version. Nothing that identifies
@@ -93,6 +100,15 @@ const CLEARED: Payload = {
   question_number: undefined,
   answer: undefined,
   question_count: undefined,
+  page_variant: undefined,
+  utm_source: undefined,
+  utm_medium: undefined,
+  utm_campaign: undefined,
+  utm_content: undefined,
+  utm_term: undefined,
+  gclid: undefined,
+  fbclid: undefined,
+  msclkid: undefined,
 };
 
 const validNumber = (n: unknown): n is number =>
@@ -118,7 +134,7 @@ function answerAllowed(version: string, id: string, answer: string): boolean {
 function payloadOf(e: AnalyticsEvent): Payload | null {
   if (!EVENT_NAMES.has(e.event)) return null;
   if (typeof e.quiz_version !== "string" || !QUIZ_VERSION.test(e.quiz_version)) return null;
-  const base: Payload = { event: e.event, ...CLEARED, quiz_version: e.quiz_version };
+  const base: Payload = { event: e.event, ...CLEARED, quiz_version: e.quiz_version, ...getAttribution() };
 
   switch (e.event) {
     case "quiz_start":
@@ -270,8 +286,17 @@ function guarded(definition: QuizDefinition, run: () => void): void {
   }
 }
 
-/** `quiz_start`, for the first question a visitor is shown - wherever they came in. */
+/**
+ * `quiz_start`, for the first question a visitor is shown - wherever they came in.
+ *
+ * It is also the moment attribution is frozen, and that happens first and
+ * unconditionally: whether or not analytics is consented, the container is loaded, the
+ * visitor is under 18 or the push is a repeat. `quiz_start` is sent once per tab, so
+ * attribution that could still change after it would let the start be counted against
+ * one variant and the answers and completion against another.
+ */
 export function trackStart(definition: QuizDefinition, key: string): void {
+  freezeAttribution();
   guarded(definition, () => {
     const n = reportedQuestionNumber(definition, key);
     if (n === null) return;
