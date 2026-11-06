@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { trackAnswer, trackComplete, trackStart } from "./analytics";
+import { trackAnswer, trackComplete, trackScoreShown, trackStart } from "./analytics";
 import { definitionOf } from "./analytics.fixtures";
 import { captureAttribution, getAttribution, resetAttributionLoad } from "./attribution";
 import { writeConsent } from "./consent";
@@ -75,6 +75,25 @@ beforeEach(() => {
 });
 
 afterEach(() => vi.unstubAllGlobals());
+
+describe("score_shown", () => {
+  /* The Lead is reported against the landing page the quiz started from, even once
+     the visitor is on /score with a bare URL. */
+  it("carries the same snapshot as the quiz that led to it", () => {
+    captureAttribution(ALL);
+    playQuiz();
+    window.history.replaceState(null, "", "/score?page_variant=v5&utm_source=other");
+    resetAttributionLoad();
+    trackScoreShown();
+    const shown = events().find((e) => e.event === "score_shown");
+    expect(shown).toStrictEqual({ event: "score_shown", ...NINE_V3 });
+  });
+
+  it("is direct, with nothing else, for a visit that came without attribution", () => {
+    trackScoreShown();
+    expect(events()).toStrictEqual([{ event: "score_shown", page_variant: "direct" }]);
+  });
+});
 
 describe("all nine fields on the three events", () => {
   it("is on quiz_start, with the existing fields intact", () => {

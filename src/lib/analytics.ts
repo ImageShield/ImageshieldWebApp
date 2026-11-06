@@ -25,6 +25,12 @@ import {
  *   quiz_answer    an answer committed                      quiz_version, question,
  *                                                           question_number, answer?
  *   quiz_complete  the last question answered               quiz_version, question_count
+ *   score_shown    a generated score on the result screen   (attribution only)
+ *
+ * `score_shown` is the Lead conversion: it fires once the score has loaded and is on
+ * screen, not when the URL changes to /score - a pending or failed score, or a redirect
+ * away, sends nothing. It carries no quiz version: the record the result screen renders
+ * doesn't hold one, and the funnel's own copy isn't guaranteed to survive to here.
  *
  * Abandonment is read from these, not sent: someone who answered question N and never
  * N+1 stopped at N+1. A page-close event would miss most phones and fire on every
@@ -53,7 +59,8 @@ export type AnalyticsEvent =
       /** Only for an approved question - see `answerAllowed`. */
       answer?: string;
     }
-  | { event: "quiz_complete"; quiz_version: string; question_count: number };
+  | { event: "quiz_complete"; quiz_version: string; question_count: number }
+  | { event: "score_shown" };
 
 export type AnalyticsEventName = AnalyticsEvent["event"];
 
@@ -61,6 +68,7 @@ const EVENT_NAMES: ReadonlySet<string> = new Set<AnalyticsEventName>([
   "quiz_start",
   "quiz_answer",
   "quiz_complete",
+  "score_shown",
 ]);
 
 /* Bounds for every value that travels, so a wrong argument is dropped rather than
@@ -133,6 +141,7 @@ function answerAllowed(version: string, id: string, answer: string): boolean {
  */
 function payloadOf(e: AnalyticsEvent): Payload | null {
   if (!EVENT_NAMES.has(e.event)) return null;
+  if (e.event === "score_shown") return { event: e.event, ...CLEARED, ...getAttribution() };
   if (typeof e.quiz_version !== "string" || !QUIZ_VERSION.test(e.quiz_version)) return null;
   const base: Payload = { event: e.event, ...CLEARED, quiz_version: e.quiz_version, ...getAttribution() };
 
@@ -161,12 +170,17 @@ function payloadOf(e: AnalyticsEvent): Payload | null {
  * re-answering, or React running an effect twice would each count again. A changed
  * answer to a question already reported is not sent again - the first committed
  * answer is the one counted. A retake against a new quiz version is a new quiz.
+ *
+ * `score_shown` has no version, so it counts once per tab outright: one Lead per
+ * verified session, however often the score is reloaded or revisited. The session
+ * lives in the same tab's sessionStorage, so no other tab can show this score.
  */
 const SENT_KEY = "imageshield.analytics.v1";
 /* Holds what sessionStorage couldn't (private mode, quota), for this page's life. */
 const sentInMemory = new Set<string>();
 
 function dedupeKey(e: AnalyticsEvent): string {
+  if (e.event === "score_shown") return e.event;
   return e.event === "quiz_answer"
     ? `${e.event}:${e.quiz_version}:${e.question}`
     : `${e.event}:${e.quiz_version}`;
@@ -348,4 +362,19 @@ export function trackComplete(definition: QuizDefinition): void {
       question_count: asked.length,
     });
   });
+}
+
+/**
+ * `score_shown`, once the result screen has a score on it. Read-only on attribution:
+ * it doesn't freeze it, since the quiz that started this tab already did.
+ *
+ * As with the quiz helpers, consent given on the result screen itself comes too late:
+ * the container isn't loaded yet when this runs, and nothing is queued for it.
+ */
+export function trackScoreShown(): void {
+  try {
+    track({ event: "score_shown" });
+  } catch {
+    // Dropped: a missing event is better than a result screen that throws.
+  }
 }

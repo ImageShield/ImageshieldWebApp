@@ -253,3 +253,48 @@ describe("/score - the general recommendations card", () => {
     );
   });
 });
+
+/* The Lead conversion: `score_shown`, pushed once a score is actually on screen. */
+describe("/score - the score_shown event", () => {
+  const pushed = () =>
+    ((window as Window & { dataLayer?: Record<string, unknown>[] }).dataLayer ?? [])
+      .filter((e) => "event" in e)
+      .map((e) => e.event);
+
+  beforeEach(async () => {
+    window.sessionStorage.clear();
+    const { writeConsent } = await import("@/lib/consent");
+    writeConsent({ analytics: true, marketing: false });
+    vi.stubGlobal("dataLayer", []);
+  });
+
+  afterEach(() => {
+    document.cookie = "imageshield_consent=; Max-Age=0; Path=/";
+  });
+
+  it("is pushed once the score is drawn", async () => {
+    await renderScore();
+    await waitFor(() => expect(pushed()).toStrictEqual(["score_shown"]));
+    expect(screen.getByText("89", { selector: "strong" })).toBeTruthy();
+  });
+
+  it("is pushed for a retired version's stored score too", async () => {
+    answers = { me: ME, score: QUIZ_OUTDATED };
+    await renderScore();
+    await waitFor(() => expect(pushed()).toStrictEqual(["score_shown"]));
+  });
+
+  it("is not pushed while the score is still being worked out", async () => {
+    answers = { me: ME, score: { ...STORED, score: null } };
+    await renderScore();
+    await screen.findByText("Your score is being worked out");
+    expect(pushed()).toStrictEqual([]);
+  });
+
+  it("is not pushed when the score couldn't be loaded", async () => {
+    answers = { me: ME, score: new AF(500, "INTERNAL", "boom", null, null) };
+    await renderScore();
+    await screen.findByText("We couldn't load your score just now");
+    expect(pushed()).toStrictEqual([]);
+  });
+});

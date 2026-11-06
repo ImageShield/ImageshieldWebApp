@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { SiteHeader } from "@/components/landing/SiteHeader";
 import { ShieldMark } from "@/components/ShieldMark";
+import { trackScoreShown } from "@/lib/analytics";
 import { STEP_PATHS } from "@/lib/funnel";
 import { loadScore, type ScoreLoad } from "@/lib/browser-score";
 import { ResumeSave } from "./ResumeSave";
@@ -42,6 +43,13 @@ export function ScoreLoader() {
       live = false;
     };
   }, [router]);
+
+  /* After the commit that put the score on screen - the Lead conversion. Pending,
+     unavailable and redirected loads never get here. */
+  const shown = loaded?.ok === true;
+  useEffect(() => {
+    if (shown) trackScoreShown();
+  }, [shown]);
 
   if (loaded === null) {
     return (

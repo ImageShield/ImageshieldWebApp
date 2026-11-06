@@ -5,6 +5,7 @@ import {
   track,
   trackAnswer,
   trackComplete,
+  trackScoreShown,
   trackStart,
 } from "./analytics";
 import { definitionOf, withoutAttribution } from "./analytics.fixtures";
@@ -36,6 +37,7 @@ const V = "likeness-health-v11";
 const ANSWER: AnalyticsEvent = { event: "quiz_answer", quiz_version: V, question: "age", question_number: 1 };
 const START: AnalyticsEvent = { event: "quiz_start", quiz_version: V, question_number: 1 };
 const COMPLETE: AnalyticsEvent = { event: "quiz_complete", quiz_version: V, question_count: 6 };
+const SCORE: AnalyticsEvent = { event: "score_shown" };
 
 const V11_ANSWERS = {
   age: "25-34",
@@ -78,6 +80,26 @@ describe("track", () => {
 
     /* Fields a caller forces past the type are not copied: the payload is built field
        by field, not spread from the argument. */
+    it("pushes score_shown with no quiz fields at all", () => {
+      track(SCORE);
+      expect(dataLayer()).toStrictEqual([SCORE]);
+    });
+
+    /* The Lead conversion must never carry the score, the band or who it belongs to. */
+    it("forwards nothing a caller adds to score_shown", () => {
+      track({ ...SCORE, quiz_version: V, score: 41, band: "high risk", firstName: "Ada" } as AnalyticsEvent);
+      expect(dataLayer()).toStrictEqual([SCORE]);
+    });
+
+    it("clears the previous event's fields on score_shown", () => {
+      track(ANSWER);
+      track(SCORE);
+      const score = (raw() ?? [])[1];
+      for (const key of ["quiz_version", "question", "question_number", "answer", "question_count"]) {
+        expect(Object.hasOwn(score, key) && score[key] === undefined).toBe(true);
+      }
+    });
+
     it("never forwards a field outside the schema", () => {
       track({
         ...ANSWER,
@@ -152,6 +174,14 @@ describe("track", () => {
   });
 
   describe("consent", () => {
+    it("sends no score_shown without analytics consent, and doesn't throw", () => {
+      expect(() => trackScoreShown()).not.toThrow();
+      loadContainer();
+      writeConsent({ analytics: false, marketing: true });
+      trackScoreShown();
+      expect(dataLayer()).toStrictEqual([]);
+    });
+
     it("sends nothing, and creates no dataLayer, before the visitor has chosen", () => {
       track(START);
       expect(dataLayer()).toBeUndefined();
@@ -241,6 +271,17 @@ describe("track", () => {
       expect(dataLayer()).toStrictEqual([COMPLETE]);
     });
 
+    /* One Lead per verified session: a reload, a revisit or a retake in the same tab
+       shows a score again but isn't a new lead. */
+    it("sends score_shown once per tab, across reloads and retakes", async () => {
+      trackScoreShown();
+      trackScoreShown();
+      track({ ...COMPLETE, quiz_version: "likeness-health-v12" });
+      vi.resetModules();
+      (await import("./analytics")).trackScoreShown();
+      expect(dataLayer()).toStrictEqual([SCORE, { ...COMPLETE, quiz_version: "likeness-health-v12" }]);
+    });
+
     /* A retake after a deploy is answering a different quiz. */
     it("counts start, answers and completion again under a new quiz version", () => {
       const v12 = "likeness-health-v12";
@@ -270,6 +311,7 @@ describe("track", () => {
 
     it("sends nothing once the visitor has said they are under 18", () => {
       writeFunnel({ quizVersion: V, answers: { age: "Under 18" } });
+      trackScoreShown();
       track(ANSWER);
       track(COMPLETE);
       track({ ...START, question_number: 2 });
