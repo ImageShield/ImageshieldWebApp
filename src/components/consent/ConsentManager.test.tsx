@@ -36,7 +36,7 @@ const cookieNames = () =>
     .split(";")
     .map((part) => part.trim().split("=")[0])
     .filter(Boolean);
-const banner = () => screen.queryByRole("heading", { name: "Cookies on the quiz" });
+const banner = () => screen.queryByRole("heading", { name: "Your privacy matters" });
 /* Stands in for a quiz screen: the manager wraps the page in the root layout. */
 const screenContent = <main>Quiz screen</main>;
 

@@ -20,8 +20,8 @@ const COOKIE = "imageshield_consent";
  *
  *   v1  today's analytics wording; marketing named HubSpot and Google
  *   v2  v1 plus the analytics wording that names quiz answers - never live
- *   v3  v1 with Meta named under marketing
- *   v4  v2 with Meta named under marketing
+ *   v3  v1 with Meta named, under analytics - the choice that loads it
+ *   v4  v2 likewise
  *
  * The answer wording goes live with the answer collection it describes, never before
  * (see analytics-approval.ts). Meta was added to both, so a "yes" given before Meta
@@ -33,9 +33,9 @@ export const CONSENT_VERSION = VERSION;
 const MAX_AGE_SECONDS = 60 * 60 * 24 * 182;
 
 export type Consent = {
-  /** Google Tag Manager, and Google Analytics through it. */
+  /** Google Tag Manager, and Google Analytics and the Meta Pixel through it. */
   analytics: boolean;
-  /** HubSpot, Meta, and Google's advertising signals. */
+  /** HubSpot, and Google's advertising signals. */
   marketing: boolean;
 };
 

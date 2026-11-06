@@ -7,14 +7,26 @@ import { PRIVACY_POLICY_URL } from "@/lib/site-nav";
 
 /* The analytics wording live today, and the one drafted for legal review that names
    answer-level collection. The second shows only once ANSWER_ANALYTICS_APPROVED is on,
-   which also moves consent to v2 so nobody's earlier "yes" is read as a "yes" to it. */
+   which also moves consent to v4 so nobody's earlier "yes" is read as a "yes" to it.
+
+   The Meta Pixel is described here, not under marketing, because that is where it
+   runs: the Tag Manager container loads with the analytics choice, and the Pixel's tags
+   in it carry no consent check of their own. They fire on every page load and page
+   change, on quiz_start, quiz_complete and on reaching /score, and the Pixel's
+   automatic configuration is on, which reports button clicks and page details. Advanced
+   matching is off, so nothing typed into a form reaches it. */
+export const META_PIXEL_DETAIL =
+  "The Meta Pixel, also run through Tag Manager, tells Meta the pages you visit, the quiz steps you reach and the buttons you press, so we can measure our ads on Facebook and Instagram.";
 const ANALYTICS_DETAIL =
-  "Google Tag Manager, and any measurement tools we run through it, such as Google Analytics where enabled: which screens people reach and where they stop.";
+  `Google Tag Manager, and Google Analytics through it: which screens people reach and where they stop. ${META_PIXEL_DETAIL}`;
 export const ANALYTICS_DETAIL_WITH_ANSWERS =
-  "Google Tag Manager, and Google Analytics through it: which quiz questions people reach, where they stop, and the options chosen for some questions - which platforms you use, how often photos of you are shared, and how you monitor your likeness. Never your age, gender, experience of misuse, name, email or phone number.";
+  `Google Tag Manager, and Google Analytics through it: which quiz questions people reach, where they stop, and the options chosen for some questions - which platforms you use, how often photos of you are shared, and how you monitor your likeness. Never your age, gender, experience of misuse, name, email or phone number. ${META_PIXEL_DETAIL}`;
+/* HubSpot and Google's advertising signals: what the marketing choice loads. */
+export const MARKETING_DETAIL =
+  "HubSpot and Google's advertising signals. Where enabled, HubSpot may track your visits, collect what you enter in our forms (such as your name, email and phone number), run advertising pixels that measure our ads, and show pop-ups.";
 const SUMMARY_ANALYTICS = ANSWER_ANALYTICS_APPROVED
-  ? "we use Google Tag Manager to see how the quiz is used, including some of your answers,"
-  : "we use Google Tag Manager to see how the quiz is used,";
+  ? "With your permission, Google Analytics helps us understand how the quiz is used, including some of your answers."
+  : "With your permission, Google Analytics helps us understand how the quiz is used.";
 
 const ALL: Consent = { analytics: true, marketing: true };
 const NONE: Consent = { analytics: false, marketing: false };
@@ -32,8 +44,7 @@ const CATEGORIES: ReadonlyArray<{
   {
     key: "marketing",
     label: "Marketing",
-    detail:
-      "HubSpot, Meta and Google's advertising signals. Where enabled, HubSpot may track your visits, collect what you enter in our forms (such as your name, email and phone number), run advertising pixels that measure our ads, and show pop-ups, and the Meta Pixel tells Meta which steps of the quiz you reach so we can measure and improve our ads on Facebook and Instagram.",
+    detail: MARKETING_DETAIL,
   },
 ];
 
@@ -106,7 +117,7 @@ export function ConsentBanner({
           room for the bottom inset. */}
       <div className="mx-auto flex max-h-[calc(100dvh-3rem)] max-w-[40rem] flex-col rounded-2xl bg-canvas p-5 shadow-[0_10px_40px_rgba(0,0,0,0.18)] ring-1 ring-line-soft sm:p-6">
         <h2 id="consent-title" className="shrink-0 text-base font-bold text-ink">
-          Cookies on the quiz
+          Your privacy matters
         </h2>
 
         <div className="min-h-0 overflow-y-auto">
@@ -138,21 +149,33 @@ export function ConsentBanner({
               </p>
             </fieldset>
           ) : (
-            <p className="mt-2 text-sm leading-6 text-ink-soft">
-              With your OK, {SUMMARY_ANALYTICS} and
-              HubSpot and Meta for marketing, which can include collecting what you
-              enter in our forms. None of them load unless you say yes, the quiz works
-              the same either way, and you can change your mind from &ldquo;Cookie
-              settings&rdquo; at
-              the bottom of any page.{" "}
-              <a href={PRIVACY_POLICY_URL} className="font-semibold text-brand-ink underline">
-                Privacy policy
-              </a>
-            </p>
+            /* Short paragraphs, sized so the privacy policy link is in view on a
+               320×568 phone without scrolling. The Meta Pixel sits with Google
+               Analytics because it is loaded the same way - through Tag Manager, under
+               the analytics choice. The forms sentence names HubSpot alone: its
+               collected-forms script reads the details form; the Pixel runs without
+               advanced matching and reads none of it. */
+            <div className="mt-2 flex flex-col gap-1.5 text-sm leading-5 text-ink-soft sm:gap-2 sm:leading-6">
+              <p>
+                {SUMMARY_ANALYTICS} The Meta Pixel measures which quiz steps visitors
+                reach to help us understand advertising performance.
+              </p>
+              <p>
+                HubSpot and Google&apos;s advertising signals help us measure our
+                marketing. HubSpot may also use information you provide through our forms.
+              </p>
+              <p>
+                The quiz works the same whatever you choose. You can change your
+                preferences anytime through Cookie settings at the bottom of any page.{" "}
+                <a href={PRIVACY_POLICY_URL} className="font-semibold text-brand-ink underline">
+                  Privacy policy
+                </a>
+              </p>
+            </div>
           )}
         </div>
 
-        <div className="mt-4 flex shrink-0 gap-3">
+        <div className="mt-3 flex shrink-0 gap-3 sm:mt-4">
           {managing ? (
             <>
               <button

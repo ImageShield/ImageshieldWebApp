@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { parseConsent, serializeConsent } from "@/lib/consent";
-import { ANALYTICS_DETAIL_WITH_ANSWERS, ConsentBanner } from "./ConsentBanner";
+import { ANALYTICS_DETAIL_WITH_ANSWERS, ConsentBanner, META_PIXEL_DETAIL } from "./ConsentBanner";
 
 /* What legal approving the answer-level wording turns on. With the switch off - as
    shipped - ConsentManager.test.tsx and consent.test.ts pin today's v1 behaviour. */
@@ -30,6 +30,8 @@ describe("consent once answer analytics is approved", () => {
     expect(screen.getByText(ANALYTICS_DETAIL_WITH_ANSWERS)).toBeTruthy();
     expect(ANALYTICS_DETAIL_WITH_ANSWERS).toMatch(/options chosen for some questions/);
     expect(ANALYTICS_DETAIL_WITH_ANSWERS).toMatch(/Never your age, gender, experience of misuse/);
+    /* The Pixel loads with this choice whatever the answer wording says. */
+    expect(ANALYTICS_DETAIL_WITH_ANSWERS.endsWith(META_PIXEL_DETAIL)).toBe(true);
   });
 
   it("says so in the summary too", () => {
