@@ -33,7 +33,7 @@ const CATEGORIES: ReadonlyArray<{
     key: "marketing",
     label: "Marketing",
     detail:
-      "HubSpot and Google's advertising signals. Where enabled, HubSpot may track your visits, collect what you enter in our forms (such as your name, email and phone number), run advertising pixels that measure our ads, and show pop-ups.",
+      "HubSpot, Meta and Google's advertising signals. Where enabled, HubSpot may track your visits, collect what you enter in our forms (such as your name, email and phone number), run advertising pixels that measure our ads, and show pop-ups, and the Meta Pixel tells Meta which steps of the quiz you reach so we can measure and improve our ads on Facebook and Instagram.",
   },
 ];
 
@@ -140,9 +140,10 @@ export function ConsentBanner({
           ) : (
             <p className="mt-2 text-sm leading-6 text-ink-soft">
               With your OK, {SUMMARY_ANALYTICS} and
-              HubSpot for marketing, which can include collecting what you enter in our
-              forms. Neither loads unless you say yes, the quiz works the same either
-              way, and you can change your mind from &ldquo;Cookie settings&rdquo; at
+              HubSpot and Meta for marketing, which can include collecting what you
+              enter in our forms. None of them load unless you say yes, the quiz works
+              the same either way, and you can change your mind from &ldquo;Cookie
+              settings&rdquo; at
               the bottom of any page.{" "}
               <a href={PRIVACY_POLICY_URL} className="font-semibold text-brand-ink underline">
                 Privacy policy

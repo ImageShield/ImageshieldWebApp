@@ -168,6 +168,37 @@ describe("ConsentManager", () => {
     expect(reloadPage).toHaveBeenCalledOnce();
   });
 
+  /* Meta was named from v3. A "yes" given before then is no "yes" to Meta, so those
+     visitors are asked again and nothing loads until they answer. */
+  it.each(["v1.a1.m1", "v2.a1.m1"])("asks again, loading nothing, for a choice made as %s", (old) => {
+    expect(V).toBe("v3");
+    document.cookie = `imageshield_consent=${old}; Path=/`;
+    render(<ConsentManager>{screenContent}</ConsentManager>);
+    expect(banner()).not.toBeNull();
+    expect(scripts()).toEqual([]);
+  });
+
+  /* Meta's tags require ad_storage, so denying it and reloading is what stops them. */
+  it("on marketing withdrawal alone, denies advertising, keeps analytics and reloads", () => {
+    document.cookie = `imageshield_consent=${V}.a1.m1; Path=/`;
+    const dataLayer: unknown[] = [];
+    (window as WithDataLayer).dataLayer = dataLayer;
+
+    render(<ConsentManager>{screenContent}</ConsentManager>);
+    fireEvent.click(screen.getByRole("button", { name: "Cookie settings" }));
+    fireEvent.click(screen.getByRole("checkbox", { name: /Marketing/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Save choices" }));
+
+    expect(document.cookie).toContain(`imageshield_consent=${V}.a1.m0`);
+    expect(Array.from(dataLayer.at(-1) as ArrayLike<unknown>)[2]).toEqual({
+      analytics_storage: "granted",
+      ad_storage: "denied",
+      ad_user_data: "denied",
+      ad_personalization: "denied",
+    });
+    expect(reloadPage).toHaveBeenCalledOnce();
+  });
+
   it("grants more without a reload", () => {
     document.cookie = `imageshield_consent=${V}.a1.m0; Path=/`;
     const dataLayer: unknown[] = [];

@@ -2,7 +2,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { ConsentBanner } from "./ConsentBanner";
 
-/* As shipped: the switch off, and the wording visitors agreed to under v1 unchanged. */
+/* As shipped: the switch off, and the v1 analytics wording unchanged. */
 vi.mock("@/lib/analytics-approval", () => ({ ANSWER_ANALYTICS_APPROVED: false }));
 
 afterEach(cleanup);
@@ -22,7 +22,13 @@ it("keeps today's analytics wording, which names no answers", () => {
 it("keeps today's summary", () => {
   const { container } = render(<ConsentBanner initial={NONE} manage={false} onSave={vi.fn()} />);
   expect(container.textContent).toContain(
-    "With your OK, we use Google Tag Manager to see how the quiz is used, and HubSpot for marketing",
+    "With your OK, we use Google Tag Manager to see how the quiz is used, and HubSpot and Meta for marketing",
   );
   expect(container.textContent).not.toMatch(/some of your answers/);
+});
+
+it("names Meta among the marketing vendors", () => {
+  render(<ConsentBanner initial={NONE} manage onSave={vi.fn()} />);
+  expect(screen.getByText(/^HubSpot, Meta and Google's advertising signals\./)).toBeTruthy();
+  expect(screen.getByText(/the Meta Pixel tells Meta which steps of the quiz you reach/)).toBeTruthy();
 });

@@ -36,7 +36,7 @@ describe("consent cookie", () => {
   /* An older VERSION is how the banner asks everyone again, so it must read as
      "no choice" rather than as whatever its flags happened to say. */
   it("treats a missing, malformed or older-version value as no choice", () => {
-    for (const value of [undefined, "", "v1", "v1.a1", "v1.a2.m0", "v1.a1.m1.x", "v0.a1.m1"]) {
+    for (const value of [undefined, "", "v1", "v1.a1", "v1.a2.m0", "v1.a1.m1.x", "v0.a1.m1", "v1.a1.m1", "v2.a1.m1"]) {
       expect(parseConsent(value)).toBeNull();
     }
   });

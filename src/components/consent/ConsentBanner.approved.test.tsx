@@ -12,15 +12,17 @@ afterEach(cleanup);
 const NONE = { analytics: false, marketing: false };
 
 describe("consent once answer analytics is approved", () => {
-  it("records choices as v2", () => {
-    expect(serializeConsent({ analytics: true, marketing: false })).toBe("v2.a1.m0");
-    expect(parseConsent("v2.a1.m0")).toStrictEqual({ analytics: true, marketing: false });
+  it("records choices as v4", () => {
+    expect(serializeConsent({ analytics: true, marketing: false })).toBe("v4.a1.m0");
+    expect(parseConsent("v4.a1.m0")).toStrictEqual({ analytics: true, marketing: false });
   });
 
-  /* A yes to the old wording is not a yes to sending answers. */
-  it("asks everyone who chose under v1 again", () => {
-    expect(parseConsent("v1.a1.m1")).toBeNull();
-    expect(parseConsent("v1.a0.m0")).toBeNull();
+  /* A yes to the old wording is not a yes to sending answers, nor v2's to Meta. */
+  it("asks everyone who chose under v1, v2 or v3 again", () => {
+    for (const v of ["v1", "v2", "v3"]) {
+      expect(parseConsent(`${v}.a1.m1`)).toBeNull();
+      expect(parseConsent(`${v}.a0.m0`)).toBeNull();
+    }
   });
 
   it("names answer-level collection, and what is never sent, in the analytics choice", () => {
